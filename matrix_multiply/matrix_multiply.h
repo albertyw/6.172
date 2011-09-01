@@ -23,13 +23,6 @@ typedef struct {
   int** values;
 } matrix;
 
-/** This is called before matrix_multiply_run(), for you to perform any
- * setup tasks.
- *
- * Do not place any code that should be timed within this function!
- */
-void matrix_multiply_setup(void);
-
 /**
  * Multiply matrix A*B, store result in C.
  */
