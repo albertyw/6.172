@@ -85,9 +85,9 @@ int main(int argc, char** argv)
 
   fprintf(stderr, "Setup\n");
 
-  A = make_matrix(4, 5);
-  B = make_matrix(4, 4);
-  C = make_matrix(4, 4);
+  A = make_matrix(1000, 1000);
+  B = make_matrix(1000, 1000);
+  C = make_matrix(1000, 1000);
 
   if (use_zero_matrix) {
     for (i = 0; i < A->rows; i++) {
@@ -144,6 +144,8 @@ int main(int argc, char** argv)
   } else {
     printf("Elapsed execution time: %f sec\n", elapsedf);
   }
-
+  free_matrix(A);
+  free_matrix(B);
+  free_matrix(C);
   return 0;
 }

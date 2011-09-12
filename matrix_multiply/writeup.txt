@@ -1,0 +1,49 @@
+Writeup
+Section 9
+==7980== Memcheck, a memory error detector.
+==7980== Copyright (C) 2002-2007, and GNU GPL'd, by Julian Seward et al.
+==7980== Using LibVEX rev 1854, a library for dynamic binary translation.
+==7980== Copyright (C) 2004-2007, and GNU GPL'd, by OpenWorks LLP.
+==7980== Using valgrind-3.3.1-Debian, a dynamic binary instrumentation framework.
+==7980== Copyright (C) 2000-2007, and GNU GPL'd, by Julian Seward et al.
+==7980== For more details, rerun with: -v
+==7980== 
+Setup
+Matrix A: 
+------------
+  0    0    0    0  
+  0    0    0    0  
+  0    0    0    0  
+  0    0    0    0  
+------------
+Matrix B: 
+------------
+  0    0    0    0  
+  0    0    0    0  
+  0    0    0    0  
+  0    0    0    0  
+------------
+Running matrix_multiply_run()...
+---- RESULTS ----
+Result: 
+------------
+  0    0    0    0  
+  0    0    0    0  
+  0    0    0    0  
+  0    0    0    0  
+------------
+---- END RESULTS ----
+Elapsed execution time: 0.003562 sec
+==7980== 
+==7980== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 8 from 1)
+==7980== malloc/free: in use at exit: 0 bytes in 0 blocks.
+==7980== malloc/free: 38 allocs, 38 frees, 656 bytes allocated.
+==7980== For counts of detected errors, rerun with: -v
+==7980== All heap blocks were freed -- no leaks are possible.
+
+Section 11
+DEBUG: 14.924542 sec
+No DEBUG: 8.244469 sec
+
+Section 12
+3.863867 sec

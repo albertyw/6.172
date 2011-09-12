@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "matrix_multiply.h"
+#include "assert.h"
 
 /*
  * Allocates a row-by-cols matrix and returns it
@@ -66,14 +67,19 @@ void print_matrix(const matrix* m)
  */
 int matrix_multiply_run(const matrix* A, const matrix* B, matrix* C)
 {
-  //assert(A->cols == B->rows);
-  //assert(A->rows == C->rows);
-  //assert(B->cols == C->cols);
-
+  assert(A->cols == B->rows);
+  assert(A->rows == C->rows);
+  assert(B->cols == C->cols);
+    
   int i, j, k;
   for (i = 0; i < A->rows; i++) {
-    for (j = 0; j < B->cols; j++) {
-      for (k = 0; k < A->cols; k++) {
+    for (j = 0; j < A->cols; j++) {
+      C->values[i][j] = 0;
+    }
+  }
+  for (i = 0; i < A->rows; i++) {
+    for (k = 0; k < A->cols; k++) {
+      for (j = 0; j < B->cols; j++) {
         C->values[i][j] += A->values[i][k] * B->values[k][j];
       }
     }
