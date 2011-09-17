@@ -70,12 +70,12 @@ enum sort_type { sortd = 1, sorti, sortp, sortb, sortc, sortm, sortf } ;
 
 static inline void display_array(data_t * data, int N )
 {
-		int i ;
-    // display array
-    for (i = 0; i < N; i++) {
-      printf("%d ", data[i]);
-    }
-    printf("\n");
+	int i ;
+	// display array
+	for (i = 0; i < N; i++) {
+		printf("%d ", data[i]);
+	}
+	printf("\n");
 }
 
 static inline void copy_data(data_t * data, data_t * data_bcup, int N)
@@ -124,202 +124,201 @@ static inline void print_sort(int stype)
 }
 
 static inline int post_process(data_t * data, data_t * data_bcup, int N, 
-																int printFlag, int stype, int begin,
-																int end)
+					int printFlag, int stype, int begin,
+					int end)
 {
-		int i ;
-		int result = 1 ;
-		if (printFlag)
+	int i ;
+	int result = 1 ;
+	if (printFlag)
+	{
+		print_sort(stype) ;
+		printf("Data after sort\n") ;
+		display_array(data, N) ;
+	}
+
+	//check if the array is unchanged from data[0..begin-1]
+	for (i = 0 ; i < begin ; i++)
+	{
+		if (data [i] != data_bcup [i])
 		{
 			print_sort(stype) ;
-			printf("Data after sort\n") ;
-			display_array(data, N) ;
+			TEST_FAIL("Array outside sort boundary changed!\n");
+			result = 0 ;
+			break ;
 		}
+	}
 
-		//check if the array is unchanged from data[0..begin-1]
-		for (i = 0 ; i < begin ; i++)
+	// check if sub-array is sorted
+	for (i = begin + 1 ; i < end + 1 ; i++) 
+	{
+		if (data[i - 1] > data[i]) {
+			print_sort(stype) ;
+  			TEST_FAIL("Arrays are sorted: NO!\n");
+			result = 0 ;
+			break ;
+		}
+	}
+
+	//check if the array is unchanged from data[end+1..N-1]
+	for (i = end + 1 ; i < N ; i++)
+	{
+		if (data [i] != data_bcup [i])
 		{
-			if (data [i] != data_bcup [i])
-			{
-				print_sort(stype) ;
-        TEST_FAIL("Array outside sort boundary changed!\n");
-				result = 0 ;
-				break ;
-			}
+			print_sort(stype) ;
+			TEST_FAIL("Array outside sort boundary changed!\n");
+			result = 0 ;
+			break ;
 		}
-
-    // check if sub-array is sorted
-    for (i = begin + 1 ; i < end + 1 ; i++) 
-		{
-      if (data[i - 1] > data[i]) {
-				print_sort(stype) ;
-        TEST_FAIL("Arrays are sorted: NO!\n");
-				result = 0 ;
-				break ;
-      }
-		}
-
-		//check if the array is unchanged from data[end+1..N-1]
-		for (i = end + 1 ; i < N ; i++)
-		{
-			if (data [i] != data_bcup [i])
-			{
-				print_sort(stype) ;
-        TEST_FAIL("Array outside sort boundary changed!\n");
-				result = 0 ;
-				break ;
-			}
-		}
-		copy_data(data, data_bcup, N) ;
-		return result ;
-
+	}
+	copy_data(data, data_bcup, N) ;
+	return result ;
 }
 
 static void test_correctness(int printFlag,int N, int R)
 {
-  clockmark_t time1, time2;
-  float sum_time = 0, sum_time_i = 0, sum_time_p = 0, sum_time_b = 0,
-				sum_time_c = 0, sum_time_m = 0, sum_time_f = 0 ;
-  data_t *data, *data_bcup ;
+	clockmark_t time1, time2;
+	float sum_time = 0, sum_time_i = 0, sum_time_p = 0, sum_time_b = 0,
+	sum_time_c = 0, sum_time_m = 0, sum_time_f = 0 ;
+	data_t *data, *data_bcup ;
 	int i, j ;
 	int success = 1 ;
 
-  // allocate memory
-  data = (data_t *) malloc(N * sizeof(data_t));
-  data_bcup = (data_t *) malloc(N * sizeof(data_t));
+	// allocate memory
+	data = (data_t *) malloc(N * sizeof(data_t));
+	data_bcup = (data_t *) malloc(N * sizeof(data_t));
 
-  if (data == NULL || data_bcup == NULL)
+	if (data == NULL || data_bcup == NULL)
 	{
-    printf("Error: not enough memory\n");
-    free (data) ;
-    free (data_bcup) ;
-    exit(-1);
-  }
+		printf("Error: not enough memory\n");
+		free (data) ;
+		free (data_bcup) ;
+		exit(-1);
+	}
 
-  // repeat for each trial
-  for (j = 0; j < R; j++) 
+	// repeat for each trial
+	for (j = 0; j < R; j++) 
 	{
-    // initialize data with random numbers
-    for (i = 0; i < N; i++) {
-      data[i] = rand() ;
-      data_bcup [i] = data [i] ;
-    }
+		// initialize data with random numbers
+		for (i = 0; i < N; i++) {
+			data[i] = rand() ;
+			data_bcup [i] = data [i] ;
+		}
 		if (printFlag)
 		{
 			printf("Data before sort\n") ;
 			display_array(data, N) ;
 		}
 
-    // sort array
-    time1 = ktiming_getmark( );
-    sort(data, 0, N - 1);
-    time2 = ktiming_getmark( );
+		// sort array
+		time1 = ktiming_getmark( );
+		sort(data, 0, N - 1);
+		time2 = ktiming_getmark( );
 
-    // compute time for this trial
-    sum_time += ktiming_diff_sec( &time1, &time2 );
+		// compute time for this trial
+		sum_time += ktiming_diff_sec( &time1, &time2 );
 		success &= post_process(data, data_bcup, N, printFlag, 1, 0, N - 1) ;
 
-    // sort array with inline sort
-    time1 = ktiming_getmark( );
-    sort_i(data, 0, N - 1);
-    time2 = ktiming_getmark( );
+		// sort array with inline sort
+		time1 = ktiming_getmark( );
+		sort_i(data, 0, N - 1);
+		time2 = ktiming_getmark( );
 
-    // compute time for this trial
-    sum_time_i += ktiming_diff_sec( &time1, &time2 );
+		// compute time for this trial
+		sum_time_i += ktiming_diff_sec( &time1, &time2 );
 		success &= post_process(data, data_bcup, N, printFlag, 2, 0, N - 1) ;
 
-    // sort array with ptr sort
-    time1 = ktiming_getmark( );
-    sort_p(data, 0, N - 1);
-    time2 = ktiming_getmark( );
+		// sort array with ptr sort
+		time1 = ktiming_getmark( );
+		sort_p(data, 0, N - 1);
+		time2 = ktiming_getmark( );
 
-    // compute time for this trial
-    sum_time_p += ktiming_diff_sec( &time1, &time2 );
+		// compute time for this trial
+		sum_time_p += ktiming_diff_sec( &time1, &time2 );
 		success &= post_process(data, data_bcup, N, printFlag, 3, 0, N - 1) ;
 
-    // sort array with branchless sort
-    time1 = ktiming_getmark( );
-    sort_b(data, 0, N - 1);
-    time2 = ktiming_getmark( );
+		// sort array with branchless sort
+		time1 = ktiming_getmark( );
+		sort_b(data, 0, N - 1);
+		time2 = ktiming_getmark( );
 
-    // compute time for this trial
-    sum_time_b += ktiming_diff_sec( &time1, &time2 );
+		// compute time for this trial
+		sum_time_b += ktiming_diff_sec( &time1, &time2 );
 		success &= post_process(data, data_bcup, N, printFlag, 4, 0, N - 1) ;
 
-    // sort array with coarsened sort
-    time1 = ktiming_getmark( );
-    sort_c(data, 0, N - 1);
-    time2 = ktiming_getmark( );
+		// sort array with coarsened sort
+		time1 = ktiming_getmark( );
+		sort_c(data, 0, N - 1);
+		time2 = ktiming_getmark( );
 
-    // compute time for this trial
-    sum_time_c += ktiming_diff_sec( &time1, &time2 );
+		// compute time for this trial
+		sum_time_c += ktiming_diff_sec( &time1, &time2 );
 		success &= post_process(data, data_bcup, N, printFlag, 5, 0, N - 1) ;
 
-    // sort array with memory optimization 1
-    time1 = ktiming_getmark( );
-    sort_m(data, 0, N - 1);
-    time2 = ktiming_getmark( );
+		// sort array with memory optimization 1
+		time1 = ktiming_getmark( );
+		sort_m(data, 0, N - 1);
+		time2 = ktiming_getmark( );
 
-    // compute time for this trial
-    sum_time_m += ktiming_diff_sec( &time1, &time2 );
+		// compute time for this trial
+		sum_time_m += ktiming_diff_sec( &time1, &time2 );
 		success &= post_process(data, data_bcup, N, printFlag, 6, 0, N - 1) ;
 
-    // sort array with memory optimization 2
-    time1 = ktiming_getmark( );
-    sort_f(data, 0, N - 1);
-    time2 = ktiming_getmark( );
+		// sort array with memory optimization 2
+		time1 = ktiming_getmark( );
+		sort_f(data, 0, N - 1);
+		time2 = ktiming_getmark( );
 
-    // compute time for this trial
-    sum_time_f += ktiming_diff_sec( &time1, &time2 );
+		// compute time for this trial
+		sum_time_f += ktiming_diff_sec( &time1, &time2 );
 		success &= post_process(data, data_bcup, N, printFlag, 7, 0, N - 1) ;
 	
 		if (!success)
 		{
 			break ;
 		}
-  }
+	}
 	if (success)
 	{
-  	printf("Arrays are sorted: yes\n");
+		printf("Arrays are sorted: yes\n");
 		TEST_PASS() ;
-  	// report total execution time
-  	printf( "sort : Elapsed execution time: %f sec\n", sum_time );
-  	printf( "sort_i : Elapsed execution time: %f sec\n", sum_time_i);
-  	printf( "sort_p : Elapsed execution time: %f sec\n", sum_time_p);
-  	printf( "sort_b : Elapsed execution time: %f sec\n", sum_time_b);
-  	printf( "sort_c : Elapsed execution time: %f sec\n", sum_time_c);
-  	printf( "sort_m : Elapsed execution time: %f sec\n", sum_time_m);
-  	printf( "sort_f : Elapsed execution time: %f sec\n", sum_time_f);
+		// report total execution time
+		printf( "sort : Elapsed execution time: %f sec\n", sum_time );
+		printf( "sort_i : Elapsed execution time: %f sec\n", sum_time_i);
+		printf( "sort_p : Elapsed execution time: %f sec\n", sum_time_p);
+		printf( "sort_b : Elapsed execution time: %f sec\n", sum_time_b);
+		printf( "sort_c : Elapsed execution time: %f sec\n", sum_time_c);
+		printf( "sort_m : Elapsed execution time: %f sec\n", sum_time_m);
+		printf( "sort_f : Elapsed execution time: %f sec\n", sum_time_f);
 	}
 
-  free (data) ;
-  free (data_bcup) ;
-  return ;
+	free (data) ;
+	free (data_bcup) ;
+	return ;
 }
 
 static void test_empty_array(int printFlag,int N, int R)
 {
-	data_t *data = 0 ;
-  sort(data, 0, 0);
-  sort_i(data, 0, 0);
-  sort_p(data, 0, 0);
-  sort_b(data, 0, 0);
-  sort_c(data, 0, 0);
-  sort_m(data, 0, 0);
-  sort_f(data, 0, 0);
+	data_t data[] = {} ;
+	sort(data, 0, 0);
+	sort_i(data, 0, 0);
+	sort_p(data, 0, 0);
+	sort_b(data, 0, 0);
+	sort_c(data, 0, 0);
+	sort_m(data, 0, 0);
+	sort_f(data, 0, 0);
 	TEST_PASS() ;	
 }
 
 static void test_one_element(int printFlag,int N, int R)
 {
 	data_t data[] = {1} ;
-  sort(data, 0, 0);
-  sort_i(data, 0, 0);
-  sort_p(data, 0, 0);
-  sort_b(data, 0, 0);
-  sort_c(data, 0, 0);
-  sort_m(data, 0, 0);
-  sort_f(data, 0, 0);
+	sort(data, 0, 0);
+	sort_i(data, 0, 0);
+	sort_p(data, 0, 0);
+	sort_b(data, 0, 0);
+	sort_c(data, 0, 0);
+	sort_m(data, 0, 0);
+	sort_f(data, 0, 0);
 	if (data [0] == 1)
 	{
 		TEST_PASS() ;
@@ -333,26 +332,26 @@ static void test_one_element(int printFlag,int N, int R)
 
 static void test_subarray(int printFlag,int N, int R)
 {
-  data_t *data, *data_bcup ;
+	data_t *data, *data_bcup ;
 	int i, j ;
 	int success = 1 ;
-  // allocate memory
-  data = (data_t *) malloc(N * sizeof(data_t));
-  data_bcup = (data_t *) malloc(N * sizeof(data_t));
+	// allocate memory
+	data = (data_t *) malloc(N * sizeof(data_t));
+	data_bcup = (data_t *) malloc(N * sizeof(data_t));
 	
-  if (data == NULL || data_bcup == NULL)
+	if (data == NULL || data_bcup == NULL)
 	{
-    printf("Error: not enough memory\n");
-    free (data) ;
-    free (data_bcup) ;
-    exit(-1);
-  }
+		printf("Error: not enough memory\n");
+		free (data) ;
+		free (data_bcup) ;
+		exit(-1);
+	}
 
-  // initialize data with random numbers
-  for (i = 0; i < N; i++) {
-    data[i] = rand() ;
-    data_bcup [i] = data [i] ;
-  }
+	// initialize data with random numbers
+	for (i = 0; i < N; i++) {
+		data[i] = rand() ;
+		data_bcup [i] = data [i] ;
+	}
 	if (printFlag)
 	{
 		printf("Data before sort\n") ;
@@ -368,50 +367,50 @@ static void test_subarray(int printFlag,int N, int R)
 	}
 
 	printf("Sorting subarray A[%d..%d]\n", begin, end) ;
-  // sort array
-  sort(data, begin, end);
+	// sort array
+	sort(data, begin, end);
 	success &= post_process(data, data_bcup, N, printFlag, 1, begin, end) ;
 
-  // sort array with inline sort
-  sort_i(data, begin, end);
+	// sort array with inline sort
+	sort_i(data, begin, end);
 	success &= post_process(data, data_bcup, N, printFlag, 2, begin, end) ;
 
-  // sort array with ptr sort
-  sort_p(data, begin, end);
+	// sort array with ptr sort
+	sort_p(data, begin, end);
 	success &= post_process(data, data_bcup, N, printFlag, 3, begin, end) ;
 
-  // sort array with branchless sort
-  sort_b(data, begin, end);
+	// sort array with branchless sort
+	sort_b(data, begin, end);
 	success &= post_process(data, data_bcup, N, printFlag, 4, begin, end) ;
 
-  // sort array with coarsened sort
-  sort_c(data, begin, end);
+	// sort array with coarsened sort
+	sort_c(data, begin, end);
 	success &= post_process(data, data_bcup, N, printFlag, 5, begin, end) ;
 
-  // sort array with memory optimization 1
-  sort_m(data, begin, end);
+	// sort array with memory optimization 1
+	sort_m(data, begin, end);
 	success &= post_process(data, data_bcup, N, printFlag, 6, begin, end) ;
 
-  // sort array with memory optimization 2
-  sort_f(data, begin, end);
+	// sort array with memory optimization 2
+	sort_f(data, begin, end);
 	success &= post_process(data, data_bcup, N, printFlag, 7, begin, end) ;
 
 	if (success)
-  {
+	{
 		printf("Arrays are sorted: yes\n");
 		TEST_PASS() ;
 	}
 
-  free (data) ;
-  free (data_bcup) ;
-  return ;
+	free (data) ;
+	free (data_bcup) ;
+	return ;
 }
 
 test_case test_cases[] = {
-  test_correctness,
-  test_empty_array,
-  test_one_element,
+	test_correctness,
+	test_empty_array,
+	test_one_element,
 	test_subarray,
-  // ADD YOUR TEST CASES HERE
-  NULL // This marks the end of all test cases. Don't change this!
+	// ADD YOUR TEST CASES HERE
+	NULL // This marks the end of all test cases. Don't change this!
 };
