@@ -63,7 +63,7 @@ static void merge_m(data_t *A, int p, int q, int r)
 	}
 
 	mem_free(&left) ;
-
+  mem_free(&right) ;
 }
 
 static void copy_m(data_t * source, data_t * dest, int n)
