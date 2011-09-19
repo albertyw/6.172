@@ -63,6 +63,7 @@ static void merge_b(data_t *A, int p, int q, int r)
 	}
 
 	mem_free(&left) ;
+	mem_free(&right);
 
 }
 
