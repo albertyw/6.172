@@ -10,11 +10,40 @@
 
 \begin{document}
 \maketitle
-\section{Introduction}
+\section{2.1}
+Added $mem_free(\&right);$ to sort.c and a bunch of other code.  
 
-\section{Section blah}
+\section{2.2}
+Merge:
+Slowest in:
+   17.12 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:60
+   16.79 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:61
+   13.90 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:56
+   13.79 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:55
+    5.51 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:53
 
-\subsection{Subsection blah}
+Sort:
+Slowest in:
+   19.93 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:21
+   11.23 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:21
+    9.16 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:12
+    6.07 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:21
+    5.73 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:21
+    5.27 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:14
+    5.27 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:18
+    5.27 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:21
+
+
+\subsection{2.3}
+Perf inline sort function: 0.393188160  seconds time elapsed
+Perf without inline: 0.393289411  seconds time elapsed
+
+Inline puts assembly code in place of function calls when compiled.  Some functions don't work because you can't put code inline of itself.
+Inline can make code faster, if you're actually inlining stuff.  
+If you inline sort_i, it doesn't inline it because you're basically running it directly.  
+You can't inline functions between files.  
+
+\subsection{2.4}
 
 
 
