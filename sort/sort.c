@@ -23,7 +23,7 @@ void sort(data_t *A, int p, int r)
 /* A merge routine. Merges the sub-arrays A [p..q] and A [q + 1..r].
  * Uses two arrays 'left' and 'right' in the merge operation.
  */
-static void merge(data_t *A, int p, int q, int r) 
+static inline void merge(data_t *A, int p, int q, int r) 
 { 
 	assert(A) ;
 	assert(p <= q) ;
