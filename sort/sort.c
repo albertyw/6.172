@@ -36,6 +36,7 @@ static inline void merge(data_t *A, int p, int q, int r)
 	mem_alloc(&right, n2 + 1) ;
         if (left == NULL || right == NULL)
         {
+                mem_free (&right);
                 mem_free (&left) ;
                 return ;
         }
