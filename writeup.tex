@@ -47,5 +47,23 @@ You can't inline functions between files.
 Using pointers instead of indices to access values in array does not improve \
 performance.
 
+\subsection{2.5}
+
+Arrays are sorted: yes
+sort_p : Elapsed execution time: 24.907089 sec
+
+ Performance counter stats for './sort_p.64 10000000 10':
+
+    20277655203  branches                 #      0.000 M/sec
+     1389280173  branch-misses            #      0.000 M/sec
+    69447260155  cycles                   #      0.000 M/sec
+    89566910390  instructions             #      1.290 IPC  
+
+   26.059289767  seconds time elapsed
+
+   branch-misses to branches rate: 0.068512861
+\subsection{2.6}
+
+
 
 \end{document}
