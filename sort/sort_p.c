@@ -2,8 +2,8 @@
 
 /* Function prototypes */
 
-static void merge_p(data_t *A, int p, int q, int r);
-static void copy_p(data_t * source, data_t * dest, int n) ;
+inline static void merge_p(data_t *A, int p, int q, int r);
+inline static void copy_p(data_t * source, data_t * dest, int n) ;
 
 /* Function definitions */
 
@@ -37,6 +37,7 @@ inline static void merge_p(data_t *A, int p, int q, int r)
         if (left == NULL || right == NULL)
         {
                 mem_free (&left) ;
+		mem_free(&right);
                 return ;
         }
 	
@@ -59,13 +60,13 @@ inline static void merge_p(data_t *A, int p, int q, int r)
 			ptr2 = &left[i];
 			*ptr = *ptr2;
 			*/
-			A [k] = left [i] ;
-			i++ ;
+		  *(A+k) = left [i] ;
+		  i++ ;
 		}
 		else
 		{
-			A [k] = right [j] ;
-			j++ ;
+		  *(A+k) = right [j] ;
+		  j++ ;
 		}
 	}
 
@@ -75,11 +76,11 @@ inline static void merge_p(data_t *A, int p, int q, int r)
 
 inline static void copy_p(data_t * source, data_t * dest, int n)                              
 {                                                                             
-        assert (dest) ;                                                       
-        assert (source) ;                                                     
-        int i ;                                                               
-        for (i = 0 ; i < n ; i++)                                             
-        {                                                                     
-                dest [i] = source [i] ;                                       
+        assert (dest) ;
+        assert (source) ;
+        int i ;
+        for (i = 0 ; i < n ; i++)
+        {
+                dest[i] = source[i];
         }                                                                     
 }
