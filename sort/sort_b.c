@@ -53,17 +53,30 @@ static inline void merge_b(data_t *A, int p, int q, int r)
 	unsigned int * __restrict rightptr = right;
 
 	for ( ; k <= r ; k++)
-	{
-		if (*leftptr <= *rightptr)
-		{
-		  *(A+k) = *leftptr;
-		  leftptr++;
-		}
-		else
+	  {
+	    /*
+	    *(A+k) = *leftptr;
+	    leftptr++;
+
+	    if (*rightptr < *(A+k)){
+		*(A+k) = *rightptr;
+		rightptr++;
+		leftptr--;
+	    }
+	    */
+	  /*
+     	{
+		if (*leftptr >= *rightptr)
 		{
 		  *(A+k) = *rightptr;
 		  rightptr++;
 		}
+		else
+		{
+		  *(A+k) = *leftptr;
+		  leftptr++;
+		}
+	  */
 	}
 
 	mem_free(&left) ;
