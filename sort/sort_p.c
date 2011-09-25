@@ -2,8 +2,8 @@
 
 /* Function prototypes */
 
-static void merge_p(data_t *A, int p, int q, int r);
-static void copy_p(data_t * source, data_t * dest, int n) ;
+inline static void merge_p(data_t *A, int p, int q, int r);
+inline static void copy_p(data_t * source, data_t * dest, int n) ;
 
 /* Function definitions */
 
@@ -23,7 +23,7 @@ void sort_p(data_t *A, int p, int r)
 /* A merge routine. Merges the sub-arrays A [p..q] and A [q + 1..r].
  * Uses two arrays 'left' and 'right' in the merge operation.
  */
-static void merge_p(data_t *A, int p, int q, int r) 
+inline static void merge_p(data_t *A, int p, int q, int r) 
 { 
 	assert(A) ;
 	assert(p <= q) ;
@@ -37,6 +37,7 @@ static void merge_p(data_t *A, int p, int q, int r)
         if (left == NULL || right == NULL)
         {
                 mem_free (&left) ;
+		mem_free(&right);
                 return ;
         }
 	
@@ -47,18 +48,18 @@ static void merge_p(data_t *A, int p, int q, int r)
 
 	int i = 0 ;
 	int j = 0 ;
-	int k = p ;	
+	int k = p ;
 	for ( ; k <= r ; k++)
 	{
 		if (left [i] <= right [j])
 		{
-			A [k] = left [i] ;
-			i++ ;
+		  *(A+k) = left [i] ;
+		  i++ ;
 		}
 		else
 		{
-			A [k] = right [j] ;
-			j++ ;
+		  *(A+k) = right [j] ;
+		  j++ ;
 		}
 	}
 
@@ -66,13 +67,13 @@ static void merge_p(data_t *A, int p, int q, int r)
 	mem_free(&right);
 }
 
-static void copy_p(data_t * source, data_t * dest, int n)                              
+inline static void copy_p(data_t * source, data_t * dest, int n)                              
 {                                                                             
-        assert (dest) ;                                                       
-        assert (source) ;                                                     
-        int i ;                                                               
-        for (i = 0 ; i < n ; i++)                                             
-        {                                                                     
-                dest [i] = source [i] ;                                       
+        assert (dest) ;
+        assert (source) ;
+        int i ;
+        for (i = 0 ; i < n ; i++)
+        {
+                dest[i] = source[i];
         }                                                                     
 }
