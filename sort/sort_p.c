@@ -31,7 +31,7 @@ inline static void merge_p(data_t *A, int p, int q, int r)
 	int n1 = q - p + 1;
 	int n2 = r - q ;
 
-	data_t * left = 0, * right = 0 ; 
+	data_t * left = 0, * right = 0;
 	mem_alloc(&left, n1 + 1) ;
 	mem_alloc(&right, n2 + 1) ;
         if (left == NULL || right == NULL)
@@ -46,20 +46,24 @@ inline static void merge_p(data_t *A, int p, int q, int r)
 	left [n1] = UINT_MAX ;
 	right [n2] = UINT_MAX ;
 
-	int i = 0 ;
-	int j = 0 ;
+	// int i = 0 ;
+	// int j = 0 ;
 	int k = p ;
+
+	unsigned int * __restrict leftptr = left;
+        unsigned int * __restrict rightptr = right;
+
 	for ( ; k <= r ; k++)
 	{
-		if (left [i] <= right [j])
+		if (*leftptr <= *rightptr)
 		{
-		  *(A+k) = left [i] ;
-		  i++ ;
+		  *(A+k) = *leftptr ;
+		  leftptr++;
 		}
 		else
 		{
-		  *(A+k) = right [j] ;
-		  j++ ;
+		  *(A+k) = *rightptr;
+		  rightptr++;
 		}
 	}
 
