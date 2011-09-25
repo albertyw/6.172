@@ -2,8 +2,8 @@
 
 /* Function prototypes */
 
-static void merge_b(data_t *A, int p, int q, int r);
-static void copy_b(data_t * source, data_t * dest, int n) ;
+static inline void merge_b(data_t *A, int p, int q, int r);
+static inline void copy_b(data_t * source, data_t * dest, int n) ;
 
 /* Function definitions */
 
@@ -23,7 +23,7 @@ void sort_b(data_t *A, int p, int r)
 /* A merge routine. Merges the sub-arrays A [p..q] and A [q + 1..r].
  * Uses two arrays 'left' and 'right' in the merge operation.
  */
-static void merge_b(data_t *A, int p, int q, int r) 
+static inline void merge_b(data_t *A, int p, int q, int r) 
 { 
 	assert(A) ;
 	assert(p <= q) ;
@@ -45,20 +45,24 @@ static void merge_b(data_t *A, int p, int q, int r)
 	left [n1] = UINT_MAX ;
 	right [n2] = UINT_MAX ;
 
-	int i = 0 ;
-	int j = 0 ;
-	int k = p ;	
+	// int i = 0 ;
+	// int j = 0 ;
+	int k = p;
+
+	unsigned int * __restrict leftptr = left;
+	unsigned int * __restrict rightptr = right;
+
 	for ( ; k <= r ; k++)
 	{
-		if (left [i] <= right [j])
+		if (*leftptr <= *rightptr)
 		{
-			A [k] = left [i] ;
-			i++ ;
+		  *(A+k) = *leftptr;
+		  leftptr++;
 		}
 		else
 		{
-			A [k] = right [j] ;
-			j++ ;
+		  *(A+k) = *rightptr;
+		  rightptr++;
 		}
 	}
 
@@ -66,7 +70,7 @@ static void merge_b(data_t *A, int p, int q, int r)
 	mem_free(&right);
 }
 
-static void copy_b(data_t * source, data_t * dest, int n)                              
+static inline void copy_b(data_t * source, data_t * dest, int n)                              
 {                                                                             
         assert (dest) ;                                                       
         assert (source) ;                                                     
