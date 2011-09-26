@@ -129,10 +129,9 @@ void bitarray_rotate2(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bi
 }
 
 /*
-  Albert/Lekha version of rotate; Will eventually replace bitarray_rotate above;
-  Rotates a bitarray using the reverse swap method in the last paragraph of 3.1;
-  That is, to transform bitarray ab to ba, we perform (a^R b^R)^R
-*/
+ * Rotates a bitarray using the reverse swap method;
+ * That is, bitarray ab is transformed to ba using the identity (a^R b^R)^R
+ */
 void bitarray_rotate(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit_right_amount) {
   assert(bit_off + bit_len <= ba->bit_sz);
 
@@ -147,34 +146,25 @@ void bitarray_rotate(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit
   bitarray_reverse(ba, bit_off + k, bit_len - k);
   bitarray_reverse(ba, bit_off, bit_len);
 
-  //TODO
-  
+  //TODO (Possible future method for improvement)
   // Chop off and save ends that aren't rotated
-  
   //bitarray_full_rotate(CHOPPED_NEW_BIT_ARRAY, ssize_t bit_right_amount)
-  
   // Add ends that are rotated
 }
 
 /*
-  Rotate the full bitarray recursively, assuming that the bitarray is a multiple of 8
-*/
+ *  Rotate the full bitarray recursively, assuming that the bitarray is a multiple of 8
+ */
 inline static void bitarray_full_rotate(bitarray_t *ba, ssize_t bit_right_amount) {
-  //TODO
-  
+  //TODO (Possible future method for improvement)
   // Split ba into left (a) and right (b) sections
-  
   // Add or remove padding on left and right sections to make it a multiple of 16
-  
   // Fix or remove padding to correct
-  
-  
 }
 
 /*
  * Reverses the bit order of the *ba[bit_off : bit_off + bit_len] substring
-  // (Maybe in the future) Reverse a bitarray of any length that is a multiple of 16
-*/
+ */
 inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len) {
   assert(bit_off + bit_len <= ba->bitarray_get_bit_sz);
 
@@ -193,7 +183,8 @@ inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len) {
     end--;
   } 
 
-  //TODO (Maybe in the future)
+  //TODO (Potential future improvement)
+  // Should be able to reverse a bitarray with size a multiple of 16
   //assert(bitarray_get_bit_sz()%16 == 0);
   // int mirror;
   // int size = bitarray_get_bit_sz();
@@ -205,18 +196,19 @@ inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len) {
   // }
 }
 
-/* Takes two bytes and switches them in place using a bithack
-*/
+/* 
+ * Swaps two bytes
+ */
 inline static void byte_switch(int *a, int *b) {
   *a = *a ^ *b;
   *b = *a ^ *b;
   *a = *a ^ *b;
 }
 
-/* Takes a single byte (expressed as an int, and reverses the bits in the byte 
-using a bithack.  
-http://graphics.stanford.edu/~seander/bithacks.html#ReverseByteWith64BitsDiv
-*/
+/* 
+ * Reverses the bit order of a byte expressed as an int;
+ * Found on: http://graphics.stanford.edu/~seander/bithacks.html#ReverseByteWith64BitsDiv
+ */
 inline static void byte_reverse(int *b) {
   *b = (*b * 0x0202020202ULL & 0x010884422010ULL) % 1023;
 }
