@@ -127,3 +127,13 @@ void bitarray_rotate(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit
   /* Convert a rotate left or right to a left rotate only, and eliminate multiple full rotations. */
   bitarray_rotate_left(ba, bit_off, bit_len, modulo(-bit_right_amount, bit_len));
 }
+
+
+
+/* Takes a single byte (expressed as an int, and reverses the bits in the byte 
+using a bithack.  
+http://graphics.stanford.edu/~seander/bithacks.html#ReverseByteWith64BitsDiv
+*/
+inline void byte_reverse(int *b) {
+  return (b * 0x0202020202ULL & 0x010884422010ULL) % 1023;
+}
