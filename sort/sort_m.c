@@ -8,15 +8,15 @@ static inline void copy_m(data_t * source, data_t * dest, int n) ;
 
 /* Function definitions */
 
+#define sort_1 100
+
 /* Basic merge sort */
 void sort_m(data_t *A, int p, int r) 
 {
 	assert (A) ;
 
-	int k = 100;
-
 	if (p < r) {
-	  if (r-p < k) {
+	  if (r-p < sort_1) {
 	    isort(&(A[p]),&(A[r]));
 	  }
 	  else {

@@ -66,5 +66,8 @@ bitarray_count_flips(ba, 0, bitarray_get_bit_sz(ba)); this will yield 5 (one tra
 "1.00.1.0.11.0"). */
 size_t bitarray_count_flips(bitarray_t *ba, size_t bit_off, size_t bit_len);
 
+/* Perform a reverse operation on the substring of bits at zero-based indices between bit_off
+(inclusive) and bit_off+bit_len (exclusive). */
+inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t b_len);
 
 #endif /* BITARRAY_H */
