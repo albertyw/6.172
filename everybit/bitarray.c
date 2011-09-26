@@ -128,12 +128,64 @@ void bitarray_rotate(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit
   bitarray_rotate_left(ba, bit_off, bit_len, modulo(-bit_right_amount, bit_len));
 }
 
+/*
+  Rotate the bitarray using the reverse swap method in the last paragraph of 3.1
+*/
+static void bitarray_rotate2(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit_right_amount) {
+  assert(bit_off + bit_len <= ba->bit_sz);
+  //TODO
+  
+  // Chop off and save ends that aren't rotated
+  
+  //bitarray_full_rotate(CHOPPED_NEW_BIT_ARRAY, ssize_t bit_right_amount)
+  
+  // Add ends that are rotated
+}
 
+/*
+  Rotate the full bitarray recursively, assuming that the bitarray is a multiple of 8
+*/
+inline static void bitarray_full_rotate(bitarray_t *ba, ssize_t bit_right_amount) {
+  //TODO
+  
+  // Split ba into left (a) and right (b) sections
+  
+  // Add or remove padding on left and right sections to make it a multiple of 16
+  
+  // Fix or remove padding to correct
+  
+  
+}
+
+/*
+  Reverse a bitarray of any length that is a multiple of 16
+*/
+inline static void bitarray_reverse(bitarray_t *ba) {
+  //TODO
+  assert(bitarray_get_bit_sz()%16 == 0);
+  // int mirror;
+  // int size = bitarray_get_bit_sz();
+  // for(int i; i < size/2; i+=8){
+  //   mirror = i + (size/2 - i)*2;
+  //   byte_reverse(ba[i]);
+  //   byte_reverse(ba[mirror]);
+  //   byte_switch(ba[i], ba[mirror]);
+  // }
+}
+
+/* Takes two bytes and switches them in place using a bithack
+http://graphics.stanford.edu/~seander/bithacks.html#SwappingValuesXOR
+*/
+inline static void byte_switch(int *a, int *b) {
+  *a = *a ^ *b;
+  *b = *a ^ *b;
+  *a = *a ^ *b;
+}
 
 /* Takes a single byte (expressed as an int, and reverses the bits in the byte 
 using a bithack.  
 http://graphics.stanford.edu/~seander/bithacks.html#ReverseByteWith64BitsDiv
 */
-inline void byte_reverse(int *b) {
-  return (b * 0x0202020202ULL & 0x010884422010ULL) % 1023;
+inline static void byte_reverse(int *b) {
+  *b = (*b * 0x0202020202ULL & 0x010884422010ULL) % 1023;
 }
