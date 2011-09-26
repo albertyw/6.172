@@ -174,6 +174,10 @@ static inline int post_process(data_t * data, data_t * data_bcup, int N,
 	return result ;
 }
 
+
+
+
+
 static void test_correctness(int printFlag,int N, int R)
 {
 	clockmark_t time1, time2;
@@ -406,11 +410,93 @@ static void test_subarray(int printFlag,int N, int R)
 	return ;
 }
 
+/*
+  Given an input and expected output, try it on every sort
+*/
+static void test_all(data_t * data, data_t * data_bcup, int length, int printFlag, int begin, int end){
+  data_t *output;
+	sort(data, begin, end);
+	post_process(data, data_bcup, length, printFlag, 1, begin, end);
+	sort_i(data, begin, end);
+	post_process(data, data_bcup, length, printFlag, 2, begin, end);
+	sort_p(data, begin, end);
+	post_process(data, data_bcup, length, printFlag, 3, begin, end);
+	sort_b(data, begin, end);
+	post_process(data, data_bcup, length, printFlag, 4, begin, end);
+	sort_c(data, begin, end);
+	post_process(data, data_bcup, length, printFlag, 5, begin, end);
+	sort_m(data, begin, end);
+	post_process(data, data_bcup, length, printFlag, 6, begin, end);
+	sort_f(data, begin, end);
+	post_process(data, data_bcup, length, printFlag, 7, begin, end);
+	
+}
+
+static void test_edge_cases(int printFlag,int N, int R){
+	data_t *data, *data_bcup ;
+	int i, j ;
+	int success = 1 ;
+
+	// allocate memory
+	data = (data_t *) malloc(N * sizeof(data_t));
+	data_bcup = (data_t *) malloc(N * sizeof(data_t));
+
+	if (data == NULL || data_bcup == NULL)
+	{
+		printf("Error: not enough memory\n");
+		free (data) ;
+		free (data_bcup) ;
+		exit(-1);
+	}
+  // initialize data with random numbers
+  for (i = 0; i < N; i++) {
+    data[i] = rand() ;
+    data_bcup [i] = data [i] ;
+  }
+}
+/*
+  Test with all numbers the same
+*/
+static void test_same_numbers(int printFlag, int N, int R){
+	data_t *data, *data_bcup ;
+
+	// allocate memory
+	data = (data_t *) malloc(N * sizeof(data_t));
+	data_bcup = (data_t *) malloc(N * sizeof(data_t));
+
+	if (data == NULL || data_bcup == NULL)
+	{
+		printf("Error: not enough memory\n");
+		free (data) ;
+		free (data_bcup) ;
+		exit(-1);
+	}
+  // initialize data with random numbers
+  int seed = rand();
+  int i;
+  for (i = 0; i < N; i++) {
+    data[i] = seed;
+    data_bcup [i] = data [i] ;
+    if (printFlag)
+    {
+      printf("Data before sort\n") ;
+      display_array(data, N) ;
+    }
+    int begin = 0;
+    int end = N-1;
+    test_all(data, data_bcup, N, printFlag, begin, end);
+  }
+	free (data) ;
+	free (data_bcup) ;
+	return ;
+}
+
 test_case test_cases[] = {
 	test_correctness,
 	test_empty_array,
 	test_one_element,
 	test_subarray,
+	test_same_numbers,
 	// ADD YOUR TEST CASES HERE
 	NULL // This marks the end of all test cases. Don't change this!
 };
