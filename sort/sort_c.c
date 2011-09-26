@@ -1,4 +1,5 @@
 #include "util.h"
+#include "isort.c"
 
 /* Function prototypes */
 
@@ -7,17 +8,24 @@ static inline void copy_c(data_t * source, data_t * dest, int n) ;
 
 /* Function definitions */
 
+#define k_isort 100
+
 /* Basic merge sort */
 void sort_c(data_t *A, int p, int r) 
 {
-	assert (A) ;
-	if (p < r)
-	{
-		int q = (p + r) / 2 ;
-		sort_c(A, p, q);
-		sort_c(A, q + 1, r);
-		merge_c(A, p, q, r) ;
-	}	
+  assert (A);
+
+  if (p < r) {
+    if (r-p < k_isort){
+      isort(&(A[p]), &(A[r]));
+    }
+    else {
+      int q = (p + r) / 2 ;
+      sort_c(A, p, q);
+      sort_c(A, q + 1, r);
+      merge_c(A, p, q, r) ;
+    }	
+  }
 }
 
 /* A merge routine. Merges the sub-arrays A [p..q] and A [q + 1..r].
@@ -47,8 +55,8 @@ static inline void merge_c(data_t *A, int p, int q, int r)
 	right [n2] = UINT_MAX ;
 
 	int k = p ;
-	int * __restrict leftptr;
-	int * __restrict rightptr;
+	unsigned int * __restrict leftptr = left;
+	unsigned int * __restrict rightptr = right;
 
 	for ( ; k <= r ; k++)
 	{

@@ -7,7 +7,7 @@
 typedef uint32_t data_t;
 
 /* Insertion sort */
-void isort(data_t *left, data_t *right) 
+void inline isort(data_t *left, data_t *right) 
 {
   data_t *cur = left + 1;
   while (cur <= right) {
