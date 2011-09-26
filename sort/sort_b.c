@@ -34,9 +34,11 @@ static inline void merge_b(data_t *A, int p, int q, int r)
   data_t * left = 0, * right = 0 ; 
   mem_alloc(&left, n1 + 1) ;
   mem_alloc(&right, n2 + 1) ;
+
   if (left == NULL || right == NULL)
   {
     mem_free (&left) ;
+    mem_free(&right);
     return ;
   }
   
@@ -45,36 +47,19 @@ static inline void merge_b(data_t *A, int p, int q, int r)
   left [n1] = UINT_MAX ;
   right [n2] = UINT_MAX ;
 
-  // int i = 0 ;
-  // int j = 0 ;
   int k = p;
-
   unsigned int * __restrict leftptr = left;
   unsigned int * __restrict rightptr = right;
 
   for ( ; k <= r ; k++)
   {
-  *(A+k) = *leftptr;
-  leftptr++;
-  if (*rightptr < *(A+k)){
-    *(A+k) = *rightptr;
-    rightptr++;
-    leftptr--;
-  }
-      
-    /*
-       {
-    if (*leftptr >= *rightptr)
-    {
-      *(A+k) = *rightptr;
-      rightptr++;
-    }
-    else
-    {
-      *(A+k) = *leftptr;
-      leftptr++;
-    }
-    */
+    long cmp = (*leftptr <= *rightptr);
+    long min = *rightptr ^ ((*leftptr ^ *rightptr) & -(cmp));
+
+    *(A+k)= min;
+    leftptr += cmp;
+    rightptr += !cmp;
+
   }
 
   mem_free(&left) ;
