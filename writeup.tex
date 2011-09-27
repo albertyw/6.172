@@ -88,16 +88,16 @@ faster.
 \section{3}
 The general idea of the new rotate method is to split the rotation string into 
 two parts, A and B.  The parts are then reversed and switched using the identity 
-$(a^R b^R)^R = ba$  This is currently implemented through two functions, 
-bitarray_rotate and bitarray_reverse.  
+$(a^R b^R)^R = ba $  This is currently implemented through two functions, 
+bitarray\_rotate and bitarray\_reverse.  
 
-The bitarray_rotate function does some initial sanity checks, making sure that 
+The bitarray\_rotate function does some initial sanity checks, making sure that 
 the rotation is amount and bitarray length are nonzero.  It then calls 
-bitarray_reverse three times in order to do a bit shift as in the identity 
-above.  The bitarray_reverse method swaps individual bits in a section of the 
-bitarray as called by bitarray_rotate.  
+bitarray\_reverse three times in order to do a bit shift as in the identity 
+above.  The bitarray\_reverse method swaps individual bits in a section of the 
+bitarray as called by bitarray\_rotate.  
 
-The performance of the bitarray_rotate method should be O(n) where n is the 
+The performance of the bitarray\_rotate method should be O(n) where n is the 
 length of the substring that is rotated.  This contrasts with the original 
 implementation which was O(m*n) where m is the number of bit shifts needed.  
 More concretely, the execution time of the long-running rotation operation test 
@@ -108,12 +108,12 @@ increase in the speed of the rotation function.
 
 There are several other methods that we will explore further.  One plan is to 
 use an inplace bit switch instead of using a temporary variable in the 
-bitarray_reverse function.  This should decrease running time because of less 
+bitarray\_reverse function.  This should decrease running time because of less 
 memory accesses and better caching.  Another method is to have the 
-bitarray_reverse function reverse bits in groups of 8 as bytes.  This way, a 
+bitarray\_reverse function reverse bits in groups of 8 as bytes.  This way, a 
 byte reverse bithack can be used to considerably increase the function's speed.  
 It is also expected that using pointers more would help with increasing 
-bitarray_rotate's speed.  
+bitarray\_rotate's speed.  
 
 The output for perf stat is below.  
 \begin{verbatim}
