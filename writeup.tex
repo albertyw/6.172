@@ -30,25 +30,27 @@ Slowest in:
     5.51 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:53
 \end{verbatim}
 This means that most of the slowdown in the program is caused by branching and 
-array changes in the for loop of the merge function.  
+array indexing in the for loop of the merge function.  
 
 \subsection{2.3}
 % Check numbers.  
-The total time for sort without inline is 0.393289411 seconds elapsed while 
+For an input of (2000, 100), the total time for sort without inline is 0.393289411 seconds elapsed while 
 sort with inline is 0.393188160 seconds.  This is a 0.03\% speedup.  
 The inline keyword is supposed to make the code speed up because inline 
 causes the compiler to put the assembly code for a function in the place of 
 where it is called, instead of making the assembly code jump to a different 
 section for the function.  This makes the compiled code slightly faster at the 
 expense of using more memory.  
+
 However, the compiler can't do this everywhere.  
+
 Recursive functions can't do this because it would be impossible to place a 
 function's code inside of itself.  Also, inline code from a different file 
 usually won't be inlined by the compiler because of dependencies.  
 
 \subsection{2.4}
-The array indeces were changed to pointers, but using pointers instead of 
-indices to access values in array does not improve performance.
+The array indeces were changed to pointers, and for an input of (20000, 100), time reduced from 3.904939 seconds
+to 3.840331 seconds, a 1.65\% speedup.
 
 \subsection{2.5}
 The original code had a perf stat output of 
@@ -75,15 +77,24 @@ using a bit hack, the new perf stat output was:
    23.560124343  seconds time elapsed
 \end{verbatim}
 The new branch-misses to branches rate is 0.0124192151 and the program is 10\% 
-faster.  
+faster. Removing the branch requires additional instructions to compute the minimum. 
+
 \subsection{2.6}
-% TODO
+Insertion sort is faster than merge sort for smaller inputs. Thus, one can perform a binary search through
+several input sizes to find the optimal size when insertion sort is a faster sort algorithm than merge sort.
+In our case, this transition is found at an input size of 100.
 
 \subsection{2.7}
-% TODO
+It is very easy to remove the {\tt malloc} calls for {\tt right}. Because of the way merge sort works, even if
+all the elements in {\tt left} are smaller than the first element of {\tt right}, the elements of {\tt right}
+will never get overwritten even if they are left in the original array.
+
+A compiler cannot automatically make these optimizations. It cannot predict that the space used by {\tt right}
+will never be overwritten.
 
 \subsection{2.8}
-% TODO
+For an input of (20000, 100), the performance improved from 1.705721 seconds to 1.474061 seconds, a 13.5\%
+speedup.
 
 \section{3}
 The general idea of the new rotate method is to split the rotation string into 
