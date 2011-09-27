@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+ "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>N-Body Simulation</title>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<script language="javascript">
+	      
+function initialize()
+{
+	ii=1;
+	maxi=100;
+	timerid = null;
+	timer2 = null;
+	images = new Array(maxi);
+	for (i = 1; i<maxi+1; ++i)
+	{
+		images[i] = new Image();
+		images[i].src="step" + (i-1) + ".png";
+	}
+}
+    
+function step() {
+	if (ii<maxi)
+		ii++;
+	else
+		ii=1;
+	document.pict.src=images[ii].src;
+}
+
+function backstep() {
+	if (ii>1)
+		ii--;
+	else
+		ii=maxi;
+	document.pict.src=images[ii].src;
+}
+
+function animate() {
+	step();
+	timerid = setTimeout('animate()', 50);
+}
+
+function wait() {
+	timer2 = setTimeout('wait()', 50);
+}
+	    
+function resetSim() {
+	window.location.reload(true);
+}
+
+
+</script>
+
+</head>
+<body onload=initialize()>
+
+<H1>N-Body Simulation</H1>
+<FORM>
+  <INPUT type="button" value=" Start "
+	 onClick="clearTimeout(timerid); animate();"	 >
+	     
+  <INPUT type="button" value=" Stop "
+	 onClick="clearTimeout(timerid);" >
+
+  <INPUT type="button" value=" Step "
+	 onClick="clearTimeout(timerid); step(); wait();" >
+
+  <INPUT type="button" value=" Back "
+	 onClick="clearTimeout(timerid); backstep(); wait();" >
+
+  <INPUT type="button" value=" Reset "
+	 onClick="clearTimeout(timerid); resetSim(); wait();" >
+
+</FORM>
+	
+<!-- <table border="2" width="100%">
+<tr width="100%"><td > -->
+    <img name=pict src="step0.png">
+<!-- </td></tr>	-->
+		     
+</body>
+</html>
