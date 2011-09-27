@@ -413,52 +413,92 @@ static void test_subarray(int printFlag,int N, int R)
 /*
   Given an input and expected output, try it on every sort
 */
-static void test_all(data_t * data, data_t * data_bcup, int length, int printFlag, int begin, int end){
+static int test_all(data_t * data, data_t * data_bcup, int length, int printFlag, int begin, int end){
   data_t *output;
+  int success = 1;
 	sort(data, begin, end);
-	post_process(data, data_bcup, length, printFlag, 1, begin, end);
+	success &= post_process(data, data_bcup, length, printFlag, 1, begin, end);
 	sort_i(data, begin, end);
-	post_process(data, data_bcup, length, printFlag, 2, begin, end);
+	success &= post_process(data, data_bcup, length, printFlag, 2, begin, end);
 	sort_p(data, begin, end);
-	post_process(data, data_bcup, length, printFlag, 3, begin, end);
+	success &= post_process(data, data_bcup, length, printFlag, 3, begin, end);
 	sort_b(data, begin, end);
-	post_process(data, data_bcup, length, printFlag, 4, begin, end);
+	success &= post_process(data, data_bcup, length, printFlag, 4, begin, end);
 	sort_c(data, begin, end);
-	post_process(data, data_bcup, length, printFlag, 5, begin, end);
+	success &= post_process(data, data_bcup, length, printFlag, 5, begin, end);
 	sort_m(data, begin, end);
-	post_process(data, data_bcup, length, printFlag, 6, begin, end);
+	success &= post_process(data, data_bcup, length, printFlag, 6, begin, end);
 	sort_f(data, begin, end);
-	post_process(data, data_bcup, length, printFlag, 7, begin, end);
-	
+	success &= post_process(data, data_bcup, length, printFlag, 7, begin, end);
+	return success;
 }
 
+/*
+ Test edge cases when:
+ begin = 0; end = 0;
+ begin = 0; end = 1;
+ begin = N-1; end = N-1;
+ begin = N-2; end = N-1;
+*/
 static void test_edge_cases(int printFlag,int N, int R){
 	data_t *data, *data_bcup ;
-	int i, j ;
-	int success = 1 ;
+	int success = 1;
+	int i, j;
 
 	// allocate memory
 	data = (data_t *) malloc(N * sizeof(data_t));
 	data_bcup = (data_t *) malloc(N * sizeof(data_t));
 
-	if (data == NULL || data_bcup == NULL)
-	{
+	if (data == NULL || data_bcup == NULL){
 		printf("Error: not enough memory\n");
 		free (data) ;
 		free (data_bcup) ;
 		exit(-1);
 	}
-  // initialize data with random numbers
-  for (i = 0; i < N; i++) {
-    data[i] = rand() ;
-    data_bcup [i] = data [i] ;
+	for (j = 0; j < R; j++) {
+    // initialize data with random numbers
+    for (i = 0; i < N; i++) {
+      data[i] = rand();
+      data_bcup [i] = data [i] ;
+      if (printFlag)
+      {
+        printf("Data before sort\n") ;
+        display_array(data, N) ;
+      }
+    }
+    int begin = 0;
+    int end = 0;
+    success &= test_all(data, data_bcup, N, printFlag, begin, end);
+    begin = 0;
+    end = 1;
+    success &= test_all(data, data_bcup, N, printFlag, begin, end);
+    begin = N-1;
+    end = N-1;
+    success &= test_all(data, data_bcup, N, printFlag, begin, end);
+    begin = N-2;
+    end = N-1;
+    success &= test_all(data, data_bcup, N, printFlag, begin, end);
+    
   }
+  if (success)
+	{
+		printf("Arrays are sorted: yes\n");
+		TEST_PASS() ;
+	}else{
+	  TEST_FAIL("Bug with edge cases");
+	}
+	free (data) ;
+	free (data_bcup) ;
+	return ;
 }
+
 /*
   Test with all numbers the same
 */
 static void test_same_numbers(int printFlag, int N, int R){
 	data_t *data, *data_bcup ;
+	int success = 1;
+	int i, j;
 
 	// allocate memory
 	data = (data_t *) malloc(N * sizeof(data_t));
@@ -471,21 +511,76 @@ static void test_same_numbers(int printFlag, int N, int R){
 		free (data_bcup) ;
 		exit(-1);
 	}
-  // initialize data with random numbers
-  int seed = rand();
-  int i;
-  for (i = 0; i < N; i++) {
-    data[i] = seed;
-    data_bcup [i] = data [i] ;
-    if (printFlag)
-    {
-      printf("Data before sort\n") ;
-      display_array(data, N) ;
+  for(j = 0; j < R; j++) {
+    // initialize data with random numbers
+    int seed = rand();
+    for (i = 0; i < N; i++) {
+      data[i] = seed;
+      data_bcup [i] = data [i] ;
+      if (printFlag)
+      {
+        printf("Data before sort\n") ;
+        display_array(data, N) ;
+      }
     }
     int begin = 0;
     int end = N-1;
-    test_all(data, data_bcup, N, printFlag, begin, end);
+    success &= test_all(data, data_bcup, N, printFlag, begin, end);
   }
+  if (success)
+	{
+		printf("Arrays are sorted: yes\n");
+		TEST_PASS() ;
+	}else{
+	  TEST_FAIL("BUG WITH SAME NUMBERS");
+	}
+	free (data) ;
+	free (data_bcup) ;
+	return ;
+}
+
+/*
+  Test with bad inputs
+*/
+static void test_bad_inputs(int printFlag, int N, int R){
+	data_t *data, *data_bcup ;
+	int success = 1;
+	int i, j;
+
+	// allocate memory
+	data = (data_t *) malloc(N * sizeof(data_t));
+	data_bcup = (data_t *) malloc(N * sizeof(data_t));
+
+	if (data == NULL || data_bcup == NULL)
+	{
+		printf("Error: not enough memory\n");
+		free (data) ;
+		free (data_bcup) ;
+		exit(-1);
+	}
+  for(j = 0; j < R; j++) {
+    // initialize data with random numbers
+    int seed = rand();
+    for (i = 0; i < N; i++) {
+      data[i] = seed;
+      data_bcup [i] = data [i] ;
+      if (printFlag)
+      {
+        printf("Data before sort\n") ;
+        display_array(data, N) ;
+      }
+    }
+    int begin = N-1;
+    int end = 0;
+    success &= test_all(data, data_bcup, N, printFlag, begin, end);
+  }
+  if (success)
+	{
+		printf("Arrays are sorted: yes\n");
+		TEST_PASS() ;
+	}else{
+	  TEST_FAIL("BUG WITH BAD INPUTS");
+	}
 	free (data) ;
 	free (data_bcup) ;
 	return ;
@@ -496,7 +591,9 @@ test_case test_cases[] = {
 	test_empty_array,
 	test_one_element,
 	test_subarray,
-	test_same_numbers,
 	// ADD YOUR TEST CASES HERE
+	test_edge_cases,
+	test_same_numbers,
+	//test_bad_inputs,
 	NULL // This marks the end of all test cases. Don't change this!
 };
