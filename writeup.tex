@@ -86,7 +86,50 @@ faster.
 % TODO
 
 \section{3}
-The general idea of the new reversal method is that the bits in to be reversed
-are directly accessed and then switched using a 
+The general idea of the new rotate method is to split the rotation string into 
+two parts, A and B.  The parts are then reversed and switched using the identity 
+$(a^R b^R)^R = ba$  This is currently implemented through two functions, 
+bitarray_rotate and bitarray_reverse.  
+
+The bitarray_rotate function does some initial sanity checks, making sure that 
+the rotation is amount and bitarray length are nonzero.  It then calls 
+bitarray_reverse three times in order to do a bit shift as in the identity 
+above.  The bitarray_reverse method swaps individual bits in a section of the 
+bitarray as called by bitarray_rotate.  
+
+The performance of the bitarray_rotate method should be O(n) where n is the 
+length of the substring that is rotated.  This contrasts with the original 
+implementation which was O(m*n) where m is the number of bit shifts needed.  
+More concretely, the execution time of the long-running rotation operation test 
+was 0.001333s and the execution time of the long-running flip count operation 
+test was 80.359986s.  The original implementation had an execution time of 
+55.151890s for the former and 80.356707s for the latter.  This is a 40,000 times 
+increase in the speed of the rotation function.  
+
+There are several other methods that we will explore further.  One plan is to 
+use an inplace bit switch instead of using a temporary variable in the 
+bitarray_reverse function.  This should decrease running time because of less 
+memory accesses and better caching.  Another method is to have the 
+bitarray_reverse function reverse bits in groups of 8 as bytes.  This way, a 
+byte reverse bithack can be used to considerably increase the function's speed.  
+It is also expected that using pointers more would help with increasing 
+bitarray_rotate's speed.  
+
+The output for perf stat is below.  
+\begin{verbatim}
+ Performance counter stats for './everybit -r':
+
+       3.509498  task-clock-msecs         #      0.917 CPUs 
+              0  context-switches         #      0.000 M/sec
+              0  CPU-migrations           #      0.000 M/sec
+            195  page-faults              #      0.056 M/sec
+        9343729  cycles                   #   2662.412 M/sec
+       20357404  instructions             #      2.179 IPC  
+          22206  cache-references         #      6.327 M/sec
+           1276  cache-misses             #      0.364 M/sec
+
+    0.003825394  seconds time elapsed
+\end{verbatim}
+
 
 \end{document}
