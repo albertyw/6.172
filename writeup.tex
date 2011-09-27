@@ -10,10 +10,17 @@
 
 \begin{document}
 \maketitle
-\section{2.1}
-Added $mem_free(\&right);$ to sort.c and a bunch of other code.  
+\section{2}
+\subsection{2.1}
+We found that the memory leak was caused by not freeing the variable "right", 
+so therefore we added $mem_free(\&right);$ to sort.c in the merge function, at 
+the end and before the premature return statement.  After this fix, valgrind 
+reported no lost memory.  
 
-\section{2.2}
+\subsection{2.2}
+The perf annotated output for merge and sort showed that most of the program's 
+time was spent in merge.  Merge had the following output:
+\begin{verbatim}
 Merge:
 Slowest in:
    17.12 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:60
@@ -21,38 +28,32 @@ Slowest in:
    13.90 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:56
    13.79 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:55
     5.51 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:53
-
-Sort:
-Slowest in:
-   19.93 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:21
-   11.23 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:21
-    9.16 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:12
-    6.07 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:21
-    5.73 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:21
-    5.27 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:14
-    5.27 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:18
-    5.27 /afs/csail.mit.edu/u/a/albertyw/project1/sort/sort.c:21
-
+\end{verbatim}
+This means that most of the slowdown in the program is caused by branching and 
+array changes in the for loop of the merge function.  
 
 \subsection{2.3}
-Perf inline sort function: 0.393188160  seconds time elapsed
-Perf without inline: 0.393289411  seconds time elapsed
-
-Inline puts assembly code in place of function calls when compiled.  Some functions don't work because you can't put code inline of itself.
-Inline can make code faster, if you're actually inlining stuff.  
-If you inline sort_i, it doesn't inline it because you're basically running it directly.  
-You can't inline functions between files.  
+% Check numbers.  
+The total time for sort without inline is 0.393289411 seconds elapsed while 
+sort with inline is 0.393188160 seconds.  This is a 0.03\% speedup.  
+The inline keyword is supposed to make the code speed up because inline 
+causes the compiler to put the assembly code for a function in the place of 
+where it is called, instead of making the assembly code jump to a different 
+section for the function.  This makes the compiled code slightly faster at the 
+expense of using more memory.  
+However, the compiler can't do this everywhere.  
+Recursive functions can't do this because it would be impossible to place a 
+function's code inside of itself.  Also, inline code from a different file 
+usually won't be inlined by the compiler because of dependencies.  
 
 \subsection{2.4}
-Using pointers instead of indices to access values in array does not improve \
-performance.
+The array indeces were changed to pointers, but using pointers instead of 
+indices to access values in array does not improve performance.
 
 \subsection{2.5}
-
-Arrays are sorted: yes
-sort_p : Elapsed execution time: 24.907089 sec
-
- Performance counter stats for './sort_p.64 10000000 10':
+The original code had a perf stat output of 
+\begin{verbatim}
+    $ ./sort_p.64 10000000 10
 
     20277655203  branches                 #      0.000 M/sec
      1389280173  branch-misses            #      0.000 M/sec
@@ -60,21 +61,32 @@ sort_p : Elapsed execution time: 24.907089 sec
     89566910390  instructions             #      1.290 IPC  
 
    26.059289767  seconds time elapsed
-
-   branch-misses to branches rate: 0.068512861
-
- Performance counter stats for ./sort_b.64 10000000 10' after modifications:
-
+\end{verbatim}
+which means that the branch-misses to branches rate is 0.068512861.  After 
+modifying the code to remove the single if statement in the merge for loop 
+using a bit hack, the new perf stat output was:
+\begin{verbatim}
+    $ ./sort_p.64 10000000 10
     16757356921  branches                 #      0.000 M/sec
       208113220  branch-misses            #      0.000 M/sec
     62785649902  cycles                   #      0.000 M/sec
    111701277873  instructions             #      1.779 IPC
 
    23.560124343  seconds time elapsed
-
-
+\end{verbatim}
+The new branch-misses to branches rate is 0.0124192151 and the program is 10\% 
+faster.  
 \subsection{2.6}
+% TODO
 
+\subsection{2.7}
+% TODO
 
+\subsection{2.8}
+% TODO
+
+\section{3}
+The general idea of the new reversal method is that the bits in to be reversed
+are directly accessed and then switched using a 
 
 \end{document}

@@ -119,14 +119,22 @@ static void bitarray_rotate_left(bitarray_t *ba, size_t bit_off, size_t bit_len,
   for (i = 0; i < bit_amount; i++)
     bitarray_rotate_left_one(ba, bit_off, bit_len);
 }
-
-void bitarray_rotate2(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit_right_amount) {
+/*
+ * The original function that was used.  "_old" has been appended to the funtion name
+ */
+void bitarray_rotate_old(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit_right_amount) {
   assert(bit_off + bit_len <= ba->bit_sz);
   if (bit_len == 0)
     return;
   /* Convert a rotate left or right to a left rotate only, and eliminate multiple full rotations. */
   bitarray_rotate_left(ba, bit_off, bit_len, modulo(-bit_right_amount, bit_len));
 }
+
+
+/*
+ * NEW CODE STARTS BELOW
+ */
+
 
 /*
  * Rotates a bitarray using the reverse swap method;
