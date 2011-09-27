@@ -237,10 +237,36 @@ static void test_moreflips(void) {
   testutil_expect_flips(0, 19, 5);
 }
 
+/* Tests for when bitarray size is not a multiple of 8 */
+static void test_non8bits(void) {
+  testutil_frmstr("100000110");
+  testutil_rotate(2,3,-3);
+  testutil_expect("100000110", 3);
+  testutil_rotate(0,9, 3);
+  testutil_expect("110100000", 3);
+}
+
+/* Tests for when bitarray is null */
+static void test_nullbitarray(void) {
+  testutil_frmstr("");
+  testutil_rotate(2,3,-3);
+  testutil_expect("", 0);
+}
+
+/* Tests for when bit_len is zero */
+static void test_zerolength(void) {
+  testutil_frmstr("101010");
+  testutil_rotate(2,0,4);
+  testutil_expect("101010", 5);
+}
+
 test_case_t test_cases[] = {
   test_headerexamples,
   test_8bit,
   test_moreflips,
   // ADD YOUR TEST CASES HERE
+  test_non8bits,
+  test_nullbitarray,
+
   NULL // This marks the end of all test cases. Don't change this!
 };

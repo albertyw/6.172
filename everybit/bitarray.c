@@ -141,6 +141,9 @@ void bitarray_rotate(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit
   // Converts rotates in either direction to a left rotate
   size_t k = modulo(-bit_right_amount, bit_len);
 
+  if (k == 0)
+    return;
+
   // Rotates using bit reverse
   bitarray_reverse(ba, bit_off, k);
   bitarray_reverse(ba, bit_off + k, bit_len - k);
@@ -166,7 +169,7 @@ inline static void bitarray_full_rotate(bitarray_t *ba, ssize_t bit_right_amount
  * Reverses the bit order of the *ba[bit_off : bit_off + bit_len] substring
  */
 inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len) {
-  assert(bit_off + bit_len <= ba->bitarray_get_bit_sz);
+  assert(bit_off + bit_len <= bitarray_get_bit_sz(ba));
 
   size_t start = bit_off;
   size_t end = bit_off + bit_len - 1;
