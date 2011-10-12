@@ -29,7 +29,7 @@
 #include <cilktools/cilkview.h>
 
 // Uncomment this line to use loops for the small matrix base case
-// #define USE_LOOPS_FOR_SMALL_MATRICES
+#define USE_LOOPS_FOR_SMALL_MATRICES
 
 /* mm_loop_serial is the standard triply nested loop implementation.
  *   C += A*B
@@ -100,7 +100,16 @@ void mm_internal (T *C, const T *A, const T *B, int n, int length)
 /************************************************************
  *               COMPLETE THE CODE BELOW                    *
  ************************************************************/
-
+        cilk_spawn mm_internal(C11, A11, B11, n, mid);
+        cilk_spawn mm_internal(C21, A21, B11, n, mid);
+        cilk_spawn mm_internal(C12, A11, B12, n, mid);
+        cilk_spawn mm_internal(C22, A21, B12, n, mid);
+        cilk_sync;
+        cilk_spawn mm_internal(C11, A12, B21, n, mid);
+        cilk_spawn mm_internal(C21, A22, B21, n, mid);
+        cilk_spawn mm_internal(C12, A12, B22, n, mid);
+        cilk_spawn mm_internal(C22, A22, B22, n, mid);
+        cilk_sync;
 
     }
 }

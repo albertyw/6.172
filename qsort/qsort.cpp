@@ -17,7 +17,7 @@
 #include <cilk/cilk.h>
 
 // Uncomment this to enable intentional race
-// #define INTENTIONAL_RACE
+#define INTENTIONAL_RACE
 
 using namespace std;
 

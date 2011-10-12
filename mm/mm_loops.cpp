@@ -49,7 +49,7 @@ void mm_loop_parallel(T *C, const T *A, const T *B, int n)
 {
     /* MODIFY THIS CODE TO MAKE IT PARALLEL */
     for (int i=0; i<n; i++)
-        for (int j=0; j<n; j++)
+        cilk_for (int j=0; j<n; j++)
             for (int k=0; k<n; k++)
                 C[i*n+j] += A[i*n+k] * B[k*n+j];
 }

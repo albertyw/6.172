@@ -1,0 +1,175 @@
+\title{6.172 Project 2.1 Writeup}
+\author{
+    Albert Wang
+}
+\date{\today}
+
+\documentclass[12pt]{article}
+\linespread{2}
+
+
+\begin{document}
+\maketitle
+\section{1}
+\subsection{1.1}
+cilkview: running with 20 workers
+Sort time: 1.032 seconds
+
+cilkview: running with 19 workers
+Sort time: 1.027 seconds
+
+cilkview: running with 18 workers
+Sort time: 1.033 seconds
+
+cilkview: running with 17 workers
+Sort time: 1.069 seconds
+
+cilkview: running with 16 workers
+Sort time: 1.055 seconds
+
+cilkview: running with 15 workers
+Sort time: 1.032 seconds
+
+cilkview: running with 14 workers
+Sort time: 1.024 seconds
+
+cilkview: running with 13 workers
+Sort time: 1.029 seconds
+
+cilkview: running with 12 workers
+Sort time: 1.023 seconds
+
+cilkview: running with 11 workers
+Sort time: 1.089 seconds
+
+cilkview: running with 10 workers
+Sort time: 1.166 seconds
+
+cilkview: running with 9 workers
+Sort time: 1.259 seconds
+
+cilkview: running with 8 workers
+Sort time: 1.387 seconds
+
+cilkview: running with 7 workers
+Sort time: 1.541 seconds
+
+cilkview: running with 6 workers
+Sort time: 1.745 seconds
+
+cilkview: running with 5 workers
+Sort time: 2.049 seconds
+
+cilkview: running with 4 workers
+Sort time: 2.463 seconds
+
+cilkview: running with 3 workers
+Sort time: 3.199 seconds
+
+cilkview: running with 2 workers
+Sort time: 4.656 seconds
+
+cilkview: running with 1 workers
+Sort time: 9.059 seconds
+
+When running with more workers than processors, the times may increase, as extra 
+time is being used to spawn threads.
+
+\subsection{1.2}
+The $sample_qsort$ recursive calls are overlapping with each other, which means 
+that they could modify each other's data
+
+\subsection{1.3}
+Yes, cilkscreen found the race condition.  Error rate ~= 916/1000.
+
+\section{2}
+\subsection{2.1}
+For 8 processors:
+Actual Speedup:  7.57686084142 times faster, 
+Theoretical Speedup:  6.26 - 8.00 times faster
+
+\begin{verbatim}
+cilkview: running with 1 workers
+matrix2 time: 0ms
+matrix256 time: 47ms
+matrix1024 time: 9365ms
+Test succeeded
+
+cilkview: running with 12 workers
+matrix2 time: 0ms
+matrix256 time: 7ms
+matrix1024 time: 932ms
+Test succeeded
+\end{verbatim}
+
+\subsection{2.2}
+For 8 processors: 
+Middle Loop Parallelization Speedup: 7.71439873418
+Outer, Middle loop Parallelization Speedup  7.70332278481
+Just outer loop parallel produces the best results because not as many threads are being spawned.  
+
+\subsection{2.3}
+
+\subsection{2.4}
+\begin{verbatim}
+mm_internal(C11, A11, B11, n, mid);
+mm_internal(C21, A21, B11, n, mid);
+mm_internal(C12, A11, B12, n, mid);
+mm_internal(C22, A21, B12, n, mid);
+mm_internal(C11, A12, B21, n, mid);
+mm_internal(C21, A22, B21, n, mid);
+mm_internal(C12, A12, B22, n, mid);
+mm_internal(C22, A22, B22, n, mid);
+\end{verbatim}
+
+\subsection{2.5}
+Can divide 8 recursive calls into two sets of 4 calls.  Calls that change the 
+same submatrix of C must be done separately.  
+Passes cilkscreen.  
+cilkview: 
+\begin{verbatim}
+Whole Program Statistics
+1) Parallelism Profile
+   Work :                                        245,301,142,331 instructions
+   Span :                                        188,099,983 instructions
+   Burdened span :                               363,019,983 instructions
+   Parallelism :                                 1304.10
+   Burdened parallelism :                        675.72
+   Number of spawns/syncs:                       1,246,607,152
+   Average instructions / strand :               65
+   Strands along span :                          21,537
+   Average instructions / strand on span :       8,733
+   Total number of atomic instructions :         1,246,607,173
+   Frame count :                                 2,493,214,304
+2) Speedup Estimate
+   2 processors:         1.90 - 2.00
+   4 processors:         3.80 - 4.00
+   8 processors:         7.60 - 8.00
+   16 processors:        15.20 - 16.00
+   32 processors:        29.68 - 32.00
+\end{verbatim}
+\begin{verbatim}
+cilkview: running with 12 workers
+matrix2 time: 0ms
+matrix256 time: 103ms
+matrix1024 time: 4912ms
+\end{verbatim}
+About 1.9 times faster than nested single processor
+
+\subsection{2.6}
+Much faster.  
+\begin{verbatim}
+cilkview: running with 12 workers
+matrix2 time: 0ms
+matrix256 time: 9ms
+matrix1024 time: 295ms
+\end{verbatim}
+About 16.7 times faster than 12 worker without looping small matrices.  
+
+\subsection{2.7}
+
+\section{3}
+
+
+
+\end{document}
