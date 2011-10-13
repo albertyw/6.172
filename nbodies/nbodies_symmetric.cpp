@@ -10,10 +10,11 @@
 #include <cmath>
 
 #include "common.h"
+#include <cilk/cilk.h>
 
 /* Calculate forces between all of the bodies in the simulation for all pairs */
 void calculate_forces(int nbodies, Body *bodies) {
-    for (int i = 0; i < nbodies; ++i) {
+    cilk_for (int i = 0; i < nbodies; ++i) {
         for (int j = 0; j < i; ++j) {
             // update the force vector on bodies[i] exerted by bodies[j] and,
             // symmetrically, the force vector on bodies[j] exerted by
@@ -31,7 +32,7 @@ void calculate_forces(int nbodies, Body *bodies) {
 /* Given sums of forces acting on all of the bodies, update their positions */
 void update_positions(int nbodies, Body *bodies)
 {
-    for (int i=0; i<nbodies; ++i) {
+    cilk_for (int i=0; i<nbodies; ++i) {
         // initial velocity
         double xv0 = bodies[i].xv;
         double yv0 = bodies[i].yv;

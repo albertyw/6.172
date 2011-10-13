@@ -65,8 +65,10 @@ void calculate_force(double *fx, double *fy, const Body &bi, const Body &bj)
 // Add force, (fx,fy) to body b
 void add_force(Body* b, double fx, double fy)
 {
+    b->mtx.lock();
     b->xf += fx;
     b->yf += fy;
+    b->mtx.unlock();
 }
 
 // For debugging

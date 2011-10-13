@@ -4,6 +4,7 @@
 // Modified by Cy Chan for 6.172
 
 #include "common.h"
+#include <cilk/cilk.h>
 
 /* traverse the rectangle i0 <= i < i1,  j0 <= j < j1 */
 void rect(int i0, int i1, int j0, int j1, Body *bodies)
@@ -13,10 +14,12 @@ void rect(int i0, int i1, int j0, int j1, Body *bodies)
     if (di > THRESHOLD && dj > THRESHOLD) {
         int im = i0 + di / 2;
         int jm = j0 + dj / 2;
-        rect(i0, im, j0, jm, bodies);  // [B]
+        cilk_spawn rect(i0, im, j0, jm, bodies);  // [B]
         rect(im, i1, jm, j1, bodies);  // [B]
-        rect(i0, im, jm, j1, bodies);  // [C]
+        cilk_sync;
+        cilk_spawn rect(i0, im, jm, j1, bodies);  // [C]
         rect(im, i1, j0, jm, bodies);  // [C]
+        cilk_sync;
     }
     else {
         for (int i = i0; i < i1; ++i) {
@@ -41,8 +44,9 @@ void triangle(int n0, int n1, Body *bodies)
     int dn = n1 - n0;
     if (dn > 1) {
         int nm = n0 + dn / 2;
-        triangle(n0, nm, bodies);  // [A]
+        cilk_spawn triangle(n0, nm, bodies);  // [A]
         triangle(nm, n1, bodies);  // [A]
+        cilk_sync;
         rect(n0, nm, nm, n1, bodies);
     }
     else if (dn == 1) {
@@ -56,7 +60,7 @@ void calculate_forces(int nbodies, Body *bodies) {
 
 void update_positions(int nbodies, Body *bodies)
 {
-    for (int i=0; i<nbodies; ++i) {
+    cilk_for (int i=0; i<nbodies; ++i) {
         // initial velocity
         double xv0 = bodies[i].xv;
         double yv0 = bodies[i].yv;

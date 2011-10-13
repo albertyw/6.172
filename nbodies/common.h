@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <tbb/mutex.h>
 
 /* Headers for image and random number generation */
 
@@ -53,6 +54,7 @@ struct Body {
     double mass;    // mass
     double density; // density
     Pixel color;    // color
+    tbb::mutex mtx; //mutex lock
 };
 
 /* Function Declarations */
