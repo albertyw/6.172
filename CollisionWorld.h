@@ -65,8 +65,17 @@ public:
 
    // **** NEW FUNCTIONS BELOW HERE ****
 
-   // Run quadTree
-   void quadTree();
+   // Run quadTree recursive function
+   vector<Line*> quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions);
+
+   // Given a quadtree box and a line, find if a line is inside of a quadrant
+   // Return -1 if line is outside of box
+   // Return 0 if line is inside of box, but not quadrantable
+   // Return 1 if line is inside first quadrant (between xMax, xAvg, yMax, yAvg)
+   // Return 2 if line is inside second quadrant (between xAvg, xMin, yMax, yAvg)
+   // Return 3 if line is inside third quadrant (between xAvg, xMin, yAvg, yMin)
+   // Return 4 if line is insde fourth quadrant (between xMax, xAvg, yAvg, yMin)
+   int lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line);
 };
 
 

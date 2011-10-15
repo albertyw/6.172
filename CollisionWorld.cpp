@@ -32,10 +32,37 @@ void CollisionWorld::updateLines()
 //****************************NEW FUNCTIONS BELOW HERE*********************
 
 
+// **TODO** NOT SURE HOW TO REPRESENT LINES.  SHOULD IT BE "vector<Line*> currentLines"?
+
 // Run the quadTree collision detection
-void CollisionWorld::quadTree()
+vector<Line*> CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions)
 {
-    
+   // Create 1 array/vector to hold lines for current quadtree box
+   // Create 4 arrays/vectors to hold lines for child quadtree boxes
+   // for each line
+   //   check where line should exist (lineInsideQuadrant)
+   //   if line is in a child quadtree
+   //     add the line to one of the 4 arrays/vectors
+   // Spawn 4 recursions of quadTree with the 4 arrays/vectors of lines
+   // Check child boxes' lines with current box's lines
+   // Check for intersections within this box
+   // Return lines to parents
+
+}
+
+// Given a quadtree box and a line, find if a line is inside of a quadrant
+// Return -1 if line is outside of box
+// Return 0 if line is inside of box, but not quadrantable
+// Return 1 if line is inside first quadrant (between xMax, xAvg, yMax, yAvg)
+// Return 2 if line is inside second quadrant (between xAvg, xMin, yMax, yAvg)
+// Return 3 if line is inside third quadrant (between xAvg, xMin, yAvg, yMin)
+// Return 4 if line is insde fourth quadrant (between xMax, xAvg, yAvg, yMin)
+// If a line is exactly on a quadrant border (i.e. one of the axes), return 0
+int CollisionWorld:lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line)
+{
+  // Math Stuff
+
+  return 0  
 }
 
 // Test all line-line pairs to see if they will intersect before the next time
@@ -43,7 +70,8 @@ void CollisionWorld::quadTree()
 void CollisionWorld::detectIntersection()
 {
    // Use the quadTree function instead of the default slow implementation
-   quadTree();
+   // **TODO**  HOW DO YOU GET A LIST OR VECTOR OR WHATEVER OF ALL LINES?
+   quadTree(BOX_XMAX, BOX_XMIN, BOX_YMAX, BOX_YMIN, lines, 0);
    return;
    
    vector<Line*>::iterator it1, it2;
