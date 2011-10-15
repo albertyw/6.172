@@ -29,11 +29,23 @@ void CollisionWorld::updateLines()
    lineWallCollision();
 }
 
+//****************************NEW FUNCTIONS BELOW HERE*********************
+
+
+// Run the quadTree collision detection
+void CollisionWorld::quadTree()
+{
+    
+}
 
 // Test all line-line pairs to see if they will intersect before the next time
 // step.
 void CollisionWorld::detectIntersection()
 {
+   // Use the quadTree function instead of the default slow implementation
+   quadTree();
+   return;
+   
    vector<Line*>::iterator it1, it2;
    for (it1 = lines.begin(); it1 != lines.end(); ++it1) {
       Line *l1 = *it1;
@@ -47,6 +59,10 @@ void CollisionWorld::detectIntersection()
       }
    }
 }
+
+
+
+// ************* NEW FUNCTIONS ABOVE HERE ****************
 
 
 // Update line positions.

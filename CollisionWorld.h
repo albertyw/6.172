@@ -60,6 +60,13 @@ public:
    unsigned int getNumLineLineCollisions();
 
    void collisionSolver(Line *l1, Line *l2, IntersectionType intersectionType);
+
+
+
+   // **** NEW FUNCTIONS BELOW HERE ****
+
+   // Run quadTree
+   void quadTree();
 };
 
 
