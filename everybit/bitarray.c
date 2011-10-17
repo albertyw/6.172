@@ -263,7 +263,7 @@ void bitarray_rotate(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit
 }
 
 inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
-  // Check if the reverse substring is inside of one byte
+  // Check if the reverse substring is inside/smaller of one byte
   if (bit_off%8 + bit_len <= 8) bitarray_reverse_bit(ba, bit_off, bit_len);
   
   // Calculate locations of the partial bytes that are on the ends of this substring
@@ -277,7 +277,9 @@ inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
   // Reverse bytes in place
   int byte_start = (left_start + left_len) / 8;
   int byte_end = right_start / 8 - 1;
-  for(int byte_index = byte_start; byte_index <= byte_end; byte_index++){
+  for(int byte_index = byte_start;
+      byte_index <= byte_end;
+      byte_index++){
     byte_reverse(ba->buf+byte_index);
   }
   
@@ -285,14 +287,14 @@ inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
   int right_byte_index;
   char * temp;
   for(int left_byte_index = byte_start;
-    left_byte_index < (byte_end + byte_start + 1) / 2;
-    left_byte_index++){
+      left_byte_index < (byte_end + byte_start + 1) / 2;
+      left_byte_index++){
     right_byte_index = byte_end - left_byte_index + byte_start;
     byte_switch(ba->buf+right_byte_index, ba->buf+left_byte_index, temp);
   }
   
   // TODO: TAKE CARE OF ENDS
   // use left_start, left_len, right_start, right_len
-  // shifts and shit... yeah!
+  // shifts and shits... yeah!
   
 }
