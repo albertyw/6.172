@@ -27,7 +27,7 @@
 #include <stdio.h>
 
 #include "bitarray.h"
-#include "bytefliptable.c"
+#include "bytefliptable.h"
 
 /* Internal representation of the bit array. */
 struct bitarray {
