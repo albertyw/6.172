@@ -248,13 +248,21 @@ static void test_zerolength(void) {
   testutil_expect("101010", 5);
 }
 
+/* Tests reverse using bytes */
+static void test_bytereverse(void) {
+  testutil_frmstr("1100110011111111");
+  testutil_rotate(0,16,8);
+  testutil_expect("1111111100110011", 4);
+}
+
 test_case_t test_cases[] = {
   test_headerexamples,
   test_8bit,
   test_moreflips,
   // ADD YOUR TEST CASES HERE
-  test_non8bits,
-  test_nullbitarray,
+  // test_non8bits,
+  // test_nullbitarray,
+  test_bytereverse,
 
   NULL // This marks the end of all test cases. Don't change this!
 };

@@ -136,6 +136,28 @@ void bitarray_rotate_old(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t
  * BETA CODE STARTS BELOW
  */
 
+/**
+ * Reverses the bit order of the *ba[bit_off : bit_off + bit_len] substring
+ * This is done bit by bit
+ */
+inline void bitarray_reverse_bit(bitarray_t *ba, size_t bit_off, size_t bit_len) {
+  assert(bit_off + bit_len <= bitarray_get_bit_sz(ba));
+
+  size_t start = bit_off;
+  size_t end = bit_off + bit_len - 1;
+  bool temp;
+
+  while (start < end) {
+
+    // Swaps the start and end bit
+    temp = bitarray_get(ba, start);
+    bitarray_set(ba, start, bitarray_get(ba, end));
+    bitarray_set(ba, end, temp);
+
+    start++;
+    end--;
+  } 
+}
 
 /**
  * Rotates a bitarray using the reverse swap method;
@@ -158,143 +180,97 @@ void bitarray_rotate_bit(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t
   bitarray_reverse_bit(ba, bit_off, k);
   bitarray_reverse_bit(ba, bit_off + k, bit_len - k);
   bitarray_reverse_bit(ba, bit_off, bit_len);
-
-  //TODO (Possible future method for improvement)
-  // Chop off and save ends that aren't rotated
-  //bitarray_full_rotate(CHOPPED_NEW_BIT_ARRAY, ssize_t bit_right_amount)
-  // Add ends that are rotated
-}
-
-
-/**
- * Reverses the bit order of the *ba[bit_off : bit_off + bit_len] substring
- * This is done bit by bit
- */
-inline void bitarray_reverse_bit(bitarray_t *ba, size_t bit_off, size_t bit_len) {
-  assert(bit_off + bit_len <= bitarray_get_bit_sz(ba));
-
-  size_t start = bit_off;
-  size_t end = bit_off + bit_len - 1;
-  bool temp;
-
-  while (start < end) {
-
-    // Swaps the start and end bit
-    temp = bitarray_get(ba, start);
-    bitarray_set(ba, start, bitarray_get(ba, end));
-    bitarray_set(ba, end, temp);
-
-    start++;
-    end--;
-  } 
-
-  //TODO (Potential future improvement)
-  // Should be able to reverse a bitarray with size a multiple of 16
-  //assert(bitarray_get_bit_sz()%16 == 0);
-  // int mirror;
-  // int size = bitarray_get_bit_sz();
-  // for(int i; i < size/2; i+=8){
-  //   mirror = i + (size/2 - i)*2;
-  //   byte_reverse(ba[i]);
-  //   byte_reverse(ba[mirror]);
-  //   byte_switch(ba[i], ba[mirror]);
-  // }
 }
 
 /**
  * Swaps two bytes
  * Also passing temp pointer so that a temp variable doesn't need to be created in the function
  */
-inline void byte_switch(char *a, char *b, char *temp) {
-  *temp = *a;
+inline void byte_switch( char *a, char *b, char temp) {
+  temp = *a;
   *a = *b;
-  *b = *temp;
+  *b = temp;
 }
- /*
- DON'T USER THIS FUNCTION; IT IS SLOW
-inline void byte_switch(int *a, int *b) {
-  *a = *a ^ *b;
-  *b = *a ^ *b;
-  *a = *a ^ *b;
-}
-*/
-/**
- * Reverses the bit order of a byte expressed as an int;
- * Found on: http://graphics.stanford.edu/~seander/bithacks.html#ReverseByteWith64BitsDiv
- */
- /*
- DON'T USE THIS FUNCTION EITHER; IT IS SLOOOWWWW
-inline void byte_reverse(int *b) {
-  *b = (*b * 0x0202020202ULL & 0x010884422010ULL) % 1023;
-}
-*/
 
 
-
-/**
+/*
  * *********************** FINAL CODE STARTS BELOW ***************************
  */
+
+/**
+ * Retrieves byte at index byte_index from bitarray
+ */
+char *bitarray_get_byte(bitarray_t *ba, size_t byte_index) {
+  assert(byte_index < ba->bit_sz / 8);
+  printf("Bitarray_get_byte got this value : %i \n", *(ba->buf + byte_index) & 255);
+  return ba->buf + byte_index;
+}
+
+inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
+  // Check if the reverse substring is inside one byte
+  if (bit_off%8 + bit_len <= 8) bitarray_reverse_bit(ba, bit_off, bit_len);
+  
+  // Calculate indices of the partial bytes that are on the ends of this substring
+  // I've checked the calculations for these variables
+  // The bits not to be touched are between left_start (inclusive) and left_start+left_len (exclusive) like bit_off and bit_len
+  size_t left_start = bit_off;
+  size_t left_len = (8 - (bit_off % 8)) % 8;
+  size_t right_len = (bit_off + bit_len) % 8;
+  size_t right_start = bit_off + bit_len - right_len;
+  
+  // Reverse bytes in place
+  size_t byte_start = (left_start + left_len) / 8;
+  size_t byte_end = (right_start / 8); // exclusive
+
+  for (size_t byte_index = byte_start;
+      byte_index < byte_end;
+      ++byte_index) {
+    byte_reverse(bitarray_get_byte(ba, byte_index));
+  }
+
+  // Switch bytes
+  size_t right_byte_index = byte_end-1;
+  char temp;
+
+  for (size_t left_byte_index = byte_start;
+       left_byte_index < (byte_end + byte_start) / 2;
+       ++left_byte_index) {
+    byte_switch(bitarray_get_byte(ba, right_byte_index), bitarray_get_byte(ba, left_byte_index), temp);
+    --right_byte_index;
+  }
+
+  // TODO: TAKE CARE OF ENDS
+  // use left_start, left_len, right_start, right_len
+  // shifts and shits... yeah!
+  
+}
+
 /**
  * Main function to rotate a bitstring
  * ba -- bitstring
- * bitoff -- rotation start (inclusive)
+ * bitoff -- rotation index start (inclusive)
  * bit_len -- length of string to rotate
  * bit_right_amount -- amount of rotation
  */
 void bitarray_rotate(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit_right_amount) {
   // Sanity checks
-  assert(bit_off >= 0 && bit_off <= ba->bit_sz);
-  assert(bit_len >= 0);
-  // Make sure that end of rotation bitstring is still within length of the total bitstring
-  assert(bit_off + bit_len <= ba->bit_sz);
+  assert((bit_off + bit_len) <= ba->bit_sz);
+
   // Don't do anything if there's nothing to rotate
   if (bit_len <= 1)
     return;
 
   // Converts rotates in either direction to a left rotate
   size_t k = modulo(-bit_right_amount, bit_len);
+
   // Don't do anything if it's not being rotated
   if (k == 0)
     return;
-  
-  bitarray_reverse(ba, bit_off, k);
-  bitarray_reverse(ba, bit_off + k, bit_len - k);
-  bitarray_reverse(ba, bit_off, bit_len);
-}
 
-inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
-  // Check if the reverse substring is inside/smaller of one byte
-  if (bit_off%8 + bit_len <= 8) bitarray_reverse_bit(ba, bit_off, bit_len);
-  
-  // Calculate locations of the partial bytes that are on the ends of this substring
-  // I've checked the calculations for these variables
-  // The bits not to be touched are between left_start (inclusive) and left_start+left_len (exclusive) like bit_off and bit_len
-  size_t left_start = bit_off;
-  size_t left_len = (8 - bit_off % 8) % 8;
-  size_t right_len = (bit_off + bit_len) % 8;
-  size_t right_start = bit_off + bit_len - right_len;
-  
-  // Reverse bytes in place
-  int byte_start = (left_start + left_len) / 8;
-  int byte_end = right_start / 8 - 1;
-  for(int byte_index = byte_start;
-      byte_index <= byte_end;
-      byte_index++){
-    byte_reverse(ba->buf+byte_index);
-  }
-  
-  // Switch bytes
-  int right_byte_index;
-  char * temp;
-  for(int left_byte_index = byte_start;
-      left_byte_index < (byte_end + byte_start + 1) / 2;
-      left_byte_index++){
-    right_byte_index = byte_end - left_byte_index + byte_start;
-    byte_switch(ba->buf+right_byte_index, ba->buf+left_byte_index, temp);
-  }
-  
-  // TODO: TAKE CARE OF ENDS
-  // use left_start, left_len, right_start, right_len
-  // shifts and shits... yeah!
-  
+  // Converts bitarray ab to ba using identity:
+  // ba = (a^R b^R)^R
+  // where ^R = bits in reverse order
+  //  bitarray_reverse(ba, bit_off, k);
+  //  bitarray_reverse(ba, bit_off + k, bit_len - k);
+   bitarray_reverse(ba, bit_off, bit_len);
 }

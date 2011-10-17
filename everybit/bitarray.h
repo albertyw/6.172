@@ -46,6 +46,9 @@ size_t bitarray_get_bit_sz(bitarray_t *ba);
 /* Index into the bitarray and retrieve the bit at the specified zero-based index. */
 bool bitarray_get(bitarray_t *ba, size_t bit_index);
 
+/* Index into the bitarray and return a pointer to the byte at the specified zero-based index. */
+char *bitarray_get_byte(bitarray_t *ba, size_t byte_index);
+
 /* Index into the bitarray and set the bit at the specified zero-based index to the specified
 value. */
 void bitarray_set(bitarray_t *ba, size_t bit_index, bool val);
