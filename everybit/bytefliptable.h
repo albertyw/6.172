@@ -18,7 +18,7 @@ static const char lookup[256] =
 15, 143, 79, 207, 47, 175, 111, 239, 31, 159, 95, 223, 63, 191, 127, 255
 };
 
-void byte_reverse(char *b)
+inline void byte_reverse(char * b)
 {
   *b = lookup[*b];
 }

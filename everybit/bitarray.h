@@ -50,14 +50,6 @@ bool bitarray_get(bitarray_t *ba, size_t bit_index);
 value. */
 void bitarray_set(bitarray_t *ba, size_t bit_index, bool val);
 
-/* Perform a rotate operation on the substring of bits at zero-based indices between bit_off
-(inclusive) and bit_off+bit_len (exclusive). The rotate distance is specified by bit_right_amount.
-Positive values of bit_right_amount will cause bits to be rotated right, negative values will cause
-bits to be rotated left. For instance, to rotate an entire bitarray 10010110 (stored in the variable
-ba) left by one bit, invoke bitarray_rotate(ba, 0, bitarray_get_bit_sz(ba), -1); this would yield
-00101101. Instead invoking bitarray_rotate(ba, 2, 5, 2) would yield 10110100. */
-void bitarray_rotate(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit_right_amount);
-
 
 /* Count the number of bit transitions in the substring of bits at zero-based indices between
 bit_off (inclusive) and bit_off+bit_len (exclusive). For instance, to count the number of bit
@@ -66,8 +58,25 @@ bitarray_count_flips(ba, 0, bitarray_get_bit_sz(ba)); this will yield 5 (one tra
 "1.00.1.0.11.0"). */
 size_t bitarray_count_flips(bitarray_t *ba, size_t bit_off, size_t bit_len);
 
+
+/* Perform a rotate operation on the substring of bits at zero-based indices between bit_off
+(inclusive) and bit_off+bit_len (exclusive). The rotate distance is specified by bit_right_amount.
+Positive values of bit_right_amount will cause bits to be rotated right, negative values will cause
+bits to be rotated left. For instance, to rotate an entire bitarray 10010110 (stored in the variable
+ba) left by one bit, invoke bitarray_rotate(ba, 0, bitarray_get_bit_sz(ba), -1); this would yield
+00101101. Instead invoking bitarray_rotate(ba, 2, 5, 2) would yield 10110100. */
+void bitarray_rotate(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit_right_amount);
+
+/* Reverses a bitarray mainly using bytes, but falls back on bitarray_reverse_bit in case the
+reversal length is short */
+inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len);
+
+/* Does the same thing as bitarray_rotate except that it does it bit by bit */
+void bitarray_rotate_bit(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit_right_amount);
+
 /* Perform a reverse operation on the substring of bits at zero-based indices between bit_off
-(inclusive) and bit_off+bit_len (exclusive). */
-inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t b_len);
+(inclusive) and bit_off+bit_len (exclusive). 
+This is done by manipulating individual bits*/
+inline void bitarray_reverse_bit(bitarray_t *ba, size_t bit_off, size_t b_len);
 
 #endif /* BITARRAY_H */
