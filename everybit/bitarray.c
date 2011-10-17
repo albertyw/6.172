@@ -27,6 +27,7 @@
 #include <stdio.h>
 
 #include "bitarray.h"
+#include "bytefliptable.c"
 
 /* Internal representation of the bit array. */
 struct bitarray {
@@ -210,7 +211,7 @@ inline void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len) {
 /* 
  * Swaps two bytes
  */
-inline static void byte_switch(int *a, int *b) {
+inline void byte_switch(int *a, int *b) {
   *a = *a ^ *b;
   *b = *a ^ *b;
   *a = *a ^ *b;
@@ -220,6 +221,9 @@ inline static void byte_switch(int *a, int *b) {
  * Reverses the bit order of a byte expressed as an int;
  * Found on: http://graphics.stanford.edu/~seander/bithacks.html#ReverseByteWith64BitsDiv
  */
-inline static void byte_reverse(int *b) {
+ /*
+ DON'T USE THIS FUNCTION IT IS SLOOOWWWW
+inline void byte_reverse(int *b) {
   *b = (*b * 0x0202020202ULL & 0x010884422010ULL) % 1023;
 }
+*/
