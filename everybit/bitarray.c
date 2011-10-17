@@ -196,6 +196,17 @@ inline void byte_switch( char *a, char *b, char temp) {
 /*
  * *********************** FINAL CODE STARTS BELOW ***************************
  */
+/**
+ * Prints out bit_length bits of the bitarray, starting at index bit_off
+ */
+void print_bitarray(bitarray_t *ba, size_t bit_off, size_t bit_length) {
+  printf("\nbitarray[%llu:%llu]: ", bit_off, bit_off + bit_length);
+  for (size_t i = 0; i < bit_length; i++) {
+    printf("%i", bitarray_get(ba, bit_off + i));
+  }
+  printf("\n");
+}
+
 
 /**
  * Retrieves byte at index byte_index from bitarray
@@ -219,6 +230,28 @@ void bitarray_set_byte(bitarray_t *ba, size_t byte_index, char val) {
  */
 static char bytemask(size_t k) {
   return 255 << ((8-k) % 8);
+}
+
+/**
+ * Copies bit_length of the bits from new_byte to bitarray, starting at location bitarray[bit_off]
+ */
+// NEEDS TO BE ADDED TO BITARRAY.H
+void bitarray_set_multiple_bits(bitarray_t *ba, size_t bit_off, size_t bit_length, char new_byte) {
+  assert(byte_off + byte_length <= ba->but_sz/8);
+  assert(bit_length <= 8);
+  
+  //No bits to move if bit_length is zero
+  if (bit_length == 0)
+    return;
+
+  size_t bit_end = bit_off + bit_length;
+  bool bit;
+  new_byte = new_byte << (8-bit_length);
+  for (size_t i = bit_end - 1; i >= bit_off; --i) {
+    bit = (new_byte%2) ? true : false;
+    new_byte = new_byte/2; 
+    bitarray_set(ba, i, bit);
+  }
 }
 
 /**
@@ -310,105 +343,57 @@ void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
 
   // DO WE NEED TO CHECK OTHER EDGE CASES? (e.g. if only one of the partial bytes exists)
 
+  /*
   printf("bit_off = %llu\n", bit_off);
   printf("bit_len = %llu\n", bit_len);
   printf("left_len = %llu\n", left_len);
   printf("right_len = %llu\n\n", right_len);
+  */
 
   // Retrieve partial bytes (at each end of the substring) by masking unwanted bits
   char left_partial_byte = *bitarray_get_byte(ba, byte_start-1) & bytemask(left_len);
   char right_partial_byte = *bitarray_get_byte(ba, byte_end) & ~(bytemask(8-right_len));
 
+  /*
   printf("left_partial = %i\n", left_partial_byte & 255);
   printf("right_partial = %i\n", right_partial_byte & 255);
+  */
 
   // Reverse order of bits in the partial bytes
   byte_reverse(&left_partial_byte);
   byte_reverse(&right_partial_byte);
 
+  /*
   printf("\nAfter reversal:\n");
   printf("left_partial = %i\n", left_partial_byte & 255);
   printf("right_partial = %i\n", right_partial_byte & 255);
+  */
 
   // Shift all full bytes (between the two partial bytes) in the direction of the larger partial byte
   // to make room for swapping
   ssize_t shift = right_len - left_len;
 
-  //printf("I'm about to call the shift_bytes operation.\n");
+  /*
   printf("%llu, %llu, %lu: %lu\n", byte_start, byte_end, shift, -shift);
+  */
 
-  for (int i = 0; i < 5; i++) {
-    printf("%i - ", *bitarray_get_byte(ba, i) & 255);
-  }
-  printf("\n");
+  print_bitarray(ba, 0, bit_len);
+
   bitarray_shift_bytes(ba, byte_start, byte_end - byte_start, shift);
 
   // NEED TO DO EDGE CHECKS HERE FOR BYTE-START and BYTE-END BOUNDARIES
   // ACTUALLY, THESE CHECKS MIGHT NOT BE NECESSARY; BYTE-END is guaranteed to be at end and start-byte is guaranteed at least 1 (unless left_partial is 0)
   // NOT SURE IF CHECKS ARE NEEDED; NEED TO THINK ABOUT THIS MORE
 
-  for (int i = 0; i < 5; i++) {
-    printf("%i - ", *bitarray_get_byte(ba, i) & 255);
-  }
+  print_bitarray(ba, 0, bit_len);
+
+  // NEED TO SOMEHOW SET UP A WAY TO RETURN THE LEFTOVER BITS FROM THE SHIFT OPERATION
+  // FOR NOW, ASSUME THEY ARE HERE:
+  unsigned char leftover = 255;
 
   // Swap partial bytes
-  unsigned char byte;
-  if (shift == 0) {
-    // Place left partial byte at right end
-    byte = *bitarray_get_byte(ba, byte_end) & bytemask(left_len);
-    byte = left_partial_byte | byte;
-    bitarray_set_byte(ba, byte_end, byte);
-
-    // printf("Just placed %i in right end\n,:", byte & 255);
-
-    // Place right partial byte at left end
-    byte = *bitarray_get_byte(ba, byte_start - 1) & ~(bytemask(right_len));
-    byte = right_partial_byte | byte;
-    bitarray_set_byte(ba, byte_start - 1, byte);
-
-    // printf("Just placed %i in left end\n", byte & 255);
-  }
-
-  /*
-
-  else if (shift > 0) {
-    // Place left partial byte at right end
-    byte = *bitarray_get_byte(ba, byte_end) & bitmask(8-left_len);
-    byte = left_partial_byte || byte;
-    bitarray_set_byte(ba, byte_end, byte);
-
-    // Place right partial byte at left end
-    byte = *bitarray_get_byte(ba, byte_start) & bitmask(shift);
-    byte = (right_partial_byte << (8-shift)) || byte;
-    bitarray_set_byte(ba, byte_start, byte);
-
-    byte = *bitarray_get_byte(ba, byte_start - 1) & bitmask(right_len - shift);
-    byte = (right_partial_byte >> shift) || byte;
-    bitarray_set_byte(ba, byte_start - 1, byte);
-  }
-  */
-
-  /*  
-  else if (shift < 0) {
-    size_t left_amt = -shift;
-
-    // Place right partial byte on left end
-    byte = *bitarray_get_byte(ba, byte_start - 1) & ~(bytemask(right_len + shift));
-    leftover = leftover << left_amt;
-    right_partial_byte = right_partial_byte << (right_len + shift);
-    byte = (right_byte_partial >> right_amt) | leftover | right_partial_byte;
-    bitarray_set_byte(ba, byte_start - 1, byte);
-
-    // Place left partial byte at right end
-    byte = *bitarray_get_byte(ba, byte_end - 1) & bitmask(shift);
-    byte = (left_partial_byte >> (8-shift)) || byte;
-    bitarray_set_byte(ba, byte_end - 1, byte);
-
-    byte = *bitarray_get_byte(ba, byte_end) & ~bitmask(left_len - shift);
-    byte = (left_partial_byte << shift) || byte;
-    bitarray_set_byte(ba, byte_end, byte);
-    }
-  */
+  bitarray_set_multiple_bits(ba, left_start, right_len, right_partial_byte);
+  bitarray_set_multiple_bits(ba, right_start - shift, left_len, left_partial_byte);
 }
 
 /**
@@ -433,10 +418,16 @@ void bitarray_rotate(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit
   if (k == 0)
     return;
 
+  printf("starting string:");
+  print_bitarray(ba, bit_off, bit_len);
+
   // Converts bitarray ab to ba using identity:
   // ba = (a^R b^R)^R
   // where ^R = bits in reverse order
-  //  bitarray_reverse(ba, bit_off, k);
-  //  bitarray_reverse(ba, bit_off + k, bit_len - k);
+  //bitarray_reverse(ba, bit_off, k);
+  //bitarray_reverse(ba, bit_off + k, bit_len - k);
   bitarray_reverse(ba, bit_off, bit_len);
+
+  printf("ending string:");
+  print_bitarray(ba, bit_off, bit_len);
 }

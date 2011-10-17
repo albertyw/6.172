@@ -263,7 +263,7 @@ static void test_bytereverse2(void) {
 
 static void test_bytereverse3(void) {
   testutil_frmstr("0000110011001111111100000000110011001111");
-  testutil_rotate(2,32,3);
+  testutil_rotate(4,32,3);
   testutil_expect("000001100110011001101111", 9);
 }
 
