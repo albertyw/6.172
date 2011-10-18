@@ -274,6 +274,14 @@ void bitarray_shift_byte(bitarray_t *ba, size_t byte_index, ssize_t shift, unsig
   unsigned char byte = *bitarray_get_byte(ba, byte_index);
 
   if (shift > 0) {
+
+    bitarray_set_byte(ba, byte_index, (byte << shift) | (*carry >> (8-shift)));
+    *carry = byte & bytemask(shift);
+    return;
+  }
+
+  else {
+
     /*
     printf("byte =");
     bitarray_set_byte(ba, 5, byte);
@@ -284,30 +292,24 @@ void bitarray_shift_byte(bitarray_t *ba, size_t byte_index, ssize_t shift, unsig
     print_bitarray(ba, 40, 8);
 
     printf("\nbyte shifted =");
-    bitarray_set_byte(ba, 5, byte << shift);
+    bitarray_set_byte(ba, 5, byte >> -shift);
     print_bitarray(ba, 40, 8);
 
-    printf("\ncarry shifted = %i\n", *carry >> (8-shift));
-    bitarray_set_byte(ba, 5, *carry >> (8-shift));
+    printf("\ncarry shifted = %i\n", *carry << (8+shift));
+    bitarray_set_byte(ba, 5, *carry << (8+shift));
     print_bitarray(ba, 40, 8);
     
     printf("\nMerged byte and carry =");
-    bitarray_set_byte(ba, 5, (byte << shift) | (*carry >> (8-shift)));
+    bitarray_set_byte(ba, 5, (byte >> -shift) | (*carry << (8+shift)));
     print_bitarray(ba, 40, 8);
 
     printf("\nnew carry = ");
-    bitarray_set_byte(ba, 5, byte & bytemask(shift));
+    bitarray_set_byte(ba, 5, byte & ~bytemask(8+shift));
     print_bitarray(ba, 40, 8);
-    */    
+    */
 
-    bitarray_set_byte(ba, byte_index, (byte << shift) | (*carry >> (8-shift)));
-    *carry = byte & bytemask(shift);
-    return;
-  }
-
-  else {
     bitarray_set_byte(ba, byte_index, (byte >> -shift) | (*carry << (8+shift)));
-    *carry = byte & bytemask(-shift);
+    *carry = byte & ~bytemask(8+shift);
     return;
   }
 }
@@ -333,19 +335,16 @@ void bitarray_shift_bytes(bitarray_t *ba, size_t byte_off, size_t byte_length, s
   // Need to shift right
   else if (shift > 0) {
     for (size_t i = 0; i < byte_length; ++i) {
-      //printf("old carry = %i", *carry & 255);
-      //print_bitarray(ba, 0, 48);
       bitarray_shift_byte(ba, byte_off+i, shift, carry);
-      print_bitarray(ba, 0, 48);
-      printf("new carry = %i", *carry & 255);
     }
   }
 
   // Need to shift left
   else {
-    size_t byte_end = byte_off + byte_length - 1;
-    for (size_t i = 0; i < byte_length; --i) {
-      bitarray_shift_byte(ba, byte_end+i, shift, carry);
+    size_t byte_end = byte_off + byte_length;
+    for (size_t i = byte_end; i > byte_off; --i) {
+      bitarray_shift_byte(ba, i-1, shift, carry);
+      print_bitarray(ba, 0, 48);
     }
   }
 }
