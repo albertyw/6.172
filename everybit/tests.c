@@ -267,6 +267,18 @@ static void test_bytereverse3(void) {
   testutil_expect("000001100110011001101111", 9); // NOT ACTUALLY CORRECT
 }
 
+static void test_byteshift(void) {
+  testutil_frmstr("000000001111111100000000111111110000000011111111");
+  testutil_rotate(0,48,0);
+  testutil_expect("000000001111111100100000111111110000000011111111", 7);
+}
+
+static void test_byteshift2(void) {
+  testutil_frmstr("000000001011011111001100111111110000000011111111");
+  testutil_rotate(0,48,0);
+  testutil_expect("000000001111111100100000111111110000000011111111", 7);
+}
+
 test_case_t test_cases[] = {
   //test_headerexamples,
   //test_8bit,
@@ -276,7 +288,8 @@ test_case_t test_cases[] = {
   // test_nullbitarray,
   //test_bytereverse,
   //test_bytereverse2,
-  test_bytereverse3,
+  //test_bytereverse3,
+  test_byteshift2,
 
   NULL // This marks the end of all test cases. Don't change this!
 };

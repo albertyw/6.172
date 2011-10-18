@@ -1,4 +1,4 @@
-static const char lookup[256] =
+static const unsigned char lookup[256] =
 {
  0, 128, 64, 192, 32, 160,  96, 224, 16, 144, 80, 208, 48, 176, 112, 240, 
  8, 136, 72, 200, 40, 168, 104, 232, 24, 152, 88, 216, 56, 184, 120, 248, 
@@ -18,7 +18,7 @@ static const char lookup[256] =
 15, 143, 79, 207, 47, 175, 111, 239, 31, 159, 95, 223, 63, 191, 127, 255
 };
 
-inline void byte_reverse(char * b)
+inline void byte_reverse(unsigned char * b)
 {
   *b = lookup[*b & 255];
 }

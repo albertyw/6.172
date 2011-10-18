@@ -47,7 +47,7 @@ size_t bitarray_get_bit_sz(bitarray_t *ba);
 bool bitarray_get(bitarray_t *ba, size_t bit_index);
 
 /* Index into the bitarray and return a pointer to the byte at the specified zero-based index. */
-char *bitarray_get_byte(bitarray_t *ba, size_t byte_index);
+unsigned char *bitarray_get_byte(bitarray_t *ba, size_t byte_index);
 
 /* Index into the bitarray and set the bit at the specified zero-based index to the specified
 value. */
@@ -55,7 +55,7 @@ void bitarray_set(bitarray_t *ba, size_t bit_index, bool val);
 
 /* Index into the bitarray and set the byte at the specified zero-based index to the specified
  * value. */
-void bitarray_set_byte(bitarray_t *ba, size_t byte_index, char val);
+void bitarray_set_byte(bitarray_t *ba, size_t byte_index, unsigned char val);
 
 
 /* Count the number of bit transitions in the substring of bits at zero-based indices between
@@ -89,6 +89,6 @@ inline void bitarray_reverse_bit(bitarray_t *ba, size_t bit_off, size_t b_len);
 /*
  * Shift right all bits in the bytes from byte_off to byte_off+byte_length by right_amt
  */
-inline void bitarray_shift_bytes(bitarray_t *ba, size_t byte_off, size_t byte_length, ssize_t right_amt);
+inline void bitarray_shift_bytes(bitarray_t *ba, size_t byte_off, size_t byte_length, ssize_t shift, unsigned char *carry);
 
 #endif /* BITARRAY_H */
