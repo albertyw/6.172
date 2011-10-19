@@ -263,6 +263,7 @@ void bitarray_set_multiple_bits(bitarray_t *ba, size_t bit_off, size_t bit_lengt
  */
 // NEEDS TO BE ADDED TO BITARRAY.H
 // NO LONGER USING THIS FUNCTION; it has been manually inlined into bitarray_shift_bytes for perf improvement
+// WILL PROBABLY JUST DELETE THIS CODE ALTOGETHER, OR AT LEAST COMMENT IT OUT
 void bitarray_shift_byte(bitarray_t *ba, size_t byte_index, ssize_t shift, unsigned char *carry) {
   assert(byte <= ba->buf_sz/8);
   assert(shift < 8);
@@ -295,33 +296,34 @@ void bitarray_shift_bytes(bitarray_t *ba, size_t byte_off, size_t byte_length, s
   assert(shift < 8);
   assert(shift > -8);
 
-  // No shift necessary
-  if (shift == 0)
-    return;  
-
   // POSSIBLE OPPORTUNITY FOR OPTIMIZATION BY REMOVING BRANCHING - BUT HOW? IDK YET
-  // CARRY DOESN'T NEED TO BE A POINTER; NOT IMPORTANT BECAUSE IT PROBABLY WON'T CHANGE RUNNING TIME
 
   unsigned char * byte;
   unsigned char temp;
+  size_t carry_shift;
 
   // Shift right
   if (shift > 0) {
     byte = bitarray_get_byte(ba, byte_off);
+    carry_shift = 8-shift;
     for (size_t i = 0; i < byte_length; ++i) {
       temp = *byte & bytemask(shift);
-      *byte = (*byte << shift) | (*carry >> (8-shift));
+      *byte = (*byte << shift) | (*carry >> carry_shift);
       *carry = temp;
       ++byte;
     }
   }
 
+  // NOT SURE IF THIS WILL IMPROVE PERF, BUT MAYBE TURN A SHIFT-LEFT INTO A SHIFT-RIGHT THAT SETS
+  // TO A DIFFERENT BYTE; SHOULDN'T BE TOO HARD TO IMPLEMENT AND MIGHT GET RID OF BRANCHES... MAYBE
   // Shift left
   else {
     byte = bitarray_get_byte(ba, byte_off + byte_length - 1);
+    shift = -shift;
+    carry_shift = 8-shift;
     for (size_t i = 0; i < byte_length; ++i) {
-      temp = *byte & ~bytemask(8+shift);
-      *byte = (*byte >> -shift) | (*carry << (8+shift));
+      temp = *byte & ~bytemask(carry_shift);
+      *byte = (*byte >> shift) | (*carry << (carry_shift));
       *carry = temp;
       --byte;
     }
@@ -329,7 +331,6 @@ void bitarray_shift_bytes(bitarray_t *ba, size_t byte_off, size_t byte_length, s
 }
 
 void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
-  // DOES THIS ACTUALLY SPEED US UP? OR DO WE SLOW DOWN ALL OTHER TIMES?
   // Manually reverse bits if the substring is within a single byte
   if (bit_off%8 + bit_len <= 8) {
     bitarray_reverse_bit(ba, bit_off, bit_len);
@@ -343,18 +344,20 @@ void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
   size_t left_len = (8 - bit_off) % 8;
   size_t right_len = (bit_off + bit_len) % 8;
   size_t right_start = bit_off + bit_len - right_len;
-  
+
   // Reverse the order of bits within each byte
   size_t byte_start = (left_start + left_len) / 8;
   size_t byte_end = (right_start / 8); // exclusive
 
+  // SHOULD BE ABLE TO COMBINE THIS FOR LOOP WITH THE NEXT ONE TO INCREASE PERF;
+  // WHEN DOING SO, BEWARE OF REVERSING THE MIDDLE BYTE TWICE
   unsigned char * byte = bitarray_get_byte(ba, byte_start);
   for (size_t i = byte_start; i < byte_end; ++i) {
     byte_reverse(byte);
     ++byte;
   }
 
-  // Reverse the order of all bytes
+  // Reverse the order of all bytes and the order of bits within each byte
   size_t number_of_swaps = (byte_end + byte_start) / 2;
   unsigned char * left_byte = bitarray_get_byte(ba, byte_start);
   unsigned char * right_byte = bitarray_get_byte(ba, byte_end-1);
@@ -373,10 +376,12 @@ void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
   unsigned char left_partial_byte;
   unsigned char right_partial_byte;
 
+  // No right partial byte
   if (right_len == 0) {
     left_partial_byte = *bitarray_get_byte(ba, byte_start-1) & bytemask(left_len);
     right_partial_byte = 0;
   }
+  // No left partial byte
   else if (left_len == 0) {
     right_partial_byte = *bitarray_get_byte(ba, byte_end) & ~(bytemask(8-right_len));
     left_partial_byte = 0;
@@ -390,38 +395,44 @@ void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
   byte_reverse(&left_partial_byte);
   byte_reverse(&right_partial_byte);
 
-  // Shift all full bytes of the substring to make room for swapping the two partial bytes
-  // to make room for swapping
+  // Swap partial bytes. Requires that all full bytes between the two partial bytes
+  // be shifted to make room for the swapping
   ssize_t shift = right_len - left_len;
   unsigned char carry;
-  if (shift > 0) {
-    carry = right_partial_byte;
-  }
-  else {
-    carry = left_partial_byte;
-  }
-  bitarray_shift_bytes(ba, byte_start, byte_end - byte_start, shift, &carry);
 
-  // Swap partial bytes
-  // Involves manually setting the individual bits in the appropriate location of bitarray
-  // MIGHT BE POSSIBLE TO OPTIMIZE BY MASKING INSTEAD OF SETTING EACH BIT INDIVIDUALLY.
-  // SUCH AN OPTIMIZATION INVOLVES CHANGING BITARRAY_SET_MULTIPLE_BITS AND CAREFULLLY
-  // THINKING ABOUT THE APPROPRIATE SHIFT/BYTEMASK TO USE.
+  // Need to shift full bytes right
   if (shift > 0) {
+    // Shift full bytes
+    carry = right_partial_byte;
+    bitarray_shift_bytes(ba, byte_start, byte_end - byte_start, shift, &carry);
+
+    // Swap partial bytes
     left_partial_byte = (carry >> (8-shift)) | (left_partial_byte << shift);
     right_partial_byte = right_partial_byte >> (8-right_len);
 
+    // POSSIBLY OPTIMIZE BY IMPROVING THIS FUNCTION; IT CURRENTLY WORKS BY MANUALLY
+    // SETTING EACH BIT; CAN WE SET THE ENTIRE BYTE AT ONCE BY SOME COMBINATION OF SHIFTING/MASKING?
     bitarray_set_multiple_bits(ba, bit_off+bit_len-right_len, right_len, left_partial_byte);
     bitarray_set_multiple_bits(ba, left_start, right_len, right_partial_byte);
   }
+
+  // Need to shift full bytes left
   else if (shift < 0) {
+    // Shift full bytes
+    carry = left_partial_byte;
+    bitarray_shift_bytes(ba, byte_start, byte_end - byte_start, shift, &carry);
+
+    // Swap partial bytes
     right_partial_byte = (carry << (8+shift)) | (right_partial_byte >> -shift);
     right_partial_byte = right_partial_byte >> (8-left_len);
 
     bitarray_set_multiple_bits(ba, left_start, left_len, right_partial_byte);
     bitarray_set_multiple_bits(ba, bit_off+bit_len-left_len, left_len, left_partial_byte);
   }
+
+  // No shift
   else {
+    // Swap partial bytes
     right_partial_byte = right_partial_byte >> (8-right_len);
 
     bitarray_set_multiple_bits(ba, left_start, left_len, right_partial_byte);
