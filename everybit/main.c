@@ -40,7 +40,7 @@ static void run_test_suite(int start_idx) {
 }
 
 extern double longrunning_rotation(void);
-extern double longrunning_flipcount(void);
+//extern double longrunning_flipcount(void);
 
 void print_usage(const char *argv_0)
 {
@@ -54,6 +54,7 @@ void print_usage(const char *argv_0)
 int main(int argc, char **argv) {
   char optchar;
   opterr = 0;
+  //double runningTime = 0.0;
   while ((optchar = getopt(argc, argv, "t:rf")) != -1) {
     switch (optchar) {
       case 't':
@@ -64,9 +65,15 @@ int main(int argc, char **argv) {
         printf("---- RESULTS ----\n");
         printf("Elapsed execution time: %.6fs\n", longrunning_rotation());
         printf("---- END RESULTS ----\n");
-
+        /*
+        for(int i=0; i < 10000; i++){
+          runningTime += longrunning_rotation();
+        }
+        printf("%.6fs\n", runningTime);
+        */
         return EXIT_SUCCESS;
         break;
+        /*
       case 'f':
         printf("---- RESULTS ----\n");
         printf("Elapsed execution time: %.6fs\n", longrunning_flipcount());
@@ -74,6 +81,7 @@ int main(int argc, char **argv) {
 
         return EXIT_SUCCESS;
         break;
+        */
     }
   }
   print_usage(argv[0]);

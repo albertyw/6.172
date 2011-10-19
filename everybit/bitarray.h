@@ -63,7 +63,7 @@ bit_off (inclusive) and bit_off+bit_len (exclusive). For instance, to count the 
 transitions in the entire bitarray 10010110, invoke
 bitarray_count_flips(ba, 0, bitarray_get_bit_sz(ba)); this will yield 5 (one transition per dot in
 "1.00.1.0.11.0"). */
-size_t bitarray_count_flips(bitarray_t *ba, size_t bit_off, size_t bit_len);
+//size_t bitarray_count_flips(bitarray_t *ba, size_t bit_off, size_t bit_len);
 
 
 /* Perform a rotate operation on the substring of bits at zero-based indices between bit_off
@@ -90,5 +90,8 @@ inline void bitarray_reverse_bit(bitarray_t *ba, size_t bit_off, size_t b_len);
  * Shift right all bits in the bytes from byte_off to byte_off+byte_length by right_amt
  */
 inline void bitarray_shift_bytes(bitarray_t *ba, size_t byte_off, size_t byte_length, ssize_t shift, unsigned char *carry);
+
+void bitarray_set_multiple_bits(bitarray_t *ba, size_t bit_off, size_t bit_length, unsigned char new_byte);
+
 
 #endif /* BITARRAY_H */

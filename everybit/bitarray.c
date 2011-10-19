@@ -65,7 +65,7 @@ size_t bitarray_get_bit_sz(bitarray_t *ba) {
 }
 
 /* Portable modulo operation that supports negative dividends. */
-static size_t modulo(ssize_t n, size_t m) {
+inline static size_t modulo(ssize_t n, size_t m) {
   /* See
   http://stackoverflow.com/questions/1907565/c-python-different-behaviour-of-the-modulo-operation */
   /* Mod may give different result if divisor is signed. */
@@ -90,7 +90,7 @@ void bitarray_set(bitarray_t *ba, size_t bit_index, bool val) {
   ba->buf[bit_index / 8]
       = (ba->buf[bit_index / 8] & ~bitmask(bit_index)) | (val ? bitmask(bit_index) : 0); 
 }
-
+#ifdef OLDCODE
 size_t bitarray_count_flips(bitarray_t *ba, size_t bit_off, size_t bit_len) {
   assert(bit_off + bit_len <= ba->bit_sz);
   size_t i, ret = 0;
@@ -127,9 +127,9 @@ void bitarray_rotate_old(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t
   assert(bit_off + bit_len <= ba->bit_sz);
   if (bit_len == 0)
     return;
-  /* Convert a rotate left or right to a left rotate only, and eliminate multiple full rotations. */
   bitarray_rotate_left(ba, bit_off, bit_len, modulo(-bit_right_amount, bit_len));
 }
+#endif
 
 
 /*
@@ -140,7 +140,7 @@ void bitarray_rotate_old(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t
  * Reverses the bit order of the *ba[bit_off : bit_off + bit_len] substring
  * This is done bit by bit
  */
-inline void bitarray_reverse_bit(bitarray_t *ba, size_t bit_off, size_t bit_len) {
+void bitarray_reverse_bit(bitarray_t *ba, size_t bit_off, size_t bit_len) {
   assert(bit_off + bit_len <= bitarray_get_bit_sz(ba));
 
   size_t start = bit_off;
@@ -164,6 +164,7 @@ inline void bitarray_reverse_bit(bitarray_t *ba, size_t bit_off, size_t bit_len)
  * That is, bitarray ab is transformed to ba using the identity (a^R b^R)^R
  * This method rotates bit by bit, which is slow...
  */
+ /*
 void bitarray_rotate_bit(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t bit_right_amount) {
   assert(bit_off + bit_len <= ba->bit_sz);
 
@@ -181,7 +182,7 @@ void bitarray_rotate_bit(bitarray_t *ba, size_t bit_off, size_t bit_len, ssize_t
   bitarray_reverse_bit(ba, bit_off + k, bit_len - k);
   bitarray_reverse_bit(ba, bit_off, bit_len);
 }
-
+*/
 /**
  * Swaps two bytes
  * Also passing temp pointer so that a temp variable doesn't need to be created in the function
@@ -200,6 +201,7 @@ inline void byte_switch(unsigned char *a,unsigned char *b,unsigned char temp) {
 /**
  * Prints out bit_length bits of the bitarray, starting at index bit_off
  */
+ /*
 void print_bitarray(bitarray_t *ba, size_t bit_off, size_t bit_length) {
   printf("bitarray[%llu:%llu]: ", bit_off, bit_off + bit_length);
   for (size_t i = 0; i < bit_length; i++) {
@@ -208,22 +210,26 @@ void print_bitarray(bitarray_t *ba, size_t bit_off, size_t bit_length) {
   }
   printf("\n");
 }
+*/
 
 /**
  * Retrieves byte at index byte_index from bitarray
+ * Perf says this is very slow
  */
-unsigned char *bitarray_get_byte(bitarray_t *ba, size_t byte_index) {
-  assert(byte_index < ba->bit_sz / 8);
+inline unsigned char *bitarray_get_byte(bitarray_t *ba, size_t byte_index) {
+  //assert(byte_index < ba->bit_sz / 8);
   return (unsigned char *) (ba->buf + byte_index);
 }
 
 /**
  * Sets byte at index byte_index of bitarray to val
  */
-void bitarray_set_byte(bitarray_t *ba, size_t byte_index, unsigned char val) {
+ /*
+inline void bitarray_set_byte(bitarray_t *ba, size_t byte_index, unsigned char val) {
   assert(byte_index < ba->bit_sz / 8);
   ba->buf[byte_index] = val;
 }
+*/
 
 /**
  * Returns the bit at index bit_index from byte
@@ -236,7 +242,7 @@ bool byte_get_bit(unsigned char byte, size_t bit_index) {
 /**
  * Creates a mask that can parse the right k bits from a byte (by using a logical AND)
  */
-static unsigned char bytemask(size_t k) {
+inline static unsigned char bytemask(size_t k) {
   return 255 << ((8-k) % 8);
 }
 
@@ -245,10 +251,9 @@ static unsigned char bytemask(size_t k) {
  */
 // NEEDS TO BE ADDED TO BITARRAY.H
 // CAN BE OPTIMIZED WITH MASKING, BUT BEWARE OF LITTLE ENDIAN ISSUES; Will think about later
+// PERF SAYS THIS IS VERY SLOW CURRENTLY
 void bitarray_set_multiple_bits(bitarray_t *ba, size_t bit_off, size_t bit_length, unsigned char new_byte) {
-  assert(byte_off + byte_length <= ba->but_sz/8);
   assert(bit_length <= 8);
-
   bool bit;
   for (size_t i = 0; i < bit_length; ++i) {
     bit = byte_get_bit(new_byte, i);
@@ -264,6 +269,7 @@ void bitarray_set_multiple_bits(bitarray_t *ba, size_t bit_off, size_t bit_lengt
 // NEEDS TO BE ADDED TO BITARRAY.H
 // NO LONGER USING THIS FUNCTION; it has been manually inlined into bitarray_shift_bytes for perf improvement
 // WILL PROBABLY JUST DELETE THIS CODE ALTOGETHER, OR AT LEAST COMMENT IT OUT
+/*
 void bitarray_shift_byte(bitarray_t *ba, size_t byte_index, ssize_t shift, unsigned char *carry) {
   assert(byte <= ba->buf_sz/8);
   assert(shift < 8);
@@ -285,6 +291,7 @@ void bitarray_shift_byte(bitarray_t *ba, size_t byte_index, ssize_t shift, unsig
     return;
   }
 }
+*/
 
 /**
  * Shifts a "byte_length" number of bytes in bitarray (starting at byte_off) by "shift" bits to the right.
@@ -292,12 +299,11 @@ void bitarray_shift_byte(bitarray_t *ba, size_t byte_index, ssize_t shift, unsig
  * that the maximum allowed shift in either direction is one byte.
  */
 void bitarray_shift_bytes(bitarray_t *ba, size_t byte_off, size_t byte_length, ssize_t shift, unsigned char * carry) {
-  assert(byte_off + byte_length <= ba->buf_sz/8);
   assert(shift < 8);
   assert(shift > -8);
 
   // POSSIBLE OPPORTUNITY FOR OPTIMIZATION BY REMOVING BRANCHING - BUT HOW? IDK YET
-
+  // This function is only called once, so there will only be one branch
   unsigned char * byte;
   unsigned char temp;
   size_t carry_shift;
@@ -307,7 +313,7 @@ void bitarray_shift_bytes(bitarray_t *ba, size_t byte_off, size_t byte_length, s
     byte = bitarray_get_byte(ba, byte_off);
     carry_shift = 8-shift;
     for (size_t i = 0; i < byte_length; ++i) {
-      temp = *byte & bytemask(shift);
+      temp = *byte & bytemask(shift); // THIS IS VERY SLOW
       *byte = (*byte << shift) | (*carry >> carry_shift);
       *carry = temp;
       ++byte;
@@ -351,22 +357,32 @@ void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
 
   // SHOULD BE ABLE TO COMBINE THIS FOR LOOP WITH THE NEXT ONE TO INCREASE PERF;
   // WHEN DOING SO, BEWARE OF REVERSING THE MIDDLE BYTE TWICE
+  /*
   unsigned char * byte = bitarray_get_byte(ba, byte_start);
   for (size_t i = byte_start; i < byte_end; ++i) {
     byte_reverse(byte);
     ++byte;
   }
+  */
 
   // Reverse the order of all bytes and the order of bits within each byte
-  size_t number_of_swaps = (byte_end + byte_start) / 2;
+  //size_t number_of_swaps = (byte_end + byte_start) / 2;
   unsigned char * left_byte = bitarray_get_byte(ba, byte_start);
   unsigned char * right_byte = bitarray_get_byte(ba, byte_end-1);
   unsigned char temp;
+  for (left_byte; left_byte < right_byte; ++left_byte) {
+    byte_switch(right_byte, left_byte, temp);
+    byte_reverse(left_byte);
+    byte_reverse(right_byte);
+    --right_byte;
+  }
+  if(left_byte == right_byte) byte_reverse(left_byte);
+  /*
   for (size_t i = byte_start; i < number_of_swaps; ++i) {
     byte_switch(right_byte, left_byte, temp);
     ++left_byte;
     --right_byte;
-  }
+  }*/
 
   // Reversal of substring is complete if no partial bytes exist
   if (left_len == 0 & right_len == 0)

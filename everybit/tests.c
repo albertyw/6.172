@@ -176,6 +176,7 @@ double longrunning_rotation(void) {
 }
 
 /* A sample long-running set of flip count operations. */
+/*
 double longrunning_flipcount(void) {
   test_verbose = false;
   size_t bit_sz = 128 * 1024 * 1024 * 8 + 531;
@@ -186,7 +187,7 @@ double longrunning_flipcount(void) {
   clockmark_t time2 = ktiming_getmark();
   return ktiming_diff_usec(&time1, &time2) / 1000000000.0;
 }
-
+*/
 /* ----------- Actual test methods go here ----------- */
 
 static void test_headerexamples(void) {
