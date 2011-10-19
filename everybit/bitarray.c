@@ -244,14 +244,10 @@ static unsigned char bytemask(size_t k) {
  * Copies bit_length bits from new_byte to bitarray, starting at location bitarray[bit_off]
  */
 // NEEDS TO BE ADDED TO BITARRAY.H
-// CAN PROBABLY BE OPTIMIZED WITH MASKING, BUT BEWARE OF LITTLE ENDIAN ISSUES
+// CAN BE OPTIMIZED WITH MASKING, BUT BEWARE OF LITTLE ENDIAN ISSUES; Will think about later
 void bitarray_set_multiple_bits(bitarray_t *ba, size_t bit_off, size_t bit_length, unsigned char new_byte) {
   assert(byte_off + byte_length <= ba->but_sz/8);
   assert(bit_length <= 8);
-  
-  //No bits to move if bit_length is zero
-  if (bit_length == 0)
-    return;
 
   bool bit;
   for (size_t i = 0; i < bit_length; ++i) {
@@ -266,6 +262,7 @@ void bitarray_set_multiple_bits(bitarray_t *ba, size_t bit_off, size_t bit_lengt
  * and a negative shift means they are pushed in from the right.
  */
 // NEEDS TO BE ADDED TO BITARRAY.H
+// NO LONGER USING THIS FUNCTION; it has been manually inlined into bitarray_shift_bytes for perf improvement
 void bitarray_shift_byte(bitarray_t *ba, size_t byte_index, ssize_t shift, unsigned char *carry) {
   assert(byte <= ba->buf_sz/8);
   assert(shift < 8);
@@ -282,33 +279,6 @@ void bitarray_shift_byte(bitarray_t *ba, size_t byte_index, ssize_t shift, unsig
 
   // Carry bits are pushed in from the right
   else {
-
-    /*
-    printf("byte =");
-    bitarray_set_byte(ba, 5, byte);
-    print_bitarray(ba, 40, 8);
-
-    printf("\ncarry = %i", *carry);
-    bitarray_set_byte(ba, 5, *carry);
-    print_bitarray(ba, 40, 8);
-
-    printf("\nbyte shifted =");
-    bitarray_set_byte(ba, 5, byte >> -shift);
-    print_bitarray(ba, 40, 8);
-
-    printf("\ncarry shifted = %i\n", *carry << (8+shift));
-    bitarray_set_byte(ba, 5, *carry << (8+shift));
-    print_bitarray(ba, 40, 8);
-    
-    printf("\nMerged byte and carry =");
-    bitarray_set_byte(ba, 5, (byte >> -shift) | (*carry << (8+shift)));
-    print_bitarray(ba, 40, 8);
-
-    printf("\nnew carry = ");
-    bitarray_set_byte(ba, 5, byte & ~bytemask(8+shift));
-    print_bitarray(ba, 40, 8);
-    */
-
     bitarray_set_byte(ba, byte_index, (byte >> -shift) | (*carry << (8+shift)));
     *carry = byte & ~bytemask(8+shift);
     return;
@@ -329,21 +299,31 @@ void bitarray_shift_bytes(bitarray_t *ba, size_t byte_off, size_t byte_length, s
   if (shift == 0)
     return;  
 
-  // POSSIBLE OPPORTUNITY FOR OPTIMIZATION BY REMOVING BRANCHING
-  // CAN ALSO CHANGE SHIFT_BYTE TO TAKE IN A POINTER TO BUFFER BYTE INSTEAD OF ALWAYS RETRIEVING VALUE
+  // POSSIBLE OPPORTUNITY FOR OPTIMIZATION BY REMOVING BRANCHING - BUT HOW? IDK YET
+  // CARRY DOESN'T NEED TO BE A POINTER; NOT IMPORTANT BECAUSE IT PROBABLY WON'T CHANGE RUNNING TIME
+
+  unsigned char * byte;
+  unsigned char temp;
 
   // Shift right
-  else if (shift > 0) {
+  if (shift > 0) {
+    byte = bitarray_get_byte(ba, byte_off);
     for (size_t i = 0; i < byte_length; ++i) {
-      bitarray_shift_byte(ba, byte_off+i, shift, carry);
+      temp = *byte & bytemask(shift);
+      *byte = (*byte << shift) | (*carry >> (8-shift));
+      *carry = temp;
+      ++byte;
     }
   }
 
   // Shift left
   else {
-    size_t byte_end = byte_off + byte_length;
-    for (size_t i = byte_end; i > byte_off; --i) {
-      bitarray_shift_byte(ba, i-1, shift, carry);
+    byte = bitarray_get_byte(ba, byte_off + byte_length - 1);
+    for (size_t i = 0; i < byte_length; ++i) {
+      temp = *byte & ~bytemask(8+shift);
+      *byte = (*byte >> -shift) | (*carry << (8+shift));
+      *carry = temp;
+      --byte;
     }
   }
 }
@@ -351,7 +331,6 @@ void bitarray_shift_bytes(bitarray_t *ba, size_t byte_off, size_t byte_length, s
 void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
   // DOES THIS ACTUALLY SPEED US UP? OR DO WE SLOW DOWN ALL OTHER TIMES?
   // Manually reverse bits if the substring is within a single byte
-
   if (bit_off%8 + bit_len <= 8) {
     bitarray_reverse_bit(ba, bit_off, bit_len);
     return;
@@ -369,22 +348,21 @@ void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
   size_t byte_start = (left_start + left_len) / 8;
   size_t byte_end = (right_start / 8); // exclusive
 
-  for (size_t byte_index = byte_start;
-      byte_index < byte_end;
-      ++byte_index) {
-    // CAN THIS BE OPTIMIZED BY USING A POINTER TO BUF INSTEAD OF RETRIEVING EACH VALUE?
-    byte_reverse(bitarray_get_byte(ba, byte_index));
+  unsigned char * byte = bitarray_get_byte(ba, byte_start);
+  for (size_t i = byte_start; i < byte_end; ++i) {
+    byte_reverse(byte);
+    ++byte;
   }
 
   // Reverse the order of all bytes
-  size_t right_byte_index = byte_end-1;
+  size_t number_of_swaps = (byte_end + byte_start) / 2;
+  unsigned char * left_byte = bitarray_get_byte(ba, byte_start);
+  unsigned char * right_byte = bitarray_get_byte(ba, byte_end-1);
   unsigned char temp;
-
-  for (size_t left_byte_index = byte_start;
-       left_byte_index < (byte_end + byte_start) / 2;
-       ++left_byte_index) {
-    byte_switch(bitarray_get_byte(ba, right_byte_index), bitarray_get_byte(ba, left_byte_index), temp);
-    --right_byte_index;
+  for (size_t i = byte_start; i < number_of_swaps; ++i) {
+    byte_switch(right_byte, left_byte, temp);
+    ++left_byte;
+    --right_byte;
   }
 
   // Reversal of substring is complete if no partial bytes exist
@@ -394,6 +372,7 @@ void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
   // Retrieve partial bytes (at each end of the substring) by masking unwanted bits
   unsigned char left_partial_byte;
   unsigned char right_partial_byte;
+
   if (right_len == 0) {
     left_partial_byte = *bitarray_get_byte(ba, byte_start-1) & bytemask(left_len);
     right_partial_byte = 0;
@@ -424,14 +403,16 @@ void bitarray_reverse(bitarray_t *ba, size_t bit_off, size_t bit_len){
   bitarray_shift_bytes(ba, byte_start, byte_end - byte_start, shift, &carry);
 
   // Swap partial bytes
+  // Involves manually setting the individual bits in the appropriate location of bitarray
+  // MIGHT BE POSSIBLE TO OPTIMIZE BY MASKING INSTEAD OF SETTING EACH BIT INDIVIDUALLY.
+  // SUCH AN OPTIMIZATION INVOLVES CHANGING BITARRAY_SET_MULTIPLE_BITS AND CAREFULLLY
+  // THINKING ABOUT THE APPROPRIATE SHIFT/BYTEMASK TO USE.
   if (shift > 0) {
     left_partial_byte = (carry >> (8-shift)) | (left_partial_byte << shift);
     right_partial_byte = right_partial_byte >> (8-right_len);
 
     bitarray_set_multiple_bits(ba, bit_off+bit_len-right_len, right_len, left_partial_byte);
     bitarray_set_multiple_bits(ba, left_start, right_len, right_partial_byte);
-
-    
   }
   else if (shift < 0) {
     right_partial_byte = (carry << (8+shift)) | (right_partial_byte >> -shift);
