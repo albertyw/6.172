@@ -20,7 +20,7 @@ optimized,
 the final code finished in 0.179 ms, a 7.5 times improvement.  
 
 After the final was first finished and correct, the code ran in 0.279 ms, an 
-only 5 times improvement.  From there, we inlined a shift_byte function, which is 
+only 5 times improvement.  From there, we inlined a shift\_byte function, which is 
 called many times in our code.  This inlining dropped the time down to 0.270 ms.  
 Three loops were also optimized to increment a pointer directly, instead of an extra
 index variable, which dropped the time to 0.210 ms.  A function call was also 
