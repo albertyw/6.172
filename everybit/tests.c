@@ -252,44 +252,166 @@ static void test_zerolength(void) {
 static void test_bytereverse(void) {
   testutil_frmstr("01100110011111111101");
   testutil_rotate(1,16,8);
-  testutil_expect("00011001111111111101", 5);
+  testutil_expect("01111111100110011101", 7);
 }
 
 static void test_bytereverse2(void) {
   testutil_frmstr("011101011");
   testutil_rotate(0,9,4);
-  testutil_expect("010110111", 5);
+  testutil_expect("110101110", 5);
 }
 
 static void test_bytereverse3(void) {
   testutil_frmstr("0000110011001111111100000000110011001111");
   testutil_rotate(2,32,3);
-  testutil_expect("000001100110011001101111", 9); // NOT ACTUALLY CORRECT
+  testutil_expect("0011001100000000111111110011001100001111", 11);
+}
+
+static void test_bytereverse4(void) {
+  testutil_frmstr("01100110011111111101");
+  testutil_rotate(7,13,8);
+  testutil_expect("01100111011111111100", 7);
 }
 
 static void test_byteshift(void) {
-  testutil_frmstr("000000001111111100000000111111110000000011111111");
-  testutil_rotate(0,48,0);
+  testutil_frmstr("0000100011111111000000001111111100000000111111111000000011111111");
+  testutil_rotate(4,46,0);
   testutil_expect("000000001111111100100000111111110000000011111111", 7);
 }
 
 static void test_byteshift2(void) {
-  testutil_frmstr("000000001011011111001100111111110000000011111111");
-  testutil_rotate(0,48,0);
-  testutil_expect("000000001111111100100000111111110000000011111111", 7);
+  testutil_frmstr("00000000101101111100110011111111000000001111111101010101");
+  testutil_rotate(4,46,0);
+  testutil_expect("00000000111111110010000011111111000000001111111101010101", 7);
 }
 
+
+static void test_naive(void) {
+  testutil_frmstr("0"); /* 1 bit */
+  testutil_rotate(0, 1, 0);
+  testutil_expect("0", 0);
+  testutil_rotate(0, 1, 1);
+  testutil_expect("0", 0);
+  testutil_rotate(0, 1, -1);
+  testutil_expect("0", 0);
+
+  testutil_frmstr("1"); /* 1 bit */
+  testutil_rotate(0, 1, 0);
+  testutil_expect("1", 0);
+  testutil_rotate(0, 1, 1);
+  testutil_expect("1", 0);
+  testutil_rotate(0, 1, -1);
+  testutil_expect("1", 0);
+}
+
+static void test_8bit_clean(void) {
+  testutil_frmstr("00000000");
+  testutil_rotate(0, 1, 0);
+  testutil_expect("00000000", 0);
+  testutil_rotate(0, 1, 1);
+  testutil_expect("00000000", 0);
+  testutil_rotate(0, 1, -1);
+  testutil_expect("00000000", 0);
+
+  testutil_frmstr("11111111");
+  testutil_rotate(0, 1, 0);
+  testutil_expect("11111111", 0);
+  testutil_rotate(0, 1, 1);
+  testutil_expect("11111111", 0);
+  testutil_rotate(0, 1, -1);
+  testutil_expect("11111111", 0);
+}
+
+static void test_7bit_strange(void) {
+  testutil_frmstr("0110010");
+  testutil_rotate(0, 3, 1);
+  testutil_expect("1010010", 5);
+  testutil_rotate(0, 3, -1);
+  testutil_expect("0110010", 4);
+  testutil_rotate(0, 7, 5);
+  testutil_expect("1001001", 4);
+  testutil_rotate(0, 6, -3);
+  testutil_expect("1001001", 4);
+}
+
+static void test_all_2bit(void) {
+  testutil_frmstr("01");
+
+  testutil_rotate(0, 1, 1);
+  testutil_expect("01", 1);
+  testutil_rotate(1, 1, 1);
+  testutil_expect("01", 1);
+
+  testutil_rotate(0, 2, 0);
+  testutil_expect("01", 1);
+  testutil_rotate(0, 2, 2);
+  testutil_expect("01", 1);
+  testutil_rotate(0, 2, -2);
+  testutil_expect("01", 1);
+
+  testutil_rotate(0, 2, 1);
+  testutil_expect("10", 1);
+  testutil_rotate(0, 2, -1);
+  testutil_expect("01", 1);
+
+  testutil_rotate(0, 2, -1);
+  testutil_expect("10", 1);
+  testutil_rotate(0, 2, 1);
+  testutil_expect("01", 1);
+
+  testutil_rotate(0, 2, 3);
+  testutil_expect("10", 1);
+  testutil_rotate(0, 2, -3);
+  testutil_expect("01", 1);
+
+  testutil_rotate(0, 2, -3);
+  testutil_expect("10", 1);
+  testutil_rotate(0, 2, 3);
+  testutil_expect("01", 1);  
+}
+
+static void test_uneven_offset(void) {
+  testutil_frmstr("0000111100001111000011110000111100001111000011110000"); //52 bits
+
+  testutil_rotate(4, 44, 8);
+  testutil_expect("0000000011111111000011110000111100001111000011110000", 12);
+
+  testutil_rotate(4, 44, 4);
+  testutil_expect("0000111100001111111100001111000011110000111100000000", 12);
+
+
+  testutil_frmstr("0000111100001111000011110000111100001111000011110000");
+  testutil_rotate(4, 44, 3);
+  testutil_expect("0000111111100001111000011110000111100001111000010000", 12);
+
+  testutil_frmstr("0000111100001111000011110000111100001111000011110000");
+  testutil_rotate(4, 44, 7);
+  testutil_expect("0000000111111110000111100001111000011110000111100000", 10);
+}
+
+
+
+
+
+
+
 test_case_t test_cases[] = {
-  //test_headerexamples,
-  //test_8bit,
-  //test_moreflips,
+  test_headerexamples,
+  test_8bit,
+  test_moreflips,
   // ADD YOUR TEST CASES HERE
-  // test_non8bits,
-  // test_nullbitarray,
+  test_non8bits,
+  test_nullbitarray,
   //test_bytereverse,
   //test_bytereverse2,
   //test_bytereverse3,
-  test_byteshift2,
+  //test_bytereverse4,
+  //test_byteshift,
+  test_naive,
+  test_8bit_clean,
+  test_7bit_strange,
+  test_all_2bit,
+  test_uneven_offset,
 
   NULL // This marks the end of all test cases. Don't change this!
 };
