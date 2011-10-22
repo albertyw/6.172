@@ -31,6 +31,13 @@ protected:
 
    // Record the total number of line line intersection
    unsigned int numLineLineCollisions;
+   
+   // Maximum number of recursions of a quadtree before the it gives up and 
+   // manually checks for collisions
+   unsigned int maxQuadTreeRecursions;
+   
+   // Maximum number of elements in a quad tree before the quad tree is required to split
+   vector<Line*>::size_type maxElementsPerQuadTree;
 
 public:
    CollisionWorld();
@@ -82,7 +89,8 @@ public:
    // Return 3 if line is inside third quadrant (between xAvg, xMin, yAvg, yMin)
    // Return 4 if line is insde fourth quadrant (between xMax, xAvg, yAvg, yMin)
    LineLocation lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line);
- 
+   
+   // Test for intersection between each line in Line1 against each line in Lines2
    void detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2);  
 
 };
