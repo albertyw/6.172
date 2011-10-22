@@ -95,10 +95,39 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
 // If a line is exactly on a quadrant border (i.e. one of the axes), return LEAF
 LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line)
 {
-  LineLocation location = OUTSIDE;
-  // Math Stuff
+   LineLocation location = OUTSIDE;
+   // Math Stuff
+   float xAvg = (xMax + xMin) / 2;
+   float yAvg = (yMax + yMin) / 2;
 
-  return location;
+   Vec p1 = (*line).p1;
+   Vec p2 = (*line).p2;
+   int xMinVec = std::min(p1.x, p2.x);
+   int xMaxVec = std::max(p1.x, p2.x);
+   int yMinVec = std::min(p1.y, p2.y);
+   int yMaxVec = std::max(p1.y, p2.y);
+
+
+   //test whether any point is outside the rectangle
+   if(xMinVec < xMin || xMaxVec > xMax || yMinVec < yMin || yMaxVec > yMax)
+      return OUTSIDE;
+
+   //test whether vector crosses quadrants
+   bool left = (xMaxVec < xAvg && xMinVec < xAvg);
+   bool right = (xMaxVec > xAvg && xMinVec > xAvg);
+   bool up = (yMaxVec < yAvg && yMinVec < yAvg); 
+   bool down = (yMaxVec > yAvg && yMinVec > yAvg);   
+   
+   if(right && up)
+      return QUAD1;
+   else if(left && up)
+      return QUAD2;
+   else if(left && down)
+      return QUAD3;
+   else if(right && down)
+      return QUAD4;
+   else
+      return LEAF;
 }
 
 // Test all line-line pairs to see if they will intersect before the next time
