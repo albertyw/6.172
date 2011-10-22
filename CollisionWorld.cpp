@@ -47,11 +47,13 @@ vector<Line*> CollisionWorld::quadTree(float xMax, float xMin, float yMax, float
    // Check child boxes' lines with current box's lines
    // Check for intersections within this box
    // Return lines to parents
-
+	
+   //default return
+   return lines;
 }
 
 // Given a quadtree box and a line, find if a line is inside of a quadrant
-// Use LineLocation in CollisionWorld.h
+// Use line_loc
 // Return OUTSIDE if line is outside of box
 // Return LEAF if line is inside of box, but not quadrantable
 // Return QUAD1 if line is inside first quadrant (between xMax, xAvg, yMax, yAvg)
@@ -59,11 +61,12 @@ vector<Line*> CollisionWorld::quadTree(float xMax, float xMin, float yMax, float
 // Return QUAD3 if line is inside third quadrant (between xAvg, xMin, yAvg, yMin)
 // Return QUAD4 if line is insde fourth quadrant (between xMax, xAvg, yAvg, yMin)
 // If a line is exactly on a quadrant border (i.e. one of the axes), return LEAF
-LineLocation CollisionWorld:lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line)
+line_loc CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line)
 {
+  line_loc location = OUTSIDE;
   // Math Stuff
 
-  return 0  
+  return location;
 }
 
 // Test all line-line pairs to see if they will intersect before the next time

@@ -7,14 +7,15 @@ using namespace std;
 #include "Line.h"
 #include "IntersectionDetection.h"
 #include <cilk/reducer_list.h>
+
+/***************NEW FUNCTIONS BELOW HERE**********************/
+typedef enum { OUTSIDE, LEAF, QUAD1, QUAD2, QUAD3, QUAD4 } line_loc;
+/**************NEW FUNCTIONS ABOVE HERE*********************/
+
+
 class CollisionWorld
 {
 protected:
-    
-    /***************NEW FUNCTIONS BELOW HERE**********************/
-    enum LineLocation { OUTSIDE, LEAF, QUAD1, QUAD2, QUAD3, QUAD4};
-    
-    /**************NEW FUNCTIONS ABOVE HERE*********************/
    // The size of the collision world
    int boxWidth;
    int boxHeight;
@@ -80,7 +81,7 @@ public:
    // Return 2 if line is inside second quadrant (between xAvg, xMin, yMax, yAvg)
    // Return 3 if line is inside third quadrant (between xAvg, xMin, yAvg, yMin)
    // Return 4 if line is insde fourth quadrant (between xMax, xAvg, yAvg, yMin)
-   int lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line);
+   line_loc lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line);
 };
 
 
