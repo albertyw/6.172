@@ -31,6 +31,8 @@ protected:
 
    // Record the total number of line line intersection
    unsigned int numLineLineCollisions;
+   
+   unsigned int maxQuadTreeRecursions;
 
 public:
    CollisionWorld();
