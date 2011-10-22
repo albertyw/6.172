@@ -35,25 +35,57 @@ void CollisionWorld::updateLines()
 // **TODO** NOT SURE HOW TO REPRESENT LINES.  SHOULD IT BE "vector<Line*> currentLines"?
 
 // Run the quadTree collision detection
-vector<Line*> CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions)
+void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions)
 {
-   // Create 1 array/vector to hold lines for current quadtree box
-   // Create 4 arrays/vectors to hold lines for child quadtree boxes
-   // for each line
-   //   check where line should exist (lineInsideQuadrant)
-   //   if line is in a child quadtree
-   //     add the line to one of the 4 arrays/vectors
-   // Spawn 4 recursions of quadTree with the 4 arrays/vectors of lines
-   // Check child boxes' lines with current box's lines
-   // Check for intersections within this box
-   // Return lines to parents
-	
-   //default return
-   return lines;
+  vector<Line*> leafLines;
+  // Create 4 arrays/vectors to hold lines for child quadtree boxes
+  vector<Line*> quad1;
+  vector<Line*> quad2;
+  vector<Line*> quad3;
+  vector<Line*> quad4;
+  // for each line
+  LineLocation location;
+  for (vector<Line*>::size_type line = 0; 
+    line < currentLines.size();
+    ++line){
+    // check where line should exist (lineInsideQuadrant)
+    location = lineInsideQuadrant(xMax, xMin, yMax, yMin, line);
+    // if line is in a child quadtree add the line to one of the 4 arrays/vectors
+    if(location == QUAD1){
+      quad1.push_back(numLines);
+    }else if(location == QUAD2){
+      quad2.push_back(numLines);
+    }else if(location == QUAD3){
+      quad3.push_back(numLines);
+    }else if(location == QUAD4){
+      quad4.push_back(numLines);
+    }else if(location == LEAF){
+      leafLines.push_back(numLines);
+    }else if(location == OUTSIDE){
+      throw std::runtime_error::runtime_error("Bad Line passed down quadtree ");
+    }
+  }
+
+  // Spawn 4 recursions of quadTree with the 4 arrays/vectors of lines
+  float xAvg = (xMax + xMin)/2;
+  float yAvg = (yMax + yMin)/2;
+  ++recursions;
+  vector<Line*>::size_type vectorEmptySize = 0;
+  if(quad1.size() > vectorEmptySize) quadTree(xMax, xAvg, yMax, yAvg, quad1, recursions);
+  if(quad2.size() > vectorEmptySize) quadTree(xAvg, xMin, yMax, yAvg, quad2, recursions);
+  if(quad3.size() > vectorEmptySize) quadTree(xAvg, xMin, yAvg, yMin, quad3, recursions);
+  if(quad4.size() > vectorEmptySize) quadTree(xMax, xAvg, yAvg, yMin, quad4, recursions);
+  // Check for intersections within this box
+  detectIntersectionNew(leafLines, leafLines);
+  // Check child boxes' lines with current box's lines
+  detectIntersectionNew(leafLines, quad1);
+  detectIntersectionNew(leafLines, quad2);
+  detectIntersectionNew(leafLines, quad3);
+  detectIntersectionNew(leafLines, quad4);
 }
 
 // Given a quadtree box and a line, find if a line is inside of a quadrant
-// Use line_loc
+// Use LineLocations
 // Return OUTSIDE if line is outside of box
 // Return LEAF if line is inside of box, but not quadrantable
 // Return QUAD1 if line is inside first quadrant (between xMax, xAvg, yMax, yAvg)
@@ -61,9 +93,9 @@ vector<Line*> CollisionWorld::quadTree(float xMax, float xMin, float yMax, float
 // Return QUAD3 if line is inside third quadrant (between xAvg, xMin, yAvg, yMin)
 // Return QUAD4 if line is insde fourth quadrant (between xMax, xAvg, yAvg, yMin)
 // If a line is exactly on a quadrant border (i.e. one of the axes), return LEAF
-line_loc CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line)
+LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line)
 {
-  line_loc location = OUTSIDE;
+  LineLocation location = OUTSIDE;
   // Math Stuff
 
   return location;
@@ -76,8 +108,7 @@ void CollisionWorld::detectIntersection()
    // Use the quadTree function instead of the default slow implementation
    // **TODO**  HOW DO YOU GET A LIST OR VECTOR OR WHATEVER OF ALL LINES?
    quadTree(BOX_XMAX, BOX_XMIN, BOX_YMAX, BOX_YMIN, lines, 0);
-   return;
-   
+   /*
    vector<Line*>::iterator it1, it2;
    for (it1 = lines.begin(); it1 != lines.end(); ++it1) {
       Line *l1 = *it1;
@@ -90,8 +121,25 @@ void CollisionWorld::detectIntersection()
          }
       }
    }
+   */
 }
 
+// Test for intersection between each line in Line1 against each line in Lines2
+void CollisionWorld::detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2)
+{
+  vector<Line*>::iterator it1, it2;
+   for (it1 = Lines1.begin(); it1 != Lines1.end(); ++it1) {
+      Line *l1 = *it1;
+      for (it2 = Lines2.begin(); it2 != Lines2.end(); ++it2) {
+         Line *l2 = *it2;
+         IntersectionType intersectionType = intersect(l1, l2, timeStep);
+         if (intersectionType != NO_INTERSECTION) {
+            collisionSolver(l1, l2, intersectionType);
+            numLineLineCollisions++;
+         }
+      }
+   }
+}
 
 
 // ************* NEW FUNCTIONS ABOVE HERE ****************

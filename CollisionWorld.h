@@ -9,7 +9,7 @@ using namespace std;
 #include <cilk/reducer_list.h>
 
 /***************NEW FUNCTIONS BELOW HERE**********************/
-typedef enum { OUTSIDE, LEAF, QUAD1, QUAD2, QUAD3, QUAD4 } line_loc;
+typedef enum { OUTSIDE, LEAF, QUAD1, QUAD2, QUAD3, QUAD4 } LineLocation;
 /**************NEW FUNCTIONS ABOVE HERE*********************/
 
 
@@ -72,7 +72,7 @@ public:
    /**** NEW FUNCTIONS BELOW HERE ****/
 
    // Run quadTree recursive function
-   vector<Line*> quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions);
+   void quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions);
 
    // Given a quadtree box and a line, find if a line is inside of a quadrant
    // Return -1 if line is outside of box
@@ -81,7 +81,10 @@ public:
    // Return 2 if line is inside second quadrant (between xAvg, xMin, yMax, yAvg)
    // Return 3 if line is inside third quadrant (between xAvg, xMin, yAvg, yMin)
    // Return 4 if line is insde fourth quadrant (between xMax, xAvg, yAvg, yMin)
-   line_loc lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line);
+   LineLocation lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line);
+ 
+   void detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2);  
+
 };
 
 
