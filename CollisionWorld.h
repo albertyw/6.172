@@ -32,7 +32,12 @@ protected:
    // Record the total number of line line intersection
    unsigned int numLineLineCollisions;
    
+   // Maximum number of recursions of a quadtree before the it gives up and 
+   // manually checks for collisions
    unsigned int maxQuadTreeRecursions;
+   
+   // Maximum number of elements in a quad tree before the quad tree is required to split
+   vector<Line*>::size_type maxElementsPerQuadTree;
 
 public:
    CollisionWorld();

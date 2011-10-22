@@ -20,6 +20,7 @@ CollisionWorld::CollisionWorld()
    numLineLineCollisions = 0;
    timeStep = 0.5;
    maxQuadTreeRecursions = 10;
+   maxElementsPerQuadTree = 5;
 }
 
 
@@ -39,7 +40,7 @@ void CollisionWorld::updateLines()
 // Run the quadTree collision detection
 void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions)
 {
-  if(recursions == maxQuadTreeRecursions){
+  if(recursions >= maxQuadTreeRecursions || currentLines.size() < maxElementsPerQuadTree){
     detectIntersectionNew(currentLines, currentLines);
     return;
   }
