@@ -10,6 +10,11 @@ using namespace std;
 class CollisionWorld
 {
 protected:
+    
+    /***************NEW FUNCTIONS BELOW HERE**********************/
+    enum LineLocation { OUTSIDE, LEAF, QUAD1, QUAD2, QUAD3, QUAD4};
+    
+    /**************NEW FUNCTIONS ABOVE HERE*********************/
    // The size of the collision world
    int boxWidth;
    int boxHeight;
@@ -63,7 +68,7 @@ public:
 
 
 
-   // **** NEW FUNCTIONS BELOW HERE ****
+   /**** NEW FUNCTIONS BELOW HERE ****/
 
    // Run quadTree recursive function
    vector<Line*> quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions);
