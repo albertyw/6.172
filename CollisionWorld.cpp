@@ -53,6 +53,8 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
   // for each line
   LineLocation location;
   vector<Line*>::iterator it;
+  printf("%f",xMin);
+  printf("%f",yMin);
   for (it = currentLines.begin(); it != currentLines.end(); ++it) {
     Line *line = *it;
     // check where line should exist (lineInsideQuadrant)
@@ -72,7 +74,8 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
       throw std::runtime_error::runtime_error("Bad Line passed down quadtree ");
     }
   }
-
+  printf("NEW ITERATION");
+  
   // Spawn 4 recursions of quadTree with the 4 arrays/vectors of lines
   float xAvg = (xMax + xMin)/2;
   float yAvg = (yMax + yMin)/2;
@@ -109,11 +112,20 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
 
    Vec p1 = (*line).p1;
    Vec p2 = (*line).p2;
-   int xMinVec = std::min(p1.x, p2.x);
-   int xMaxVec = std::max(p1.x, p2.x);
-   int yMinVec = std::min(p1.y, p2.y);
-   int yMaxVec = std::max(p1.y, p2.y);
-
+   double xMinVec = std::min(p1.x, p2.x);
+   double xMaxVec = std::max(p1.x, p2.x);
+   double yMinVec = std::min(p1.y, p2.y);
+   double yMaxVec = std::max(p1.y, p2.y);
+   
+   printf("%f\n",xMin);
+   printf("%f\n\n",xMinVec);
+   printf("%f\n",xMax);
+   printf("%f\n\n",xMaxVec);
+   printf("%f\n",yMin);
+   printf("%f\n\n",yMinVec);
+   printf("%f\n",yMax);
+   printf("%f\n\n",yMaxVec);
+   
 
    //test whether any point is outside the rectangle
    if(xMinVec < xMin || xMaxVec > xMax || yMinVec < yMin || yMaxVec > yMax)
