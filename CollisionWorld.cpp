@@ -19,6 +19,7 @@ CollisionWorld::CollisionWorld()
    numLineWallCollisions = 0;
    numLineLineCollisions = 0;
    timeStep = 0.5;
+   maxQuadTreeRecursions = 10;
 }
 
 
@@ -38,6 +39,10 @@ void CollisionWorld::updateLines()
 // Run the quadTree collision detection
 void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions)
 {
+  if(recursions == maxQuadTreeRecursions){
+    detectIntersectionNew(currentLines, currentLines);
+    return;
+  }
   vector<Line*> leafLines;
   // Create 4 arrays/vectors to hold lines for child quadtree boxes
   vector<Line*> quad1;
@@ -107,7 +112,6 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
 void CollisionWorld::detectIntersection()
 {
    // Use the quadTree function instead of the default slow implementation
-   // **TODO**  HOW DO YOU GET A LIST OR VECTOR OR WHATEVER OF ALL LINES?
    quadTree(BOX_XMAX, BOX_XMIN, BOX_YMAX, BOX_YMIN, lines, 0);
    /*
    vector<Line*>::iterator it1, it2;
