@@ -36,8 +36,10 @@ protected:
    // manually checks for collisions
    unsigned int maxQuadTreeRecursions;
    
-   // Maximum number of elements in a quad tree before the quad tree is required to split
-   vector<Line*>::size_type maxElementsPerQuadTree;
+   // Minimum number of elements in a quad tree before it gives up and 
+   // manully checks for collisions
+   vector<Line*>::size_type minElementsToSplit;
+   
 
 public:
    CollisionWorld();
@@ -91,8 +93,10 @@ public:
    LineLocation lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line);
    
    // Test for intersection between each line in Line1 against each line in Lines2
-   void detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2);  
-
+   void detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2);
+   
+   // Test for intersection between each line in Lines
+   void detectIntersectionNewSame(vector<Line*> Lines);  
 };
 
 
