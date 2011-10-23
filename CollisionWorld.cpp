@@ -371,6 +371,9 @@ Line *CollisionWorld::getLine(unsigned int index)
 // Delete all lines in the box
 void CollisionWorld::deleteLines()
 {
+   for(vector<Line*>::iterator it = lines.begin(); it < lines.end(); it++){
+      delete *it;
+   }
    lines.clear();
 }
 

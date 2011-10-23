@@ -68,6 +68,7 @@ LineDemo::LineDemo()
 
 LineDemo::~LineDemo()
 {
+   this->deleteLines();
    delete collisionWorld;
 }
 
