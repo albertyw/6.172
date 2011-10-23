@@ -20,7 +20,7 @@ CollisionWorld::CollisionWorld()
    numLineLineCollisions = 0;
    timeStep = 0.5;
    maxQuadTreeRecursions = 10;
-   maxElementsPerQuadTree = 5;
+   minElementsToSplit = 5;
 }
 
 
@@ -40,7 +40,7 @@ void CollisionWorld::updateLines()
 // Run the quadTree collision detection
 void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions)
 {
-  if(recursions >= maxQuadTreeRecursions || currentLines.size() < maxElementsPerQuadTree){
+  if(recursions >= maxQuadTreeRecursions || currentLines.size() < minElementsToSplit){
     detectIntersectionNew(currentLines, currentLines);
     return;
   }
@@ -88,13 +88,13 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
   float xAvg = (xMax + xMin)/2;
   float yAvg = (yMax + yMin)/2;
   ++recursions;
-  vector<Line*>::size_type vectorEmptySize = 0;
-  if(quad1.size() > vectorEmptySize) quadTree(xMax, xAvg, yMax, yAvg, quad1, recursions);
-  if(quad2.size() > vectorEmptySize) quadTree(xAvg, xMin, yMax, yAvg, quad2, recursions);
-  if(quad3.size() > vectorEmptySize) quadTree(xAvg, xMin, yAvg, yMin, quad3, recursions);
-  if(quad4.size() > vectorEmptySize) quadTree(xMax, xAvg, yAvg, yMin, quad4, recursions);
+  vector<Line*>::size_type vectorMin = 1;
+  if(quad1.size() > vectorMin) quadTree(xMax, xAvg, yMax, yAvg, quad1, recursions);
+  if(quad2.size() > vectorMin) quadTree(xAvg, xMin, yMax, yAvg, quad2, recursions);
+  if(quad3.size() > vectorMin) quadTree(xAvg, xMin, yAvg, yMin, quad3, recursions);
+  if(quad4.size() > vectorMin) quadTree(xMax, xAvg, yAvg, yMin, quad4, recursions);
   // Check for intersections within this box
-  detectIntersectionNew(leafLines, leafLines);
+  detectIntersectionNewSame(leafLines);
   // Check child boxes' lines with current box's lines
   detectIntersectionNew(leafLines, quad1);
   detectIntersectionNew(leafLines, quad2);
@@ -200,6 +200,22 @@ void CollisionWorld::detectIntersectionNew(vector<Line*> Lines1, vector<Line*> L
         //printf("%f", l2->vel.x);
       }
       //printf("\n\n");
+    }
+  }
+}
+// Test for intersection between each line in Lines
+void CollisionWorld::detectIntersectionNewSame(vector<Line*> Lines)
+{
+  vector<Line*>::iterator it1, it2;
+  for (it1 = Lines.begin(); it1 != Lines.end(); ++it1) {
+    Line *l1 = *it1;
+    for (it2 = it1+1; it2 != Lines.end(); ++it2) {
+       Line *l2 = *it2;
+       IntersectionType intersectionType = intersect(l1, l2, timeStep);
+       if (intersectionType != NO_INTERSECTION) {
+         collisionSolver(l1, l2, intersectionType);
+         numLineLineCollisions++;
+       }
     }
   }
 }
