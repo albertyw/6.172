@@ -133,7 +133,7 @@ Vec getIntersectionPoint(Vec p1, Vec p2, Vec p3, Vec p4)
 
 
 // Check the direction of two lines (pi, pj) and (pi, pk)
-double direction(Vec pi, Vec pj, Vec pk)
+inline double direction(Vec pi, Vec pj, Vec pk)
 {
    return crossProduct(pk.x - pi.x,
                        pk.y - pi.y,
@@ -157,7 +157,7 @@ bool onSegment(Vec pi, Vec pj, Vec pk)
 
 
 // Calculate the cross product
-double crossProduct(double x1, double y1, double x2, double y2)
+inline double crossProduct(double x1, double y1, double x2, double y2)
 {
    return x1 * y2 - x2 * y1;
 }
