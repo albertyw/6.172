@@ -117,6 +117,8 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
    // Math Stuff
    float xAvg = (xMax + xMin) / 2;
    float yAvg = (yMax + yMin) / 2;
+   float xVel = fabs((*line).vel.x);
+   float yVel = fabs((*line).vel.y);
 
    double xMinVec = std::min((*line).p1.x, (*line).p2.x);
    double xMaxVec = std::max((*line).p1.x, (*line).p2.x);
@@ -124,8 +126,8 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
    double yMaxVec = std::max((*line).p1.y, (*line).p2.y);
 
    //test whether any point is outside the rectangle
-   if(xMinVec < xMin || xMaxVec > xMax || yMinVec < yMin || yMaxVec > yMax)
-      return OUTSIDE;
+   if(xMinVec + (xVel * 2) < xMin || xMaxVec - (xVel * 2) > xMax || yMinVec + (yVel * 2) < yMin || yMaxVec - (yVel * 2) > yMax)
+      return LEAF;
 
    //test whether vector crosses quadrants
    bool left = (xMaxVec < xAvg && xMinVec < xAvg);
