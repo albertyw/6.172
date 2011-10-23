@@ -19,8 +19,8 @@ CollisionWorld::CollisionWorld()
    numLineWallCollisions = 0;
    numLineLineCollisions = 0;
    timeStep = 0.5;
-   maxQuadTreeRecursions = 10;
-   minElementsToSplit = 5;
+   maxQuadTreeRecursions = 8;
+   minElementsToSplit = 10;
 }
 
 
@@ -41,30 +41,29 @@ void CollisionWorld::updateLines()
 void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions)
 {
   if(recursions >= maxQuadTreeRecursions || currentLines.size() < minElementsToSplit){
-    detectIntersectionNew(currentLines, currentLines);
+    detectIntersectionNewSame(currentLines);
     return;
   }
   vector<Line*> leafLines;
   // Create 4 arrays/vectors to hold lines for child quadtree boxes
   vector<Line*> quad1;
   vector<Line*> quad2;
-  vector<Line*> quad3;
+  vector<Line*> quad3; // Can we combine these vector statements for memory allocation optimization?
   vector<Line*> quad4;
   // for each line
   LineLocation location;
-  vector<Line*>::iterator it;
   //printf("%f ",xMin);
   //printf("%f ",xMax);
   //printf("%f ",yMin);
   //printf("%f ",yMax);
   //printf("%zu ", currentLines.size());
-  for (it = currentLines.begin(); it != currentLines.end(); ++it) {
+  for (vector<Line*>::iterator it = currentLines.begin(); it != currentLines.end(); ++it) {
     Line *line = *it;
     // check where line should exist (lineInsideQuadrant)
     location = lineInsideQuadrant(xMax, xMin, yMax, yMin, line);
     // if line is in a child quadtree add the line to one of the 4 arrays/vectors
     if(location == QUAD1){
-      quad1.push_back(line);
+      quad1.push_back(line); // These push_backs can probably be optimized, since push_back changes the vector size each time
     }else if(location == QUAD2){
       quad2.push_back(line);
     }else if(location == QUAD3){
