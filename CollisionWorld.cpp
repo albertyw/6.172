@@ -74,7 +74,7 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
       throw std::runtime_error::runtime_error("Bad Line passed down quadtree ");
     }
   }
-  printf("NEW ITERATION");
+  printf("NEW ITERATION, num recurse: %i\n", (recursions + 1));
   
   // Spawn 4 recursions of quadTree with the 4 arrays/vectors of lines
   float xAvg = (xMax + xMin)/2;
@@ -116,16 +116,16 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
    double xMaxVec = std::max(p1.x, p2.x);
    double yMinVec = std::min(p1.y, p2.y);
    double yMaxVec = std::max(p1.y, p2.y);
-   
-   printf("%f\n",xMin);
-   printf("%f\n\n",xMinVec);
-   printf("%f\n",xMax);
-   printf("%f\n\n",xMaxVec);
-   printf("%f\n",yMin);
-   printf("%f\n\n",yMinVec);
-   printf("%f\n",yMax);
-   printf("%f\n\n",yMaxVec);
-   
+/*   
+   printf("xmin:%f\n",xMin);
+   printf("xminV:%f\n\n",xMinVec);
+   printf("xmax:%f\n",xMax);
+   printf("xmaxV%f\n\n",xMaxVec);
+   printf("ymin%f\n",yMin);
+   printf("yminV%f\n\n",yMinVec);
+   printf("ymax%f\n",yMax);
+   printf("ymaxV%f\n\n",yMaxVec);
+*/   
 
    //test whether any point is outside the rectangle
    if(xMinVec < xMin || xMaxVec > xMax || yMinVec < yMin || yMaxVec > yMax)
@@ -134,8 +134,8 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
    //test whether vector crosses quadrants
    bool left = (xMaxVec < xAvg && xMinVec < xAvg);
    bool right = (xMaxVec > xAvg && xMinVec > xAvg);
-   bool up = (yMaxVec < yAvg && yMinVec < yAvg); 
-   bool down = (yMaxVec > yAvg && yMinVec > yAvg);   
+   bool up = (yMaxVec > yAvg && yMinVec > yAvg); 
+   bool down = (yMaxVec < yAvg && yMinVec < yAvg);   
    
    if(right && up)
       return QUAD1;
