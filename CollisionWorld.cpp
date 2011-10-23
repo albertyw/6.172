@@ -187,37 +187,50 @@ void CollisionWorld::detectIntersection()
 void CollisionWorld::detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2)
 {
   vector<Line*>::iterator it1, it2;
+  list<IntersectionInfo> intersections;
   for (it1 = Lines1.begin(); it1 != Lines1.end(); ++it1) {
     Line *l1 = *it1;
     for (it2 = Lines2.begin(); it2 != Lines2.end(); ++it2) {
       Line *l2 = *it2;
       if(l1 == l2) continue;
-      //printf("%f\n", l2->vel.x);
       IntersectionType intersectionType = intersect(l1, l2, timeStep);
-      //printf("%f\n", l2->vel.x);
       if (intersectionType != NO_INTERSECTION) {
-        collisionSolver(l1, l2, intersectionType);
-        numLineLineCollisions++;
-        //printf("%f", l2->vel.x);
+         IntersectionInfo intersection = IntersectionInfo(l1, l2, intersectionType);
+         intersections.push_back(intersection);
       }
-      //printf("\n\n");
     }
   }
+  allCollisionSolver(intersections);
 }
+
 // Test for intersection between each line in Lines
 void CollisionWorld::detectIntersectionNewSame(vector<Line*> Lines)
 {
   vector<Line*>::iterator it1, it2;
+  list<IntersectionInfo> intersections;
   for (it1 = Lines.begin(); it1 != Lines.end(); ++it1) {
     Line *l1 = *it1;
     for (it2 = it1+1; it2 != Lines.end(); ++it2) {
        Line *l2 = *it2;
        IntersectionType intersectionType = intersect(l1, l2, timeStep);
        if (intersectionType != NO_INTERSECTION) {
-         collisionSolver(l1, l2, intersectionType);
-         numLineLineCollisions++;
+         IntersectionInfo intersection = IntersectionInfo(l1, l2, intersectionType);
+         intersections.push_back(intersection);
        }
     }
+  }
+  allCollisionSolver(intersections);
+}
+
+/**
+ * Solve all of the collisions in the list<IntersectionInfo>
+ **/
+void CollisionWorld::allCollisionSolver(list<IntersectionInfo> intersections)
+{
+  list<IntersectionInfo>::iterator i;
+  numLineLineCollisions += intersections.size();
+  for(i=intersections.begin(); i!=intersections.end(); ++i){
+    collisionSolver(i->l1, i->l2, i->intersectionType);
   }
 }
 

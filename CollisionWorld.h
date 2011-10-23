@@ -10,6 +10,16 @@ using namespace std;
 
 /***************NEW FUNCTIONS BELOW HERE**********************/
 typedef enum { OUTSIDE, LEAF, QUAD1, QUAD2, QUAD3, QUAD4 } LineLocation;
+struct IntersectionInfo {
+  Line *l1;
+  Line *l2;
+  IntersectionType intersectionType;
+  IntersectionInfo(Line *l1, Line *l2, IntersectionType intersectionType) {
+    this->l1 = l1;
+    this->l2 = l2;
+    this->intersectionType = intersectionType;
+  }
+};
 /**************NEW FUNCTIONS ABOVE HERE*********************/
 
 
@@ -84,12 +94,14 @@ public:
    void quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions);
 
    // Given a quadtree box and a line, find if a line is inside of a quadrant
-   // Return -1 if line is outside of box
-   // Return 0 if line is inside of box, but not quadrantable
-   // Return 1 if line is inside first quadrant (between xMax, xAvg, yMax, yAvg)
-   // Return 2 if line is inside second quadrant (between xAvg, xMin, yMax, yAvg)
-   // Return 3 if line is inside third quadrant (between xAvg, xMin, yAvg, yMin)
-   // Return 4 if line is insde fourth quadrant (between xMax, xAvg, yAvg, yMin)
+   // Use LineLocations
+   // Return OUTSIDE if line is outside of box
+   // Return LEAF if line is inside of box, but not quadrantable
+   // Return QUAD1 if line is inside first quadrant (between xMax, xAvg, yMax, yAvg)
+   // Return QUAD2 if line is inside second quadrant (between xAvg, xMin, yMax, yAvg)
+   // Return QUAD3 if line is inside third quadrant (between xAvg, xMin, yAvg, yMin)
+   // Return QUAD4 if line is insde fourth quadrant (between xMax, xAvg, yAvg, yMin)
+   // If a line is exactly on a quadrant border (i.e. one of the axes), return LEAF
    LineLocation lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line);
    
    // Test for intersection between each line in Line1 against each line in Lines2
@@ -97,6 +109,11 @@ public:
    
    // Test for intersection between each line in Lines
    void detectIntersectionNewSame(vector<Line*> Lines);  
+   
+   /**
+   * Solve all of the collisions in the list<IntersectionInfo>
+   **/
+  void allCollisionSolver(list<IntersectionInfo> intersections);
 };
 
 
