@@ -11,6 +11,8 @@
 \begin{document}
 \maketitle
 \section{4}
+
+
 \subsection{4.1}
 Original Output
 \begin{verbatim}
@@ -20,15 +22,87 @@ Number of frames = 4000
 88.884 seconds in total
 \end{verbatim}
 
-\begin{verbatim}
-1257 Line-Wall Collisions
-19957 Line-Line Collisions
-19.538 seconds in total
-\end{verbatim}
+
 \subsection{4.2}
-BLAH
+This is not a problem for quadtree because the Line will just be stored by the 
+inner quadtree node, not be a quadtree leaf.  This, however, means that the 
+Line needs to be checked for collisions against each of the node's children 
+(although this probably can be optimized to being just checked against the 
+children that the large Line overlaps).  
+
+This method of storing some line segments in inner nodes is not as 
+efficient as the original quadtree implementation because inner node Lines need 
+to be checked for collisions against children lines.  However, it is still more 
+efficient than the original implementation because it still reduces the number of 
+collision checks.  
+
 
 \subsection{4.3}
+Quadtree output
+\begin{verbatim}
+Number of frames = 4000
+1297 Line-Wall Collisions
+20094 Line-Line Collisions
+18.238 seconds in total
+\end{verbatim}
+This speedup is 4.9 times faster.  Since quadtree is supposed to dramatically 
+reduce the number of collision checks, this speedup is expected.  
+
+
+\subsection{4.4}
+The quadtree function was implemented as a recursive function.  Each run of the 
+function represents a single node of the quadtree.  Instead of using the 
+CollisionWorld variable "lines", the quadtree function passes a vector of lines 
+that it creates to children nodes.  When the quadtree function is first run, 
+the quadtree sorts every line that it gets into one of five vectors: a leaf 
+vector if the line can't be stored in a child of the node, or one of the vectors 
+that is sent to one of the node's quadrant children.  The quadtree function then 
+checks each of the four quadrant vectors to make sure they have more than 1 line, 
+then instantiates the quadtree function for the child node.  Lastly, the quadtree 
+function runs collision checks between Lines in its own vector and Lines in its 
+children.  
+
+Each quadtree node has one 
+vector<Line*> variable that stores all the lines.  Quadtree nodes will create 
+the vectors for their children nodes.  This might be optimized to use an object 
+that is not a vector.
+
+
+\subsection{4.5}
+Max elements without subdividing.
+
+Found that the best time to stop subdividing quadtrees into children nodes 
+was when the number of Lines in a quadtree was 10.  
+\begin{verbatim}
+Number of frames = 4000
+1310 Line-Wall Collisions
+20302 Line-Line Collisions
+17.399 seconds in total
+\end{verbatim}
+This is a 5\% speedup.  
+
+
+\subsection{4.6}
+Max recursion depth
+
+Maximum recursion depth doesn't seem to matter because any benefits you get 
+from maximum recursion depth are already gained by implementing a maximum ele
+
+
+\subsection{4.7}
+One part that was optimized was that there are now two functions that manually 
+compare vectors of lines.  Since there are some parts of the code that need to 
+compare two different vectors and some parts that compare vectors to themselves, 
+the parts that compare vectors against themselves can be optimized to not 
+recompare Lines that have already been recompared.  This can probably be 
+optimized for the former comparisons too so that lines are never compared for 
+collisions more than once in a timestep.  
+
+
+
+
+\section{5}
+\subsection{5.1}
 
 
 \end{document}
