@@ -53,8 +53,11 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
   // for each line
   LineLocation location;
   vector<Line*>::iterator it;
-  printf("%f",xMin);
-  printf("%f",yMin);
+  printf("%f ",xMin);
+  printf("%f ",xMax);
+  printf("%f ",yMin);
+  printf("%f ",yMax);
+  printf("%zu ", currentLines.size());
   for (it = currentLines.begin(); it != currentLines.end(); ++it) {
     Line *line = *it;
     // check where line should exist (lineInsideQuadrant)
@@ -74,7 +77,8 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
       throw std::runtime_error::runtime_error("Bad Line passed down quadtree ");
     }
   }
-  printf("NEW ITERATION, num recurse: %i\n", (recursions + 1));
+  printf("NEW ITERATION, num recurse: %i ", (recursions + 1));
+  printf("%zu %zu %zu %zu %zu\n", quad1.size(), quad2.size(), quad3.size(), quad4.size(), leafLines.size());
   
   // Spawn 4 recursions of quadTree with the 4 arrays/vectors of lines
   float xAvg = (xMax + xMin)/2;
@@ -110,22 +114,10 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
    float xAvg = (xMax + xMin) / 2;
    float yAvg = (yMax + yMin) / 2;
 
-   Vec p1 = (*line).p1;
-   Vec p2 = (*line).p2;
-   double xMinVec = std::min(p1.x, p2.x);
-   double xMaxVec = std::max(p1.x, p2.x);
-   double yMinVec = std::min(p1.y, p2.y);
-   double yMaxVec = std::max(p1.y, p2.y);
-/*   
-   printf("xmin:%f\n",xMin);
-   printf("xminV:%f\n\n",xMinVec);
-   printf("xmax:%f\n",xMax);
-   printf("xmaxV%f\n\n",xMaxVec);
-   printf("ymin%f\n",yMin);
-   printf("yminV%f\n\n",yMinVec);
-   printf("ymax%f\n",yMax);
-   printf("ymaxV%f\n\n",yMaxVec);
-*/   
+   double xMinVec = std::min((*line).p1.x, (*line).p2.x);
+   double xMaxVec = std::max((*line).p1.x, (*line).p2.x);
+   double yMinVec = std::min((*line).p1.y, (*line).p2.y);
+   double yMaxVec = std::max((*line).p1.y, (*line).p2.y);
 
    //test whether any point is outside the rectangle
    if(xMinVec < xMin || xMaxVec > xMax || yMinVec < yMin || yMaxVec > yMax)
@@ -154,7 +146,16 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
 void CollisionWorld::detectIntersection()
 {
    // Use the quadTree function instead of the default slow implementation
+   printf("p1X:%f\n",(*lines[0]).p1.x);
+   printf("p1Y:%f\n",(*lines[0]).p1.y);
+   printf("p2X:%f\n",(*lines[0]).p2.x);
+   printf("p2Y:%f\n\n",(*lines[0]).p2.y);
    quadTree(BOX_XMAX, BOX_XMIN, BOX_YMAX, BOX_YMIN, lines, 0);
+   printf("p1X:%f\n",(*lines[0]).p1.x);
+   printf("p1Y:%f\n",(*lines[0]).p1.y);
+   printf("p2X:%f\n",(*lines[0]).p2.x);
+   printf("p2Y:%f\n\n",(*lines[0]).p2.y);
+   printf("FINISHED FRAME\n");
    /*
    vector<Line*>::iterator it1, it2;
    for (it1 = lines.begin(); it1 != lines.end(); ++it1) {
