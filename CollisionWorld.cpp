@@ -87,7 +87,8 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
   if(quad4.size() > vectorMin) quadTree(xMax, xAvg, yAvg, yMin, quad4, recursions); // TODO: One of the previous cilk_spawns shouldn't spawn if this line isn't run
   cilk_sync;
   // Check for intersections within this box
-  detectIntersectionNewSame(leafLines);
+  list<IntersectionInfo> intersections = detectIntersectionNewSame(leafLines);
+  allCollisionSolver(intersections);
   // Check child boxes' lines with current box's lines
   detectIntersectionNew(leafLines, quad1);
   detectIntersectionNew(leafLines, quad2);
@@ -165,12 +166,11 @@ void CollisionWorld::detectIntersectionNew(vector<Line*> Lines1, vector<Line*> L
       }
     }
   }
-  //const list<IntersectionInfo> &intersections2 = intersections.get_value();
   allCollisionSolver(intersections.get_value());
 }
 
 // Test for intersection between each line in Lines
-void CollisionWorld::detectIntersectionNewSame(vector<Line*> Lines)
+list<IntersectionInfo> CollisionWorld::detectIntersectionNewSame(vector<Line*> Lines)
 {
   cilk::reducer_list_append<IntersectionInfo> intersections;
   cilk_for (vector<Line*>::iterator it1 = Lines.begin(); it1 != Lines.end(); ++it1) {
@@ -185,8 +185,7 @@ void CollisionWorld::detectIntersectionNewSame(vector<Line*> Lines)
        }
     }
   }
-  //const list<IntersectionInfo> &intersections2 = ;
-  allCollisionSolver(intersections.get_value());
+  return intersections.get_value();
 }
 
 /**

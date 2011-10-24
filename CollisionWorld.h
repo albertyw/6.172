@@ -111,7 +111,7 @@ public:
    void detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2);
    
    // Test for intersection between each line in Lines
-   void detectIntersectionNewSame(vector<Line*> Lines);  
+   list<IntersectionInfo> detectIntersectionNewSame(vector<Line*> Lines);  
    
    /**
    * Solve all of the collisions in the list<IntersectionInfo>
