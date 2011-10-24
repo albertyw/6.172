@@ -113,6 +113,32 @@ Top six longest functions:
 
 
 \subsection{5.2}
+Changed detectIntersectionNew and detectIntersectionNewSame functions to save 
+collisions to a list instead of calling collisionSolver directly.  
+
+New time:
+\begin{verbatim}
+Number of frames = 4000
+1265 Line-Wall Collisions
+20250 Line-Line Collisions
+17.792 seconds in total
+\end{verbatim}
+
+
+\subsection{5.3}
+Made the tester into a cilk_for and changed the list into a reducer.  
+
+New time:
+\begin{verbatim}
+Number of frames = 4000
+1265 Line-Wall Collisions
+20250 Line-Line Collisions
+10.734 seconds in total
+\end{verbatim}
+
+
+\subsection{5.4}
+
 
 
 \end{document}

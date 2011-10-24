@@ -3,6 +3,7 @@
 
 #include <vector>
 using namespace std;
+#include <cilk/cilk.h>
 
 #include "Line.h"
 #include "IntersectionDetection.h"

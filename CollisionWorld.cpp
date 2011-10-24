@@ -186,9 +186,9 @@ void CollisionWorld::detectIntersection()
 // Test for intersection between each line in Line1 against each line in Lines2
 void CollisionWorld::detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2)
 {
-  vector<Line*>::iterator it1, it2;
-  list<IntersectionInfo> intersections;
-  for (it1 = Lines1.begin(); it1 != Lines1.end(); ++it1) {
+  cilk::reducer_list_append<IntersectionInfo> intersections;
+  cilk_for (vector<Line*>::iterator it1 = Lines1.begin(); it1 != Lines1.end(); ++it1) {
+    vector<Line*>::iterator it2;
     Line *l1 = *it1;
     for (it2 = Lines2.begin(); it2 != Lines2.end(); ++it2) {
       Line *l2 = *it2;
@@ -200,15 +200,16 @@ void CollisionWorld::detectIntersectionNew(vector<Line*> Lines1, vector<Line*> L
       }
     }
   }
-  allCollisionSolver(intersections);
+  //const list<IntersectionInfo> &intersections2 = intersections.get_value();
+  allCollisionSolver(intersections.get_value());
 }
 
 // Test for intersection between each line in Lines
 void CollisionWorld::detectIntersectionNewSame(vector<Line*> Lines)
 {
-  vector<Line*>::iterator it1, it2;
-  list<IntersectionInfo> intersections;
-  for (it1 = Lines.begin(); it1 != Lines.end(); ++it1) {
+  cilk::reducer_list_append<IntersectionInfo> intersections;
+  cilk_for (vector<Line*>::iterator it1 = Lines.begin(); it1 != Lines.end(); ++it1) {
+    vector<Line*>::iterator it2;
     Line *l1 = *it1;
     for (it2 = it1+1; it2 != Lines.end(); ++it2) {
        Line *l2 = *it2;
@@ -219,7 +220,8 @@ void CollisionWorld::detectIntersectionNewSame(vector<Line*> Lines)
        }
     }
   }
-  allCollisionSolver(intersections);
+  //const list<IntersectionInfo> &intersections2 = ;
+  allCollisionSolver(intersections.get_value());
 }
 
 /**
