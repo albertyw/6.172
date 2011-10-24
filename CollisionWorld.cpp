@@ -52,11 +52,6 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
   vector<Line*> quad4;
   // for each line
   LineLocation location;
-  //printf("%f ",xMin);
-  //printf("%f ",xMax);
-  //printf("%f ",yMin);
-  //printf("%f ",yMax);
-  //printf("%zu ", currentLines.size());
   for (vector<Line*>::iterator it = currentLines.begin(); it != currentLines.end(); ++it) {
     Line *line = *it;
     // check where line should exist (lineInsideQuadrant)
@@ -80,18 +75,17 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
       throw std::runtime_error::runtime_error("Bad Line passed down quadtree ");
     }
   }
-  //printf("NEW ITERATION, num recurse: %i ", (recursions + 1));
-  //printf("%zu %zu %zu %zu %zu\n", quad1.size(), quad2.size(), quad3.size(), quad4.size(), leafLines.size());
-  
   // Spawn 4 recursions of quadTree with the 4 arrays/vectors of lines
   float xAvg = (xMax + xMin)/2;
   float yAvg = (yMax + yMin)/2;
   ++recursions;
   vector<Line*>::size_type vectorMin = 1;
-  if(quad1.size() > vectorMin) quadTree(xMax, xAvg, yMax, yAvg, quad1, recursions);
-  if(quad2.size() > vectorMin) quadTree(xAvg, xMin, yMax, yAvg, quad2, recursions);
-  if(quad3.size() > vectorMin) quadTree(xAvg, xMin, yAvg, yMin, quad3, recursions);
-  if(quad4.size() > vectorMin) quadTree(xMax, xAvg, yAvg, yMin, quad4, recursions);
+  
+  if(quad1.size() > vectorMin) cilk_spawn quadTree(xMax, xAvg, yMax, yAvg, quad1, recursions);
+  if(quad2.size() > vectorMin) cilk_spawn quadTree(xAvg, xMin, yMax, yAvg, quad2, recursions);
+  if(quad3.size() > vectorMin) cilk_spawn quadTree(xAvg, xMin, yAvg, yMin, quad3, recursions);
+  if(quad4.size() > vectorMin) quadTree(xMax, xAvg, yAvg, yMin, quad4, recursions); // TODO: One of the previous cilk_spawns shouldn't spawn if this line isn't run
+  cilk_sync;
   // Check for intersections within this box
   detectIntersectionNewSame(leafLines);
   // Check child boxes' lines with current box's lines
@@ -151,36 +145,7 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
 void CollisionWorld::detectIntersection()
 {
    // Use the quadTree function instead of the default slow implementation
-   
-   /*
-   printf("%zu\n\n", lines.size());
-   printf("p1X:%f\n",(*lines[0]).p1.x);
-   printf("p1Y:%f\n",(*lines[0]).p1.y);
-   printf("p2X:%f\n",(*lines[0]).p2.x);
-   printf("p2Y:%f\n\n",(*lines[0]).p2.y);
-   */
    quadTree(BOX_XMAX, BOX_XMIN, BOX_YMAX, BOX_YMIN, lines, 0);
-   /*
-   printf("p1X:%f\n",(*lines[0]).p1.x);
-   printf("p1Y:%f\n",(*lines[0]).p1.y);
-   printf("p2X:%f\n",(*lines[0]).p2.x);
-   printf("p2Y:%f\n\n",(*lines[0]).p2.y);
-   printf("FINISHED FRAME\n");
-   */
-   /*
-   vector<Line*>::iterator it1, it2;
-   for (it1 = lines.begin(); it1 != lines.end(); ++it1) {
-      Line *l1 = *it1;
-      for (it2 = it1+1; it2 != lines.end(); ++it2) {
-         Line *l2 = *it2;
-         IntersectionType intersectionType = intersect(l1, l2, timeStep);
-         if (intersectionType != NO_INTERSECTION) {
-            collisionSolver(l1, l2, intersectionType);
-            numLineLineCollisions++;
-         }
-      }
-   }
-   */
 }
 
 // Test for intersection between each line in Line1 against each line in Lines2
