@@ -126,7 +126,7 @@ Number of frames = 4000
 
 
 \subsection{5.3}
-Made the tester into a cilk_for and changed the list into a reducer.  
+Made the tester into a cilk\_for and changed the list into a reducer.  
 
 New time:
 \begin{verbatim}
@@ -139,7 +139,7 @@ Number of frames = 4000
 
 \subsection{5.4}
 Optimized some parts of code to run faster.  
-Added cilk_spawn to the functions that start the search for intersections.  
+Added cilk\_spawn to the functions that start the search for intersections.  
 \begin{verbatim}
 Number of frames = 4000
 1227 Line-Wall Collisions
@@ -159,9 +159,9 @@ Best maximum recursion depth is 7.  Best size of quadtrees is 25 or less.  Speed
 was:
 \begin{verbatim}
 Number of frames = 4000
-1187 Line-Wall Collisions
-21165 Line-Line Collisions
-6.868 seconds in total
+1267 Line-Wall Collisions
+20383 Line-Line Collisions
+6.846 seconds in total
 \end{verbatim}
 
 
@@ -172,7 +172,7 @@ Total speedup from beginning was about 10 times faster from original code.
 We want to basically parallelize calls to exterior functions, especially to 
 collisionsolver() and intersect().  We may also look into modifying the intersect 
 function itself to run faster.  We currently have problems with iterators because 
-cilk_for cannot use STL list iterators while the output of a reducer_list is a 
+cilk\_for cannot use STL list iterators while the output of a reducer\_list is a 
 list, and not a vector.  Unless there is a way to easily convert from STL lists 
 to vectors, we may not be able to parallelize some loops.  
 
