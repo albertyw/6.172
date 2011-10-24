@@ -19,8 +19,8 @@ CollisionWorld::CollisionWorld()
    numLineWallCollisions = 0;
    numLineLineCollisions = 0;
    timeStep = 0.5;
-   maxQuadTreeRecursions = 8;
-   minElementsToSplit = 10;
+   maxQuadTreeRecursions = 7;
+   minElementsToSplit = 25;
 }
 
 
