@@ -4,6 +4,8 @@
 #include <vector>
 using namespace std;
 #include <cilk/cilk.h>
+#include <cilktools/cilkview.h>
+#include <cilktools/cilkscreen.h>
 
 #include "Line.h"
 #include "IntersectionDetection.h"
