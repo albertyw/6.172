@@ -89,11 +89,10 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
   // Check for intersections within this box
   detectIntersectionNewSame(leafLines);
   // Check child boxes' lines with current box's lines
-  cilk_spawn detectIntersectionNew(leafLines, quad1);
-  cilk_spawn detectIntersectionNew(leafLines, quad2);
-  cilk_spawn detectIntersectionNew(leafLines, quad3);
+  detectIntersectionNew(leafLines, quad1);
+  detectIntersectionNew(leafLines, quad2);
+  detectIntersectionNew(leafLines, quad3);
   detectIntersectionNew(leafLines, quad4);
-  cilk_sync;
 }
 
 // Given a quadtree box and a line, find if a line is inside of a quadrant
