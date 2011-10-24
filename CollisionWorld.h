@@ -108,7 +108,7 @@ public:
    LineLocation lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line);
    
    // Test for intersection between each line in Line1 against each line in Lines2
-   void detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2);
+   list<IntersectionInfo> detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2);
    
    // Test for intersection between each line in Lines
    list<IntersectionInfo> detectIntersectionNewSame(vector<Line*> Lines);  

@@ -90,10 +90,16 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
   list<IntersectionInfo> intersections = detectIntersectionNewSame(leafLines);
   allCollisionSolver(intersections);
   // Check child boxes' lines with current box's lines
-  detectIntersectionNew(leafLines, quad1);
-  detectIntersectionNew(leafLines, quad2);
-  detectIntersectionNew(leafLines, quad3);
-  detectIntersectionNew(leafLines, quad4);
+  list<IntersectionInfo> intersectionsquad1 = cilk_spawn detectIntersectionNew(leafLines, quad1);
+  list<IntersectionInfo> intersectionsquad2 = cilk_spawn detectIntersectionNew(leafLines, quad2);
+  list<IntersectionInfo> intersectionsquad3 = cilk_spawn detectIntersectionNew(leafLines, quad3);
+  list<IntersectionInfo> intersectionsquad4 = cilk_spawn detectIntersectionNew(leafLines, quad4);
+  cilk_sync;
+  
+  allCollisionSolver(intersectionsquad1);
+  allCollisionSolver(intersectionsquad2);
+  allCollisionSolver(intersectionsquad3);
+  allCollisionSolver(intersectionsquad4);
 }
 
 /**
@@ -158,7 +164,7 @@ void CollisionWorld::detectIntersection()
 /**
  * Test for intersection between each line in Line1 against each line in Lines2
  **/
-void CollisionWorld::detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2)
+list<IntersectionInfo> CollisionWorld::detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2)
 {
   cilk::reducer_list_append<IntersectionInfo> intersections;
   cilk_for (vector<Line*>::iterator it1 = Lines1.begin(); it1 != Lines1.end(); ++it1) {
@@ -174,7 +180,7 @@ void CollisionWorld::detectIntersectionNew(vector<Line*> Lines1, vector<Line*> L
       }
     }
   }
-  allCollisionSolver(intersections.get_value());
+  return intersections.get_value();
 }
 
 /**
@@ -205,7 +211,7 @@ void CollisionWorld::allCollisionSolver(list<IntersectionInfo> intersections)
 {
   list<IntersectionInfo>::iterator i;
   numLineLineCollisions += intersections.size();
-  for(i=intersections.begin(); i!=intersections.end(); ++i){
+  for(i=intersections.begin(); i!=intersections.end(); ++i){// If we coarsen this loop, we can make it parallel
     collisionSolver(i->l1, i->l2, i->intersectionType);
   }
 }
