@@ -138,17 +138,16 @@ Number of frames = 4000
 
 
 \subsection{5.4}
-Added cilk_spawn to the four functions that spawn child quadtrees.  
-
-New time:
+Optimized some parts of code to run faster.  
+Added cilk_spawn to the functions that start the search for intersections.  
 \begin{verbatim}
 Number of frames = 4000
-1265 Line-Wall Collisions
-19456 Line-Line Collisions
-3.094 seconds in total
+1227 Line-Wall Collisions
+18999 Line-Line Collisions
+8.978 seconds in total
 \end{verbatim}
 
-cilkscreen says no races.  
+cilkscreen says no races.  Runs are the same time.  
 \subsection{5.5}
 Span is 337 million instructions
 
@@ -160,13 +159,24 @@ Best maximum recursion depth is 7.  Best size of quadtrees is 25 or less.  Speed
 was:
 \begin{verbatim}
 Number of frames = 4000
-1227 Line-Wall Collisions
-18792 Line-Line Collisions
-2.958 seconds in total
+1187 Line-Wall Collisions
+21165 Line-Line Collisions
+6.868 seconds in total
 \end{verbatim}
 
 
 \subsection{5.6}
-Total speedup from beginning was 30 times faster from original code.  
+Total speedup from beginning was about 10 times faster from original code.  
+
+
+We want to basically parallelize calls to exterior functions, especially to 
+collisionsolver() and intersect().  We may also look into modifying the intersect 
+function itself to run faster.  We currently have problems with iterators because 
+cilk_for cannot use STL list iterators while the output of a reducer_list is a 
+list, and not a vector.  Unless there is a way to easily convert from STL lists 
+to vectors, we may not be able to parallelize some loops.  
+
+Albert wrote the quadtree, detectIntersectionNew, and allCollisionSolver functions.  
+Kaichen did testing and wrote the lineInsideQuadrant function.  
 
 \end{document}

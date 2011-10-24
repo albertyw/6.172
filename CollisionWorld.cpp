@@ -65,7 +65,7 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
       quad4.push_back(line);
     }else if(location == LEAF){
       leafLines.push_back(line);
-    }else if(location == OUTSIDE){
+    }/*else if(location == OUTSIDE){
       printf("X must be between %f and %f\n", xMin, xMax);
       printf("p1X:%f\n",(*line).p1.x);
       printf("p2X:%f\n",(*line).p2.x);
@@ -73,7 +73,7 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
       printf("p1Y:%f\n",(*line).p1.y);
       printf("p2Y:%f\n\n",(*line).p2.y);
       throw std::runtime_error::runtime_error("Bad Line passed down quadtree ");
-    }
+    }*/
   }
   // Spawn 4 recursions of quadTree with the 4 arrays/vectors of lines
   float xAvg = (xMax + xMin)/2;
@@ -128,9 +128,10 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
    double yMaxVec = std::max((*line).p1.y, (*line).p2.y);
 
    //test whether any point is outside the rectangle
-   double buffer = 0.01; // Use this buffer because comparing floating points is not exact
-   if(xMinVec < xMin-buffer || xMaxVec > xMax+buffer || yMinVec < yMin-buffer || yMaxVec > yMax+buffer)
-      return OUTSIDE;
+   // We don't need to test this anymore because quadTrees never gives bad lines to children
+   //double buffer = 0.01; // Use this buffer because comparing floating points is not exact
+   //if(xMinVec < xMin-buffer || xMaxVec > xMax+buffer || yMinVec < yMin-buffer || yMaxVec > yMax+buffer)
+   //   return OUTSIDE;
 
    //test whether vector crosses quadrants
    bool left = (xMaxVec < xAvg && xMinVec < xAvg);
@@ -172,7 +173,7 @@ list<IntersectionInfo> CollisionWorld::detectIntersectionNew(vector<Line*> Lines
     Line *l1 = *it1;
     for (it2 = Lines2.begin(); it2 != Lines2.end(); ++it2) {
       Line *l2 = *it2;
-      if(l1 == l2) continue;
+      if(l1 == l2) continue; // Don't compare a line against itself
       IntersectionType intersectionType = intersect(l1, l2, timeStep);
       if (intersectionType != NO_INTERSECTION) {
          IntersectionInfo intersection = IntersectionInfo(l1, l2, intersectionType);
