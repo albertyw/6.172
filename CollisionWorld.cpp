@@ -19,8 +19,8 @@ CollisionWorld::CollisionWorld()
    numLineWallCollisions = 0;
    numLineLineCollisions = 0;
    timeStep = 0.5;
-   maxQuadTreeRecursions = 7;
-   minElementsToSplit = 25;
+   maxQuadTreeRecursions = 7;  // Maximum recursion depth
+   minElementsToSplit = 25;    // Minimum quadtree size
 }
 
 
@@ -32,24 +32,22 @@ void CollisionWorld::updateLines()
    lineWallCollision();
 }
 
-//****************************NEW FUNCTIONS BELOW HERE*********************
+/****************************NEW FUNCTIONS BELOW HERE*********************/
 
-
-// **TODO** NOT SURE HOW TO REPRESENT LINES.  SHOULD IT BE "vector<Line*> currentLines"?
-
-// Run the quadTree collision detection
+/**
+ * Run the quadTree collision detection
+ **/
 void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions)
 {
-  if(recursions >= maxQuadTreeRecursions || currentLines.size() < minElementsToSplit){
+  if(recursions >= maxQuadTreeRecursions ||      // Maximum recursion depth 
+    currentLines.size() < minElementsToSplit){   // Minimum quadtree size
     detectIntersectionNewSame(currentLines);
     return;
   }
+  // Create a vector to hold lines that must sit in the current node
   vector<Line*> leafLines;
-  // Create 4 arrays/vectors to hold lines for child quadtree boxes
-  vector<Line*> quad1;
-  vector<Line*> quad2;
-  vector<Line*> quad3; // Can we combine these vector statements for memory allocation optimization?
-  vector<Line*> quad4;
+  // Create 4 vectors to hold lines for child quadtree boxes
+  vector<Line*> quad1, quad2, quad3, quad4;
   // for each line
   LineLocation location;
   for (vector<Line*>::iterator it = currentLines.begin(); it != currentLines.end(); ++it) {
@@ -68,9 +66,11 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
     }else if(location == LEAF){
       leafLines.push_back(line);
     }else if(location == OUTSIDE){
+      printf("X must be between %f and %f\n", xMin, xMax);
       printf("p1X:%f\n",(*line).p1.x);
-      printf("p1Y:%f\n",(*line).p1.y);
       printf("p2X:%f\n",(*line).p2.x);
+      printf("Y must be between %f and %f\n", yMin, yMax);
+      printf("p1Y:%f\n",(*line).p1.y);
       printf("p2Y:%f\n\n",(*line).p2.y);
       throw std::runtime_error::runtime_error("Bad Line passed down quadtree ");
     }
@@ -81,11 +81,11 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
   ++recursions;
   vector<Line*>::size_type vectorMin = 1;
   
-  if(quad1.size() > vectorMin) cilk_spawn quadTree(xMax, xAvg, yMax, yAvg, quad1, recursions);
-  if(quad2.size() > vectorMin) cilk_spawn quadTree(xAvg, xMin, yMax, yAvg, quad2, recursions);
-  if(quad3.size() > vectorMin) cilk_spawn quadTree(xAvg, xMin, yAvg, yMin, quad3, recursions);
-  if(quad4.size() > vectorMin) quadTree(xMax, xAvg, yAvg, yMin, quad4, recursions); // TODO: One of the previous cilk_spawns shouldn't spawn if this line isn't run
-  cilk_sync;
+  // Create child quadTrees
+  if(quad1.size() > vectorMin) quadTree(xMax, xAvg, yMax, yAvg, quad1, recursions);
+  if(quad2.size() > vectorMin) quadTree(xAvg, xMin, yMax, yAvg, quad2, recursions);
+  if(quad3.size() > vectorMin) quadTree(xAvg, xMin, yAvg, yMin, quad3, recursions);
+  if(quad4.size() > vectorMin) quadTree(xMax, xAvg, yAvg, yMin, quad4, recursions);
   // Check for intersections within this box
   list<IntersectionInfo> intersections = detectIntersectionNewSame(leafLines);
   allCollisionSolver(intersections);
@@ -96,15 +96,17 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
   detectIntersectionNew(leafLines, quad4);
 }
 
-// Given a quadtree box and a line, find if a line is inside of a quadrant
-// Use LineLocations
-// Return OUTSIDE if line is outside of box
-// Return LEAF if line is inside of box, but not quadrantable
-// Return QUAD1 if line is inside first quadrant (between xMax, xAvg, yMax, yAvg)
-// Return QUAD2 if line is inside second quadrant (between xAvg, xMin, yMax, yAvg)
-// Return QUAD3 if line is inside third quadrant (between xAvg, xMin, yAvg, yMin)
-// Return QUAD4 if line is insde fourth quadrant (between xMax, xAvg, yAvg, yMin)
-// If a line is exactly on a quadrant border (i.e. one of the axes), return LEAF
+/**
+ * Given a quadtree box and a line, find if a line is inside of a quadrant
+ * Use LineLocations
+ * Return OUTSIDE if line is outside of box
+ * Return LEAF if line is inside of box, but not quadrantable
+ * Return QUAD1 if line is inside first quadrant (between xMax, xAvg, yMax, yAvg)
+ * Return QUAD2 if line is inside second quadrant (between xAvg, xMin, yMax, yAvg)
+ * Return QUAD3 if line is inside third quadrant (between xAvg, xMin, yAvg, yMin)
+ * Return QUAD4 if line is insde fourth quadrant (between xMax, xAvg, yAvg, yMin)
+ * If a line is exactly on a quadrant border (i.e. one of the axes), return LEAF
+ **/
 LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line)
 {
    LineLocation location = OUTSIDE;
@@ -120,8 +122,9 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
    double yMaxVec = std::max((*line).p1.y, (*line).p2.y);
 
    //test whether any point is outside the rectangle
-   if(xMinVec + (xVel * 2) < xMin || xMaxVec - (xVel * 2) > xMax || yMinVec + (yVel * 2) < yMin || yMaxVec - (yVel * 2) > yMax)
-      return LEAF;
+   double buffer = 0.01; // Use this buffer because comparing floating points is not exact
+   if(xMinVec < xMin-buffer || xMaxVec > xMax+buffer || yMinVec < yMin-buffer || yMaxVec > yMax+buffer)
+      return OUTSIDE;
 
    //test whether vector crosses quadrants
    bool left = (xMaxVec < xAvg && xMinVec < xAvg);
@@ -129,6 +132,7 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
    bool up = (yMaxVec > yAvg && yMinVec > yAvg); 
    bool down = (yMaxVec < yAvg && yMinVec < yAvg);   
    
+   // Return one of five values
    if(right && up)
       return QUAD1;
    else if(left && up)
@@ -141,15 +145,19 @@ LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float yM
       return LEAF;
 }
 
-// Test all line-line pairs to see if they will intersect before the next time
-// step.
+/**
+ * Test all line-line pairs to see if they will intersect before the next time
+ * step.
+ **/
 void CollisionWorld::detectIntersection()
 {
    // Use the quadTree function instead of the default slow implementation
    quadTree(BOX_XMAX, BOX_XMIN, BOX_YMAX, BOX_YMIN, lines, 0);
 }
 
-// Test for intersection between each line in Line1 against each line in Lines2
+/**
+ * Test for intersection between each line in Line1 against each line in Lines2
+ **/
 void CollisionWorld::detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2)
 {
   cilk::reducer_list_append<IntersectionInfo> intersections;
@@ -169,7 +177,9 @@ void CollisionWorld::detectIntersectionNew(vector<Line*> Lines1, vector<Line*> L
   allCollisionSolver(intersections.get_value());
 }
 
-// Test for intersection between each line in Lines
+/**
+ * Test for intersection between each line in Lines
+ **/
 list<IntersectionInfo> CollisionWorld::detectIntersectionNewSame(vector<Line*> Lines)
 {
   cilk::reducer_list_append<IntersectionInfo> intersections;
@@ -201,7 +211,7 @@ void CollisionWorld::allCollisionSolver(list<IntersectionInfo> intersections)
 }
 
 
-// ************* NEW FUNCTIONS ABOVE HERE ****************
+/************* NEW FUNCTIONS ABOVE HERE ****************/
 
 
 // Update line positions.

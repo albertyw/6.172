@@ -117,6 +117,8 @@ public:
    * Solve all of the collisions in the list<IntersectionInfo>
    **/
   void allCollisionSolver(list<IntersectionInfo> intersections);
+  
+  void smallCollisionSolver(int *i, _List_iterator<IntersectionInfo> distance);
 };
 
 
