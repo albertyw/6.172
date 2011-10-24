@@ -87,8 +87,8 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
   if(quad3.size() > vectorMin) quadTree(xAvg, xMin, yAvg, yMin, quad3, recursions);
   if(quad4.size() > vectorMin) quadTree(xMax, xAvg, yAvg, yMin, quad4, recursions);
   // Check for intersections within this box
-  list<IntersectionInfo> intersections = detectIntersectionNewSame(leafLines);
-  allCollisionSolver(intersections);
+  detectIntersectionNewSame(leafLines);
+  
   // Check child boxes' lines with current box's lines
   list<IntersectionInfo> intersectionsquad1 = cilk_spawn detectIntersectionNew(leafLines, quad1);
   list<IntersectionInfo> intersectionsquad2 = cilk_spawn detectIntersectionNew(leafLines, quad2);
@@ -202,6 +202,7 @@ list<IntersectionInfo> CollisionWorld::detectIntersectionNewSame(vector<Line*> L
        }
     }
   }
+  allCollisionSolver(intersections.get_value());
   return intersections.get_value();
 }
 
