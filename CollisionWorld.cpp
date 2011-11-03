@@ -32,6 +32,16 @@ void CollisionWorld::updateLines()
    lineWallCollision();
 }
 
+// TODO: TEST FOR PARALLEL MOTION IN LINES
+// TODO: CHANGE COORDINATE SYSTEM TO INT
+// TODO: PARALLELIZE PLACING LINES INTO BUCKETS
+// TODO: TRY CACHING LOW-LEVEL FUNCTIONS LIKE CROSS PRODUCTS, AVOID DIVISION/MULTIPLICATION
+// TODO: CHANGE TIMESTEP TO INT (use shifting)
+// TODO: CHANGE DOUBLES AND FLOATS TO INTS
+// TODO: PARALLELIZE COLLISION
+// TODO: CHANGE EVERYTHING TO LISTS
+
+
 /****************************NEW FUNCTIONS BELOW HERE*********************/
 
 /**
@@ -45,7 +55,7 @@ void CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, ve
     return;
   }
   // Create a vector to hold lines that must sit in the current node
-  vector<Line*> leafLines;
+  vector<Line*> leafLines;          // TODO TEST VECTOR SIZES
   // Create 4 vectors to hold lines for child quadtree boxes
   vector<Line*> quad1, quad2, quad3, quad4;
   // for each line
@@ -212,7 +222,7 @@ list<IntersectionInfo> CollisionWorld::detectIntersectionNewSame(vector<Line*> L
 void CollisionWorld::allCollisionSolver(list<IntersectionInfo> intersections)
 {
   list<IntersectionInfo>::iterator i;
-  numLineLineCollisions += intersections.size();
+  numLineLineCollisions += intersections.size(); // Check for race conditions
   for(i=intersections.begin(); i!=intersections.end(); ++i){// If we coarsen this loop, we can make it parallel
     collisionSolver(i->l1, i->l2, i->intersectionType);
   }
