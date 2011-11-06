@@ -4,8 +4,14 @@
 #include "allocator_interface.h"
 #include "memlib.h"
 
+
+
 /* All blocks must have a specified minimum alignment. */
 #define ALIGNMENT 8
+
+/* Starting size of the heap */
+#define STARTING_SIZE  ALIGNMENT*1024;
+// starting_size should be a power of 2
 
 /* Rounds up to the nearest multiple of ALIGNMENT. */
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~(ALIGNMENT-1))
@@ -42,13 +48,16 @@ namespace my
     return 0;
   }
 
-  /*
+  /**
    * init - Initialize the malloc package.  Called once before any other
    * calls are made.  Since this is a very simple implementation, we just
    * return success.
    */
   int allocator::init()
   {
+    // ALLOCATE A STARTING HEAP OF SIZE STARTING_SIZE
+    
+    // ALLOCATE A PART OF THE HEAP TO MEMORIZE EMPTY BIN'S BLOCKS
     return 0;
   }
 
@@ -58,6 +67,25 @@ namespace my
    */
   void * allocator::malloc(size_t size)
   {
+    // FIND THE BIN (ROUND UP LG(SIZE))
+    
+    // IF BIN IS EMPTY
+    
+      // SEARCH LARGER BINS FOR BLOCKS
+      
+      // IF NO BLOCKS FOUND, MEM_SBRK A BLOCK FOR THE LARGEST BIN
+      
+      // SPLIT BLOCK UP INTO SMALLER BINS
+      
+    // ASSERT BIN IS NOT EMPTY
+    
+    // REMOVE BLOCK POINTER FROM BIN
+    
+    // RETURN BLOCK POINTER
+    
+    
+    
+    
     /* We allocate a little bit of extra memory so that we can store the
        size of the block we've allocated.  Take a look at realloc to see
        one example of a place where this can come in handy. */
@@ -92,6 +120,11 @@ namespace my
    */
   void allocator::free(void *ptr)
   {
+    // FIND BIN THAT BLOCK IS SUPPOSED TO BELONG TO
+    
+    // FIND IF CONTIGUOUS FREE BLOCKS ARE FREE
+    
+      // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
   }
 
   /*
