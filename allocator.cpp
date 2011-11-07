@@ -15,6 +15,7 @@
 /* Starting size of the heap */
 
 /* Starting size of the private heap area */
+#define UINT8_MAX   0xff
 #define BIN_MIN 3
 #define BIN_MAX 36            // The highest number bin
 #define NUMBER_OF_BINS (BIN_MAX-BIN_MIN)                               //TODO: OPTIMIZE 33; using 33 because we're not using bins 0,1,2
@@ -67,12 +68,10 @@ namespace my
    * This rounds up to 
    **/
   int roundPowUp(int num){                                     // See http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-    num--;                                                       //TODO: INCREASE THE MAX POWER THAT IT ROUNDS UP TO
-    num |= num >> 1;
-    num |= num >> 2;
-    num |= num >> 4;
-    num |= num >> 8;
-    num |= num >> 16;
+    num--;
+    for(uint8_t power=1; power<UINT8_MAX; power*=2){
+      num |= num >> power;
+    }
     num++;
     return num;
   }
