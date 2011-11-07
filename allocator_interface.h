@@ -29,6 +29,9 @@ namespace my
   {
   public:
     static int init ();
+    static size_t ** getBinPointer (uint8_t binNum);
+    static void setBinPointer (uint8_t binNum, size_t *setPointer);
+    static size_t * getHeapPointer ();
     static void * increaseHeapSize (size_t size);
     static void * splitBlock (size_t *pointer, size_t biggerSize, size_t smallerSize);
     static void * malloc (size_t size);

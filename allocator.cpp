@@ -13,9 +13,10 @@
 /* Starting size of the heap */
 
 /* Starting size of the private heap area */
-#define PRIVATE_SIZE (ALIGNMENT*(36-3))                      //TODO: OPTIMIZE 33; using 33 because we're not using bins 0,1,2
-#define STARTING_SIZE (ALIGNMENT*1024 + PRIVATE_SIZE)        //TODO: OPTIMIZE 1024
-// STARTING_SIZE and PRIVATE_SIZE should be a power of 2
+#define NUMBER_OF_BINS (36-3)                               //TODO: OPTIMIZE 33; using 33 because we're not using bins 0,1,2
+#define PRIVATE_SIZE (ALIGNMENT*NUMBER_OF_BINS)                      
+#define HEAP_SIZE (ALIGNMENT*1024)                          //TODO: OPTIMIZE 1024
+// HEAP_SIZE and PRIVATE_SIZE should be a power of 2
 
 /* Rounds up to the nearest multiple of ALIGNMENT. */
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~(ALIGNMENT-1))
@@ -55,35 +56,64 @@ namespace my
 
     return 0;
   }
-
+  
+  //******************** MATH STUFF *********************//
   /**
-   * init - Initialize the malloc package.  Called once before any other
-   * calls are made.  Since this is a very simple implementation, we just
-   * return success.
-   */
-  int allocator::init()
-  {
-    // ALLOCATE A STARTING HEAP OF SIZE STARTING_SIZE
-    size_t *p = (size_t *)mem_sbrk(STARTING_SIZE);
-    
-    if (p == (void *)-1) {
-      /* Whoops, an error of some sort occurred.  We return NULL to let
-         the client code know that we weren't able to allocate memory. */
-      return -1;
-    }
-    size_t *startingPosition = (size_t*)mem_heap_lo();
-    for(size_t *i = startingPosition; i<(PRIVATE_SIZE + startingPosition); i+=ALIGNMENT){
-      *i = 0;
-    }
-    
-    // ALLOCATE A PART OF THE HEAP TO MEMORIZE EMPTY BIN'S BLOCKS
-    size_t *bin13 = p+10*ALIGNMENT;                         //TODO: Change 10 to whatever the bin of the starting size is
-    *bin13 = (size_t)(p + PRIVATE_SIZE);
-    
-    
-    return 0;
+   * Round up to the next highest power
+   * This rounds up to 
+   **/
+  int roundPowUp(int num){                                     // See http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+    num--;                                                       //TODO: INCREASE THE MAX POWER THAT IT ROUNDS UP TO
+    num |= num >> 1;
+    num |= num >> 2;
+    num |= num >> 4;
+    num |= num >> 8;
+    num |= num >> 16;
+    num++;
+    return num;
+  }
+   
+  /**
+   * Find the ceiling for the log of num
+   **/
+  int logceil(int num){
+    return ceil(log2(num));                                       //TODO: FIND A BITHACK
+  }
+  /**
+   * Find 2^num
+   **/
+  int pow2(int num){
+    return pow(2, num);                                          //TODO: FIND A BITHACK
   }
   
+  
+  //********************* POINTER MANIPULATIONS ****************//
+  /**
+   * Returns a pointer to the bin number specified
+   * binNumber is based on size of the blocks, not based on distance from mem_heap_lo
+   * getBinPointer is a pointer to a bin
+   * *getBinPointer is the pointer from the bin to the heap
+   * **getBinPointer is the value in the heap
+   **/
+  size_t ** allocator::getBinPointer(uint8_t binNum){
+    return (size_t**)mem_heap_lo() + ALIGNMENT*(binNum-3);
+  }
+  /**
+   * Set the pointer in a bin (i.e. the value of the bin) to a given pointer
+   **/
+  void allocator::setBinPointer(uint8_t binNum, size_t *setPointer){
+    size_t **binPointer = getBinPointer(binNum);
+    *binPointer = setPointer;
+  }
+  /**
+   * Returns a pointer to the beginning of the public heap (after the bin pointers)
+   **/
+  size_t * allocator::getHeapPointer(){
+    return (size_t*)mem_heap_lo() + PRIVATE_SIZE;
+  }
+  
+  
+  //*************************** HEAP HELPER FUNCTIONS ************************//
   /**
    * Increase the heap size then add the extra amount to a bin
    * size should be max of current heap size and the size needed by malloc
@@ -94,7 +124,6 @@ namespace my
     size = max(size, mem_heapsize());
     return mem_sbrk(size);
   }
-  
   /**
    * Split a block at pointer with size biggerSize into at least one block of smallerSize
    * This will also change pointers for other free blocks to make sure they are linked
@@ -105,12 +134,6 @@ namespace my
    **/
   void * allocator::splitBlock(size_t *pointer, size_t biggerSize, size_t smallerSize)
   {
-    /*int a = 3;
-    int *b  = &a;
-    int c = 5;
-    int *d = &c;
-    *b = d;*/
-    
     // MAKE THE REQUIRED BLOCK
     size_t *returnPointer = pointer;
     pointer += ALIGNMENT * smallerSize;
@@ -128,6 +151,33 @@ namespace my
     return returnPointer;
   }
   
+  //******************** INIT ***************************//
+  /**
+   * init - Initialize the malloc package.  Called once before any other
+   * calls are made.  Since this is a very simple implementation, we just
+   * return success.
+   */
+  int allocator::init()
+  {
+    // ALLOCATE A STARTING HEAP
+    size_t *p = (size_t *)mem_sbrk(HEAP_SIZE + PRIVATE_SIZE);
+    
+    if (p == (void *)-1) {
+      /* Whoops, an error of some sort occurred.  We return NULL to let
+         the client code know that we weren't able to allocate memory. */
+      return -1;
+    }
+    // MAKE SURE THAT ALL POINTERS IN THE PRIVATE AREA IS SET TO 0
+    for(int i=0; i<NUMBER_OF_BINS; i++){
+      setBinPointer(i, 0);
+    }
+    // ALLOCATE A PART OF THE HEAP TO MEMORIZE EMPTY BIN'S BLOCKS
+    setBinPointer(logceil(HEAP_SIZE), getHeapPointer());
+    return 0;
+  }
+  
+  
+  //******************** MALLOC ***************************//
   /**
    * malloc - Allocate a block by incrementing the brk pointer.
    *     Always allocate a block whose size is a multiple of the alignment.
@@ -137,18 +187,17 @@ namespace my
     // Make sure that we're aligned to 8 byte boundaries
     int my_aligned_size = ALIGN(size + SIZE_T_SIZE);
     // FIND THE BIN (ROUND UP LG(SIZE))
-    uint8_t bin = (uint8_t)ceil(log2(my_aligned_size));         //TODO: USE A BITHACK
-    size_t *binPtr = (size_t *)mem_heap_lo() + bin;
+    uint8_t bin = logceil(my_aligned_size);
+    size_t **binPtr = getBinPointer(bin);
     // IF BIN IS EMPTY
     if(*binPtr == 0){
       // SEARCH LARGER BINS FOR BLOCKS
-      size_t *searchBinPtr = binPtr;
-      size_t *startingPosition = (size_t*)mem_heap_lo();
-      for(*searchBinPtr; searchBinPtr < (startingPosition+PRIVATE_SIZE); *searchBinPtr+= ALIGNMENT){
-        if(*searchBinPtr != 0) break;
+      
+      for(int i = bin+1; i < NUMBER_OF_BINS; i++){
+        if(*getBinPointer(i) != 0) break;
       }
       // IF NO BLOCKS FOUND, MEM_SBRK
-      if(*searchBinPtr == 0){
+      if(*getBinPointer(i) == 0){
         searchBinPtr = (size_t *)increaseHeapSize(pow(2,bin));
       }
       // SPLIT BLOCK UP INTO SMALLER BINS
@@ -191,7 +240,9 @@ namespace my
       return (void *)((char *)p + SIZE_T_SIZE);
     }
   }
-
+  
+  
+  //******************** FREE ***************************//
   /*
    * free - Freeing a block does nothing.
    */
@@ -204,6 +255,8 @@ namespace my
       // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
   }
 
+  
+  //******************** REALLOC ***************************//
   /*
    * realloc - Implemented simply in terms of malloc and free
    */
@@ -238,6 +291,8 @@ namespace my
     return newptr;
   }
 
+  
+  
   /* call mem_reset_brk. */
   void allocator::reset_brk()
   {
