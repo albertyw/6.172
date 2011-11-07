@@ -35,32 +35,7 @@
 
 namespace my
 {
-  /*
-   * check - This checks our invariant that the size_t header before every
-   * block points to either the beginning of the next block, or the end of the
-   * heap.
-   */
-  int allocator::check()
-  {
-    char *p;
-    char *lo = (char*)mem_heap_lo();
-    char *hi = (char*)mem_heap_hi() + 1;
-    size_t size = 0;
-
-    p = lo;
-    while (lo <= p && p < hi) {
-      size = ALIGN(*(size_t*)p + SIZE_T_SIZE);
-      p += size;
-    }
-
-    if (p != hi) {
-      printf("Bad headers did not end at heap_hi!\n");
-      printf("heap_lo: %p, heap_hi: %p, size: %lu, p: %p\n", lo, hi, size, p);
-      return -1;
-    }
-
-    return 0;
-  }
+  
   
   //******************** MATH STUFF *********************//
   /**
@@ -88,6 +63,80 @@ namespace my
   int pow2(int num){
     return pow(2, num);                                          //TODO: FIND A BITHACK
   }
+  
+  //********************** HEAP CONSISTENCY CHECKING *****************//
+  /**
+   * check heap consistency
+   **/
+  int allocator::check()
+  {
+    // CHECK THAT EVERY FREE BLOCK HAS A POINTER WITHIN THE HEAP OR IS 0
+    size_t *minPointer = (size_t *)mem_heap_lo()+PRIVATE_SIZE;
+    size_t *maxPointer = (size_t *)mem_heap_hi();
+    for(uint8_t i = BIN_MIN; i <= BIN_MAX; i++){
+      size_t *blockPointer = *getBinPointer(i);
+      while(blockPointer != 0){
+          if(blockPointer != 0 && (blockPointer<minPointer || blockPointer>maxPointer)){
+            printf("Free Block has a pointer pointing outside of range");
+            return -1;
+          }
+          blockPointer = nextBlock(blockPointer);
+      }
+    }
+    
+    // CHECK THAT THERE ARE NO CONTIGUOUS COALESCEABLE BLOCKS
+    for(uint8_t i = BIN_MIN; i <= BIN_MAX; i++){
+      size_t block_size = pow2(i);
+      size_t *blockPointer = *getBinPointer(i);
+      while(*blockPointer != 0){
+        size_t *block2Pointer = *getBinPointer(i);
+        while(*block2Pointer != 0){
+          if(blockPointer + block_size == block2Pointer || blockPointer - block_size == block2Pointer){
+            printf("Contiguous Coalescable block found in bin %i", i);
+            return -1;
+          }
+          block2Pointer = nextBlock(block2Pointer);
+        }
+        blockPointer = nextBlock(blockPointer);
+      }
+    }
+    
+    
+    
+    // Is every block in the free list marked as free?
+    
+    // Are there any contiguous free blocks that could be coalesced?
+    
+    // Is every free block actually in the free list?
+    // Do the pointers in the free list point to valid free blocks?
+    // Do any allocated blocks overlap?
+    
+    // Do the pointers in a heap block point to valid heap addresses?
+    /*
+     * check - This checks our invariant that the size_t header before every
+     * block points to either the beginning of the next block, or the end of the
+     * heap.
+     */
+    char *p;
+    char *lo = (char*)mem_heap_lo();
+    char *hi = (char*)mem_heap_hi() + 1;
+    size_t size = 0;
+
+    p = lo;
+    while (lo <= p && p < hi) {
+      size = ALIGN(*(size_t*)p + SIZE_T_SIZE);
+      p += size;
+    }
+
+    if (p != hi) {
+      printf("Bad headers did not end at heap_hi!\n");
+      printf("heap_lo: %p, heap_hi: %p, size: %lu, p: %p\n", lo, hi, size, p);
+      return -1;
+    }
+
+    return 0;
+  }
+  
   
   
   //********************* POINTER MANIPULATIONS ****************//
@@ -142,12 +191,8 @@ namespace my
   }
   
   /**
-   * Split a block at pointer with size biggerSize into at least one block of smallerSize
-   * This will also change pointers for other free blocks to make sure they are linked
-   * biggerSize is number of bytes of the big block
-   * smallerSize is the number of bytes of the block size needed
-   * both sizes should be a power of 2
-   * return a pointer to the block size needed
+   * Split a block in the largerBinNum into 2 blocks of smallerBinNum and several blocks of larger sizes
+   * After running, bins are updated and blocks are properly integrated with pointers
    **/
   void allocator::splitBlock(int largerBinNum, int smallerBinNum)
   {
@@ -176,6 +221,17 @@ namespace my
       currentBin++;
     }
     setBinPointer(largerBinNum, 0);
+  }
+  
+  /**
+   * Given a pointer to a block where the value stored in the block is also a pointer,
+   * return that value as a pointer
+   **/
+  size_t * allocator::nextBlock(size_t *blockPointer){
+    // Same as:
+    // size_t blockValue = *blockPointer;
+    // return (size_t *)blockValue;
+    return (size_t *)*blockPointer;
   }
   
   //******************** INIT ***************************//
@@ -243,8 +299,6 @@ namespace my
     returnBlock += SIZE_T_SIZE;
     // RETURN BLOCK POINTER
     return returnBlock;
-    
-    
   }
   
   
@@ -268,27 +322,35 @@ namespace my
       *erasePointer = 0;
     }
     // FIND IF CONTIGUOUS FREE BLOCKS ARE FREE
-    size_t *binFreeBlockPointer = *getBinPointer(binNum);
-    while(binFreeBlockPointer != 0){
-      if(binFreeBlockPointer == blockPointer+blockSize){
-        // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
-        *binFreeBlockPointer = 0;
-        blockSize *=2;
-        binNum++;
-      }else if(binFreeBlockPointer == blockPointer-blockSize){
-        // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
-        *blockPointer = 0;
-        blockPointer = binFreeBlockPointer;
-        blockSize *=2;
-        binNum++;
+    bool coalesceFound = false;
+    size_t *binFreeBlockPointer;
+    while(coalesceFound == false){
+      binFreeBlockPointer = *getBinPointer(binNum);
+      for(binFreeBlockPointer; binFreeBlockPointer !=0; binFreeBlockPointer = nextBlock(binFreeBlockPointer)){
+        if(binFreeBlockPointer == blockPointer+blockSize){
+          // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
+          *binFreeBlockPointer = 0;
+          blockSize *=2;
+          binNum++;
+          break;
+        }else if(binFreeBlockPointer == blockPointer-blockSize){
+          // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
+          *blockPointer = 0;
+          blockPointer = binFreeBlockPointer;
+          blockSize *=2;
+          binNum++;
+          break;
+        }
       }
-      binFreeBlockPointer = (size_t *)*binFreeBlockPointer;
+      // Don't need to care about binNum too big because memory wouldn't be able to have already allocated blocks
+      assert(binNum < BIN_MAX);
+      assert(binNum > BIN_MIN);
     }
     //ADD BLOCK TO BIN
     setBlockPointer(blockPointer, *getBinPointer(binNum));
     setBinPointer(binNum, blockPointer);
   }
-
+  
   
   //******************** REALLOC ***************************//
   /*

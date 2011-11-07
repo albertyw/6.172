@@ -35,6 +35,7 @@ namespace my
     static size_t * getHeapPointer ();
     static int increaseHeapSize (size_t size);
     static void splitBlock (int largerBinNum, int smallerBinNum);
+    static size_t * nextBlock (size_t *blockPointer);
     static void * malloc (size_t size);
     static void * realloc (void *ptr, size_t size);
     static void free (void *ptr);
