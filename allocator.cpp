@@ -3,6 +3,7 @@
 #include<cstring>
 #include "allocator_interface.h"
 #include "memlib.h"
+#include <math.h>
 
 
 
@@ -10,14 +11,21 @@
 #define ALIGNMENT 8
 
 /* Starting size of the heap */
-#define STARTING_SIZE  ALIGNMENT*1024;
-// starting_size should be a power of 2
+
+/* Starting size of the private heap area */
+#define PRIVATE_SIZE (ALIGNMENT*(36-3))                      //TODO: OPTIMIZE 33; using 33 because we're not using bins 0,1,2
+#define STARTING_SIZE (ALIGNMENT*1024 + PRIVATE_SIZE)        //TODO: OPTIMIZE 1024
+// STARTING_SIZE and PRIVATE_SIZE should be a power of 2
 
 /* Rounds up to the nearest multiple of ALIGNMENT. */
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~(ALIGNMENT-1))
 
 /* The smallest aligned size that will hold a size_t value. */
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
+
+#ifndef max
+	#define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
+#endif
 
 namespace my
 {
@@ -56,27 +64,96 @@ namespace my
   int allocator::init()
   {
     // ALLOCATE A STARTING HEAP OF SIZE STARTING_SIZE
+    size_t *p = (size_t *)mem_sbrk(STARTING_SIZE);
+    
+    if (p == (void *)-1) {
+      /* Whoops, an error of some sort occurred.  We return NULL to let
+         the client code know that we weren't able to allocate memory. */
+      return -1;
+    }
+    size_t *startingPosition = (size_t*)mem_heap_lo();
+    for(size_t *i = startingPosition; i<(PRIVATE_SIZE + startingPosition); i+=ALIGNMENT){
+      *i = 0;
+    }
     
     // ALLOCATE A PART OF THE HEAP TO MEMORIZE EMPTY BIN'S BLOCKS
+    size_t *bin13 = p+10*ALIGNMENT;                         //TODO: Change 10 to whatever the bin of the starting size is
+    *bin13 = (size_t)(p + PRIVATE_SIZE);
+    
+    
     return 0;
   }
-
-  /*
+  
+  /**
+   * Increase the heap size then add the extra amount to a bin
+   * size should be max of current heap size and the size needed by malloc
+   * Return a pointer to the block that is allocated
+   **/
+  void * allocator::increaseHeapSize(size_t size)
+  {
+    size = max(size, mem_heapsize());
+    return mem_sbrk(size);
+  }
+  
+  /**
+   * Split a block at pointer with size biggerSize into at least one block of smallerSize
+   * This will also change pointers for other free blocks to make sure they are linked
+   * biggerSize is number of bytes of the big block
+   * smallerSize is the number of bytes of the block size needed
+   * both sizes should be a power of 2
+   * return a pointer to the block size needed
+   **/
+  void * allocator::splitBlock(size_t *pointer, size_t biggerSize, size_t smallerSize)
+  {
+    /*int a = 3;
+    int *b  = &a;
+    int c = 5;
+    int *d = &c;
+    *b = d;*/
+    
+    // MAKE THE REQUIRED BLOCK
+    size_t *returnPointer = pointer;
+    pointer += ALIGNMENT * smallerSize;
+    size_t currentSize = smallerSize;
+    size_t ** binPtr;
+    // WHILE CURRENTSIZE IS LESS THAN BIGGERSIZE/2
+    for(currentSize; currentSize < (biggerSize/2); currentSize *= 2){
+      // FIND THE BIN FOR THE BLOCK
+      binPtr = (size_t **)mem_heap_lo() + ((uint8_t)(log2(currentSize))-3) * ALIGNMENT;
+      // COPY THE BIN'S POINTER TO THE BLOCK
+      *pointer = *binPtr;
+      // CHANGE THE BIN'S POINTER TO POINT TO THE BLOCK
+      *binPtr = pointer;
+    }
+    return returnPointer;
+  }
+  
+  /**
    * malloc - Allocate a block by incrementing the brk pointer.
    *     Always allocate a block whose size is a multiple of the alignment.
    */
   void * allocator::malloc(size_t size)
   {
+    // Make sure that we're aligned to 8 byte boundaries
+    int my_aligned_size = ALIGN(size + SIZE_T_SIZE);
     // FIND THE BIN (ROUND UP LG(SIZE))
-    
+    uint8_t bin = (uint8_t)ceil(log2(my_aligned_size));         //TODO: USE A BITHACK
+    size_t *binPtr = (size_t *)mem_heap_lo() + bin;
     // IF BIN IS EMPTY
-    
+    if(*binPtr == 0){
       // SEARCH LARGER BINS FOR BLOCKS
-      
-      // IF NO BLOCKS FOUND, MEM_SBRK A BLOCK FOR THE LARGEST BIN
-      
+      size_t *searchBinPtr = binPtr;
+      size_t *startingPosition = (size_t*)mem_heap_lo();
+      for(*searchBinPtr; searchBinPtr < (startingPosition+PRIVATE_SIZE); *searchBinPtr+= ALIGNMENT){
+        if(*searchBinPtr != 0) break;
+      }
+      // IF NO BLOCKS FOUND, MEM_SBRK
+      if(*searchBinPtr == 0){
+        searchBinPtr = (size_t *)increaseHeapSize(pow(2,bin));
+      }
       // SPLIT BLOCK UP INTO SMALLER BINS
       
+    }
     // ASSERT BIN IS NOT EMPTY
     
     // REMOVE BLOCK POINTER FROM BIN

@@ -29,6 +29,8 @@ namespace my
   {
   public:
     static int init ();
+    static void * increaseHeapSize (size_t size);
+    static void * splitBlock (size_t *pointer, size_t biggerSize, size_t smallerSize);
     static void * malloc (size_t size);
     static void * realloc (void *ptr, size_t size);
     static void free (void *ptr);
