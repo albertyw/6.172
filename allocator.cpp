@@ -196,7 +196,7 @@ namespace my
       return -1;
     }
     // MAKE SURE THAT ALL POINTERS IN THE PRIVATE AREA IS SET TO 0
-    for(int i=0; i<BIN_MAX; i++){
+    for(uint8_t i=BIN_MIN; i<BIN_MAX; i++){
       setBinPointer(i, 0);
     }
     // ALLOCATE A PART OF THE HEAP TO MEMORIZE EMPTY BIN'S BLOCKS
@@ -255,11 +255,39 @@ namespace my
    */
   void allocator::free(void *ptr)
   {
+    // DON'T DO ANYTHING FOR NULL POINTERS
+    if(ptr == NULL) return;
+    // GO BACK AND FIND THE SIZE
+    size_t *blockPointer = (size_t *)ptr-SIZE_T_SIZE;
+    uint8_t blockSize = *blockPointer;
+    assert(roundPowUp(blockSize) == blockSize);
     // FIND BIN THAT BLOCK IS SUPPOSED TO BELONG TO
-    
+    uint8_t binNum = log2(blockSize);
+    // ERASE VALUES IN PTR
+    size_t *erasePointer = (size_t *)ptr;
+    for(erasePointer; erasePointer < erasePointer+blockSize-SIZE_T_SIZE; erasePointer++){
+      *erasePointer = 0;
+    }
     // FIND IF CONTIGUOUS FREE BLOCKS ARE FREE
-    
-      // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
+    size_t *binFreeBlockPointer = *getBinPointer(binNum);
+    while(binFreeBlockPointer != 0){
+      if(binFreeBlockPointer == blockPointer+blockSize){
+        // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
+        *binFreeBlockPointer = 0;
+        blockSize *=2;
+        binNum++;
+      }else if(binFreeBlockPointer == blockPointer-blockSize){
+        // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
+        *blockPointer = 0;
+        blockPointer = binFreeBlockPointer;
+        blockSize *=2;
+        binNum++;
+      }
+      binFreeBlockPointer = (size_t *)*binFreeBlockPointer;
+    }
+    //ADD BLOCK TO BIN
+    setBlockPointer(blockPointer, *getBinPointer(binNum));
+    setBinPointer(binNum, blockPointer);
   }
 
   
