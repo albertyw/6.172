@@ -190,7 +190,10 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
          * for if the region is copied via realloc.
          */
         /* YOUR CODE HERE */
-
+        for(char *writePointer = p; writePointer < p+size; writePointer++){
+          *writePointer = writePointer-p;
+        }
+        
         /* Remember region */
         trace->blocks[index] = p;
         trace->block_sizes[index] = size;
@@ -220,6 +223,12 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
         if (size < oldsize)
           oldsize = size;
         /* YOUR CODE HERE */
+        for(char *writePointer = p; writePointer < p+oldsize; writePointer++){
+          assert(*writePointer == writePointer-p);
+        }
+        for(char *writePointer = p; writePointer < p+size; writePointer++){
+          *writePointer = writePointer-p;
+        }
 
         /* Remember region */
         trace->blocks[index] = newp;
