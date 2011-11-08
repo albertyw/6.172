@@ -50,6 +50,10 @@ typedef struct range_t {
  *     we've just called the student's malloc to allocate a block of
  *     size bytes at addr lo. After checking the block for correctness,
  *     we create a range struct for this block and add it to the range list.
+ * opnum - request
+ * tracenum - trace
+ * size - bytes that were malloc
+ * lo - address returned by malloc
  */
 template <class Type>
 static int add_range(Type *impl, range_t **ranges, char *lo, 
@@ -64,19 +68,32 @@ static int add_range(Type *impl, range_t **ranges, char *lo,
 
   /* Payload addresses must be ALIGNMENT-byte aligned */
   /* YOUR CODE HERE */
-  IS_ALIGNED(ranges);
+  assert(IS_ALIGNED(lo));
 
   /* The payload must lie within the extent of the heap */
   /* YOUR CODE HERE */
+  assert(lo > (char *)mem_heap_lo());
+  assert(hi < (char *)mem_heap_hi());
 
   /* The payload must not overlap any other payloads */
   /* YOUR CODE HERE */
+  range_t *pnext;
+  for (p = *ranges; p != NULL; p = pnext) {
+    assert(lo > p->high);
+    assert(hi < p->lo);
+    pnext = p->next;
+    if(pnext == NULL) break;
+  }
 
   /* Everything looks OK, so remember the extent of this block by creating a
    * range struct and adding it the range list.
    */
   /* YOUR CODE HERE */
-
+  range_t new_p;
+  new_p.lo = lo;
+  new_p.hi = hi;
+  new_p.next = NULL;
+  p->next = &new_p;
   return 1;
 }
 
@@ -85,14 +102,26 @@ static int add_range(Type *impl, range_t **ranges, char *lo,
  */
 static void remove_range(range_t **ranges, char *lo)
 {
-  //range_t *p = NULL;
-  //range_t **prevpp = ranges;
+  range_t *p = NULL;
+  range_t **prevpp = ranges;
+  range_t *pnext;
 
   /* Iterate the linked list until you find the range with a matching lo
    * payload and remove it.  Remember to properly handle the case where the
    * payload is in the first node, and to free the node after unlinking it.
    */
   /* YOUR CODE HERE */
+  for (p = *ranges; p != NULL; p = pnext) {
+    pnext = p->next;
+    if(p->lo == lo){
+      (*prevpp)->next = pnext;
+      free(p);
+    }
+    if(ranges == prevpp){
+      ranges = &pnext;
+    }
+    prevpp = &p;
+  }
 }
 
 /*
