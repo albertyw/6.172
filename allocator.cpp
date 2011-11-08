@@ -73,24 +73,30 @@ namespace my
     // CHECK THAT EVERY FREE BLOCK HAS A POINTER WITHIN THE HEAP OR IS 0
     size_t *minPointer = (size_t *)mem_heap_lo()+PRIVATE_SIZE;
     size_t *maxPointer = (size_t *)mem_heap_hi();
+    // For every in
     for(uint8_t i = BIN_MIN; i <= BIN_MAX; i++){
       size_t *blockPointer = *getBinPointer(i);
+      // For every block
       while(blockPointer != 0){
-          if(blockPointer != 0 && (blockPointer<minPointer || blockPointer>maxPointer)){
-            printf("Free Block has a pointer pointing outside of range");
-            return -1;
-          }
-          blockPointer = nextBlock(blockPointer);
+        // Check that the pointer in the block does not point to somewhere wrong
+        if(blockPointer != 0 && (blockPointer<minPointer || blockPointer>maxPointer)){
+          printf("Free Block has a pointer pointing outside of range");
+          return -1;
+        }
+        blockPointer = nextBlock(blockPointer);
       }
     }
     
     // CHECK THAT THERE ARE NO CONTIGUOUS COALESCEABLE BLOCKS
+    // For every bin
     for(uint8_t i = BIN_MIN; i <= BIN_MAX; i++){
       size_t block_size = pow2(i);
       size_t *blockPointer = *getBinPointer(i);
+      // Compare every two blocks
       while(*blockPointer != 0){
         size_t *block2Pointer = *getBinPointer(i);
         while(*block2Pointer != 0){
+          // And check whether the blocks are adjacent
           if(blockPointer + block_size == block2Pointer || blockPointer - block_size == block2Pointer){
             printf("Contiguous Coalescable block found in bin %i", i);
             return -1;
@@ -101,22 +107,18 @@ namespace my
       }
     }
     
+    //  CHECK THAT THERE ARE NO OVERLAPPING ALLOCATED BLOCKS
     
     
     // Is every block in the free list marked as free?
-    
-    // Are there any contiguous free blocks that could be coalesced?
-    
     // Is every free block actually in the free list?
-    // Do the pointers in the free list point to valid free blocks?
-    // Do any allocated blocks overlap?
     
-    // Do the pointers in a heap block point to valid heap addresses?
     /*
      * check - This checks our invariant that the size_t header before every
      * block points to either the beginning of the next block, or the end of the
      * heap.
      */
+    /*
     char *p;
     char *lo = (char*)mem_heap_lo();
     char *hi = (char*)mem_heap_hi() + 1;
@@ -133,7 +135,7 @@ namespace my
       printf("heap_lo: %p, heap_hi: %p, size: %lu, p: %p\n", lo, hi, size, p);
       return -1;
     }
-
+    */
     return 0;
   }
   
@@ -358,6 +360,33 @@ namespace my
    */
   void * allocator::realloc(void *ptr, size_t size)
   {
+    if(size==0){
+      return free(ptr);
+    }
+    if(ptr==0){
+      return malloc(size);
+    }
+    // FIND CURRENT SIZE OF ALLOCATION
+    
+    // CALCULATE DIFFERENCE IN MEMORY IS NEEDED FOR THE REALLOC
+    
+    // IF REQUESTED SIZE IS SMALLER
+    // CHANGE THE CURRENT SIZE OF ALLOCATION
+    // DIVIDE UP THE EXTRA MEMORY INTO BINS
+    
+    //IF REQUESTED SIZE IS LARGER
+    
+    // CREATE A POINTER TO END OF ALLOCATION
+    
+    // WHILE VALUE OF POINTER IS IN A BIN
+      // INCREASE THE POINTER TO THE END OF THE UNALLOCATED BLOCK
+      
+    // IF THE POINTER IS IN AN ALLOCATED AREA
+      // MALLOC FULL SIZE
+      // MOVE DATA TO THE NEW MALLOC AREA
+    // ELSE
+      // COMBINE BLOCKS
+    
     void *newptr;
     size_t copy_size;
 
