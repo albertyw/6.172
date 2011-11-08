@@ -3,16 +3,11 @@
 #include<cstring>
 #include "allocator_interface.h"
 #include "memlib.h"
-
 #include <math.h>
 #include <assert.h>
 
-
-
 /* All blocks must have a specified minimum alignment. */
 #define ALIGNMENT 8
-
-/* Starting size of the heap */
 
 /* Starting size of the private heap area */
 #define BIN_MIN 3
@@ -32,8 +27,6 @@
 
 namespace my
 {
-  
-  
   //******************** MATH STUFF *********************//
   /**
    * Round up to the next highest power
@@ -148,7 +141,6 @@ namespace my
    **/
   size_t ** allocator::getBinPointer(uint8_t binNum){
     size_t ** temp = (size_t**)mem_heap_lo() + (binNum-3);
-    //printf("%d %p %p\n", binNum, temp, *temp);
     return (size_t**)mem_heap_lo() + (binNum-3);
   }
   /**
@@ -156,11 +148,7 @@ namespace my
    **/
   void allocator::setBinPointer(uint8_t binNum, size_t *setPointer){
     size_t **binPointer = getBinPointer(binNum);
-    /*if (((size_t)*binPointer < (size_t)0x2000) and (size_t)*binPointer!=0){
-      int temp = 1;
-    }*/
     *binPointer = setPointer;
-    //printf("%d %p\n",binNum,setPointer);
   }
   /**
    * Set the value of blockPointer to pointerValue
@@ -220,7 +208,7 @@ namespace my
     // WHILE CURRENTSIZE IS LESS THAN BIGGERSIZE/2
     size_t currentSize = smallerSize;
     uint8_t currentBin = smallerBinNum;
-    printf("%p -- Pointer In Block\n",pointerInBlock);
+    //printf("%p -- Pointer In Block\n",pointerInBlock);
     for(currentSize; currentSize < biggerSize; currentSize *= 2){
       assert(currentSize == pow2(currentBin));
       // COPY THE BIN'S POINTER TO THE BLOCK
@@ -231,7 +219,6 @@ namespace my
       pointerInBlock = (size_t *)((char *) pointerInBlock + currentSize);
       currentBin++;
     }
-    printf("DONE ----\n");
     setBinPointer(largerBinNum, 0);
   }
   
@@ -256,7 +243,7 @@ namespace my
   {
     // ALLOCATE A STARTING HEAP
     size_t *p = (size_t *)mem_sbrk(HEAP_SIZE + PRIVATE_SIZE);
-    memset(p,0,HEAP_SIZE+PRIVATE_SIZE);
+    memset(p,0,(HEAP_SIZE+PRIVATE_SIZE));
     if (p == (void *)-1) {
       /* Whoops, an error of some sort occurred.  We return NULL to let
          the client code know that we weren't able to allocate memory. */
@@ -281,12 +268,9 @@ namespace my
   void * allocator::malloc(size_t size)
   {
     // Make sure that we're aligned to 8 byte boundaries
-    int alig = ALIGN(size);
-    int alig1 = ALIGN(SIZE_T_SIZE);
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
+    assert(size <= (my_aligned_size-8));
     // FIND THE BIN (ROUND UP LG(SIZE))
-    void* mem_low = mem_heap_lo();
-    uint8_t binToBreakNum;
     uint8_t binAllocateNum = log2(my_aligned_size);
     size_t **binPtr = getBinPointer(binAllocateNum);
     // IF BIN IS EMPTY
@@ -309,10 +293,12 @@ namespace my
     assert(*getBinPointer(binAllocateNum)!=0);
     // REMOVE BLOCK POINTER FROM BIN
     size_t * returnBlock = (size_t *)*getBinPointer(binAllocateNum);
-    printf("aaaaaaaaa\n");
+    //printf("%p %p ------- BLOCK SWAP\n",returnBlock,(size_t *)*returnBlock);
     setBinPointer(binAllocateNum, (size_t *)*returnBlock);
     // RECORD THE SIZE INTO THE RETURNBLOCK
     *returnBlock = my_aligned_size;
+    //printf("%lu %p --- BLOCKS \n",*returnBlock,returnBlock);
+    assert(*returnBlock!=0);
     returnBlock += 1;
     // RETURN BLOCK POINTER
     return returnBlock;
@@ -328,16 +314,17 @@ namespace my
     // DON'T DO ANYTHING FOR NULL POINTERS
     if(ptr == NULL) return;
     // GO BACK AND FIND THE SIZE
-    size_t *blockPointer = (size_t *)ptr-SIZE_T_SIZE;
-    uint8_t blockSize = *blockPointer;
+    printf("%p POINTER \n",ptr);
+    size_t *blockPointer = (size_t *)ptr-1;
+    size_t blockSize = *blockPointer;
+    printf("%lu SIZE\n",blockSize);
     assert(roundPowUp(blockSize) == blockSize);
+    assert(blockPointer > ((size_t *)mem_heap_lo()+33));
+    assert(blockPointer < (size_t *)mem_heap_hi());
     // FIND BIN THAT BLOCK IS SUPPOSED TO BELONG TO
     uint8_t binNum = log2(blockSize);
     // ERASE VALUES IN PTR
-    size_t *erasePointer = (size_t *)ptr;
-    for(erasePointer; erasePointer < erasePointer+blockSize-SIZE_T_SIZE; erasePointer++){
-      *erasePointer = 0;
-    }
+    memset(blockPointer,0,blockSize);
     // FIND IF CONTIGUOUS FREE BLOCKS ARE FREE
     bool coalesceFound = false;
     size_t *binFreeBlockPointer;
