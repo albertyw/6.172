@@ -55,9 +55,8 @@ template <class Type>
 static int add_range(Type *impl, range_t **ranges, char *lo, 
 			int size, int tracenum, int opnum)
 {
-  //char *hi = lo + size - 1;
-  //range_t *p = NULL;
-
+  char *hi = lo + size - 1;
+  range_t *p = NULL;
   /* You can use this as a buffer for writing messages with sprintf. */
   //char msg[MAXLINE];
 
@@ -65,6 +64,7 @@ static int add_range(Type *impl, range_t **ranges, char *lo,
 
   /* Payload addresses must be ALIGNMENT-byte aligned */
   /* YOUR CODE HERE */
+  IS_ALIGNED(ranges);
 
   /* The payload must lie within the extent of the heap */
   /* YOUR CODE HERE */
