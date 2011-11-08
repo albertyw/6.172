@@ -63,7 +63,7 @@ static int add_range(Type *impl, range_t **ranges, char *lo,
   range_t *p = NULL;
   /* You can use this as a buffer for writing messages with sprintf. */
   //char msg[MAXLINE];
-
+  
   assert(size > 0);
 
   /* Payload addresses must be ALIGNMENT-byte aligned */
@@ -79,12 +79,11 @@ static int add_range(Type *impl, range_t **ranges, char *lo,
   /* YOUR CODE HERE */
   range_t *pnext;
   for (p = *ranges; p != NULL; p = pnext) {
-    assert(lo > p->high);
+    assert(lo > p->hi);
     assert(hi < p->lo);
     pnext = p->next;
     if(pnext == NULL) break;
   }
-
   /* Everything looks OK, so remember the extent of this block by creating a
    * range struct and adding it the range list.
    */
@@ -93,7 +92,12 @@ static int add_range(Type *impl, range_t **ranges, char *lo,
   new_p.lo = lo;
   new_p.hi = hi;
   new_p.next = NULL;
-  p->next = &new_p;
+  range_t *asdf = &new_p;
+  if(p == NULL){
+    *ranges = &new_p; 
+  }else{
+    p->next = asdf;
+  }
   return 1;
 }
 
