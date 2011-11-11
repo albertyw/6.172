@@ -28,7 +28,7 @@ def process_malloc(size, return_ptr):
   
   # Test overlap
   for b in allocated_blocks:
-    if (b[0] <= return_ptr + size) and (b[1] >= return_ptr):
+    if (b[0] < return_ptr + size) and (b[1] >= return_ptr):
       raise ValidationError("Payload (%d,%d) overlaps another payload (%d, %d)" % (return_ptr, return_ptr + size, b[0], b[1]))
   
   allocated_blocks.append((return_ptr, return_ptr + size))
