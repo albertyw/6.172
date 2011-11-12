@@ -24,14 +24,15 @@ max_allocated_size = 0
 def process_malloc(size, return_ptr):
   # Test alignment
   if (return_ptr % 8) != 0:
-    raise ValidationError("%d is not aligned to 8 bytes." % (return_ptr))
+    raise ValidationError("0x%x is not aligned to 8 bytes." % (return_ptr))
   
   # Test overlap
+  return_ptr_end = return_ptr + size - 1
   for b in allocated_blocks:
-    if (b[0] < return_ptr + size) and (b[1] >= return_ptr):
-      raise ValidationError("Payload (%d,%d) overlaps another payload (%d, %d)" % (return_ptr, return_ptr + size, b[0], b[1]))
-  
-  allocated_blocks.append((return_ptr, return_ptr + size))
+    if (b[0] <= return_ptr_end) and (b[1] >= return_ptr):
+      raise ValidationError("Payload (0x%x,0x%x) overlaps another payload (0x%x, 0x%x)" % (return_ptr, return_ptr_end, b[0], b[1]))
+
+  allocated_blocks.append((return_ptr, return_ptr_end))
   
   global allocated_size
   global max_allocated_size
@@ -126,7 +127,7 @@ def validate(files):
         try:
           process_action(val)
         except ValidationError as error:
-          print "VALIDATION ERROR: %s at `%s` in %s" % (error, " ".join(val), reader.f.name)
+          print "VALIDATION ERROR: %s at seq `%s` in %s" % (error, val['seq'], reader.f.name)
           exit(1)
           
         curr_seq += 1
@@ -141,7 +142,7 @@ def validate(files):
           try:
             process_action(val)
           except ValidationError as error:
-            print "VALIDATION ERROR: %s at `%s` in %s" % (error, " ".join(val), reader.f.name)
+            print "VALIDATION ERROR: %s at seq `%s` in %s" % (error, val['seq'], reader.f.name)
             exit(1)
             
           previous_values.remove(val)
@@ -158,7 +159,7 @@ def validate(files):
         try:
           process_action(val)
         except ValidationError as error:
-          print "VALIDATION ERROR: %s at `%s` in %s" % (error, " ".join(val), reader.f.name)
+          print "VALIDATION ERROR: %s at seq `%s` in %s" % (error, val['seq'], reader.f.name)
           exit(1)
             
         curr_seq += 1
