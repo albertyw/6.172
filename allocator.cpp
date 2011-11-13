@@ -30,7 +30,7 @@ namespace my
   //******************** MATH STUFF *********************//
   /**
    * Round up to the next highest power
-   * This rounds up to 
+   * This rounds up to 2**SIZE_T_SIZE
    **/
   size_t roundPowUp(size_t num){                                     // See http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
     num--;
@@ -53,83 +53,6 @@ namespace my
   size_t pow2(size_t num){
     return pow(2, num);                                          //TODO: FIND A BITHACK
   }
-  
-  //********************** HEAP CONSISTENCY CHECKING *****************//
-  /**
-   * check heap consistency
-   **/
-  int allocator::check()
-  {
-    // CHECK THAT EVERY FREE BLOCK HAS A POINTER WITHIN THE HEAP OR IS 0
-    size_t *minPointer = (size_t *)mem_heap_lo()+PRIVATE_SIZE;
-    size_t *maxPointer = (size_t *)mem_heap_hi();
-    // For every in
-    for(uint8_t i = BIN_MIN; i <= BIN_MAX; i++){
-      size_t *blockPointer = *getBinPointer(i);
-      // For every block
-      while(blockPointer != 0){
-        // Check that the pointer in the block does not point to somewhere wrong
-        if(blockPointer != 0 && (blockPointer<minPointer || blockPointer>maxPointer)){
-          printf("Free Block has a pointer pointing outside of range");
-          return -1;
-        }
-        blockPointer = nextBlock(blockPointer);
-      }
-    }
-    
-    // CHECK THAT THERE ARE NO CONTIGUOUS COALESCEABLE BLOCKS
-    // For every bin
-    for(uint8_t i = BIN_MIN; i <= BIN_MAX; i++){
-      size_t block_size = pow2(i);
-      size_t *blockPointer = *getBinPointer(i);
-      // Compare every two blocks
-      while(*blockPointer != 0){
-        size_t *block2Pointer = *getBinPointer(i);
-        while(*block2Pointer != 0){
-          // And check whether the blocks are adjacent
-          if(blockPointer + block_size == block2Pointer || blockPointer - block_size == block2Pointer){
-            printf("Contiguous Coalescable block found in bin %i", i);
-            return -1;
-          }
-          block2Pointer = nextBlock(block2Pointer);
-        }
-        blockPointer = nextBlock(blockPointer);
-      }
-    }
-    
-    //  CHECK THAT THERE ARE NO OVERLAPPING ALLOCATED BLOCKS
-    
-    
-    // Is every block in the free list marked as free?
-    // Is every free block actually in the free list?
-    
-    /*
-     * check - This checks our invariant that the size_t header before every
-     * block points to either the beginning of the next block, or the end of the
-     * heap.
-     */
-    /*
-    char *p;
-    char *lo = (char*)mem_heap_lo();
-    char *hi = (char*)mem_heap_hi() + 1;
-    size_t size = 0;
-
-    p = lo;
-    while (lo <= p && p < hi) {
-      size = ALIGN(*(size_t*)p + SIZE_T_SIZE);
-      p += size;
-    }
-
-    if (p != hi) {
-      printf("Bad headers did not end at heap_hi!\n");
-      printf("heap_lo: %p, heap_hi: %p, size: %lu, p: %p\n", lo, hi, size, p);
-      return -1;
-    }
-    */
-    return 0;
-  }
-  
-  
   
   //********************* POINTER MANIPULATIONS ****************//
   /**
@@ -233,6 +156,59 @@ namespace my
     return (size_t *)*blockPointer;
   }
   
+  //********************** HEAP CONSISTENCY CHECKING *****************//
+  /**
+   * check heap consistency
+   **/
+  int allocator::check()
+  {
+    // CHECK THAT EVERY FREE BLOCK HAS A POINTER WITHIN THE HEAP OR IS 0
+    size_t *minPointer = (size_t *)mem_heap_lo()+PRIVATE_SIZE;
+    size_t *maxPointer = (size_t *)mem_heap_hi();
+    // For every in
+    for(uint8_t i = BIN_MIN; i <= BIN_MAX; i++){
+      size_t *blockPointer = *getBinPointer(i);
+      // For every block
+      while(blockPointer != 0){
+        // Check that the pointer in the block does not point to somewhere wrong
+        if(blockPointer != 0 && (blockPointer<minPointer || blockPointer>maxPointer)){
+          printf("Free Block has a pointer pointing outside of range");
+          return -1;
+        }
+        blockPointer = nextBlock(blockPointer);
+      }
+    }
+    
+    // CHECK THAT THERE ARE NO CONTIGUOUS COALESCEABLE BLOCKS
+    // For every bin
+    for(uint8_t i = BIN_MIN; i <= BIN_MAX; i++){
+      size_t block_size = pow2(i);
+      size_t *blockPointer = *getBinPointer(i);
+      // Compare every two blocks
+      while(*blockPointer != 0){
+        size_t *block2Pointer = *getBinPointer(i);
+        while(*block2Pointer != 0){
+          // And check whether the blocks are adjacent
+          if(blockPointer + block_size == block2Pointer || blockPointer - block_size == block2Pointer){
+            printf("Contiguous Coalescable block found in bin %i", i);
+            return -1;
+          }
+          block2Pointer = nextBlock(block2Pointer);
+        }
+        blockPointer = nextBlock(blockPointer);
+      }
+    }
+    
+    //  CHECK THAT THERE ARE NO OVERLAPPING ALLOCATED BLOCKS
+    
+    
+    // Is every block in the free list marked as free?
+    // Is every free block actually in the free list?
+    
+    
+    return 0;
+  }
+  
   //******************** INIT ***************************//
   /**
    * init - Initialize the malloc package.  Called once before any other
@@ -243,19 +219,19 @@ namespace my
   {
     // ALLOCATE A STARTING HEAP
     size_t *p = (size_t *)mem_sbrk(HEAP_SIZE + PRIVATE_SIZE);
-    memset(p,0,(HEAP_SIZE+PRIVATE_SIZE));
     if (p == (void *)-1) {
       /* Whoops, an error of some sort occurred.  We return NULL to let
          the client code know that we weren't able to allocate memory. */
       return -1;
     }
-    // MAKE SURE THAT ALL POINTERS IN THE PRIVATE AREA IS SET TO 0
-    for(uint8_t i=BIN_MIN; i<BIN_MAX; i++){
-      setBinPointer(i, 0);
-    }
+    assert(p != (void *)-1);
+    
+    // MAKE SURE THAT ALL POINTERS ARE SET TO 0
+    memset(p,0,(HEAP_SIZE+PRIVATE_SIZE));
+    assert(*p == 0);
+    
     // ALLOCATE A PART OF THE HEAP TO MEMORIZE EMPTY BIN'S BLOCKS
     setBinPointer(log2(HEAP_SIZE), getHeapPointer());
-    
     return 0;
   }
   
@@ -270,14 +246,18 @@ namespace my
     // Make sure that we're aligned to 8 byte boundaries
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
     assert(size <= (my_aligned_size-8));
+    assert(size%8 = 0);
     // FIND THE BIN (ROUND UP LG(SIZE))
     uint8_t binAllocateNum = log2(my_aligned_size);
     size_t **binPtr = getBinPointer(binAllocateNum);
+    assert(binAllocateNum >= BIN_MIN);
+    assert(binAllocateNum <= BIN_MAX);
+    assert(binPtr < getHeapPointer());
     // IF BIN IS EMPTY
     if(*binPtr == 0){                                     //TODO: USE A GLOBAL VARIABLE TO SAVE THE HIGHEST BIN NUMBER
       // SEARCH LARGER BINS FOR BLOCKS
       uint8_t binToBreakNum;
-      for(binToBreakNum = binAllocateNum+1; binToBreakNum < BIN_MAX; binToBreakNum++){
+      for(binToBreakNum = binAllocateNum+1; binToBreakNum <= BIN_MAX; binToBreakNum++){
         if(*getBinPointer(binToBreakNum) != 0) break;
       }
       // IF NO BLOCKS FOUND, ALLOCATE MORE MEMORY FOR THE HEAP
