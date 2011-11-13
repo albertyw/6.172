@@ -67,6 +67,8 @@ namespace my
     assert(binNum <= BIN_MAX);
     assert(binNum >= BIN_MIN);
     size_t ** temp = (size_t**)mem_heap_lo() + (binNum-3);
+    assert(temp >= mem_heap_lo());
+    assert(temp <= getHeapPointer());
     return temp;
   }
   /**
@@ -75,13 +77,20 @@ namespace my
   void allocator::setBinPointer(uint8_t binNum, size_t *setPointer){
     assert(binNum <= BIN_MAX);
     assert(binNum >= BIN_MIN);
+    assert(setPointer >= getHeapPointer());
+    assert(setPointer <= mem_heap_hi());
     size_t **binPointer = getBinPointer(binNum);
     *binPointer = setPointer;
+    assert(*getBinPointer(binNum) == setPointer);
   }
   /**
    * Set the value of blockPointer to pointerValue
    **/
   void allocator::setBlockPointer(size_t *blockPointer, size_t *pointerValue){
+    assert(blockPointer >= getHeapPointer());
+    assert(blockPointer <= mem_heap_hi());
+    assert(pointerValue >= getHeapPointer());
+    assert(pointerValue <= mem_heap_hi());
     size_t **pointer = (size_t **)blockPointer;
     *pointer = pointerValue;
   }
@@ -89,6 +98,7 @@ namespace my
    * Returns a pointer to the beginning of the public heap (after the bin pointers)
    **/
   size_t * allocator::getHeapPointer(){
+    assert(((size_t*)mem_heap_lo() + PRIVATE_SIZE)<= mem_heap_hi());
     return (size_t*)mem_heap_lo() + PRIVATE_SIZE;
   }
   
@@ -107,8 +117,12 @@ namespace my
     assert(size == roundPowUp(size));
     size = max(size, mem_heapsize());
     uint8_t binNum = log2(size);
+    assert(binNum <= BIN_MAX);
+    assert(binNum >= BIN_MIN);
     assert(*getBinPointer(binNum)==0);
     void *newMemPointer = mem_sbrk(size);
+    assert(newMemPointer >= getHeapPointer());
+    assert(newMemPointer <= mem_heap_hi());
     setBinPointer(binNum, (size_t *)newMemPointer);
     return binNum;
   }
@@ -133,22 +147,26 @@ namespace my
     
     // MAKE THE REQUIRED BLOCK
     size_t *pointerInBlock = *getBinPointer(largerBinNum);
-    size_t *returnPointer = pointerInBlock;
-    pointerInBlock += smallerSize;
+    size_t *endBlock = pointerInBlock;
+    setBinPointer(smallerBinNum, pointerInBlock);
     // WHILE CURRENTSIZE IS LESS THAN BIGGERSIZE/2
-    size_t currentSize = smallerSize;
+    pointerInBlock += smallerSize;
     uint8_t currentBin = smallerBinNum;
     //printf("%p -- Pointer In Block\n",pointerInBlock);
-    for(currentSize; currentSize < biggerSize; currentSize *= 2){
+    for(size_t currentSize = smallerSize; currentSize < biggerSize; currentSize *= 2){
       assert(currentSize == pow2(currentBin));
+      assert(pointerInBlock <= mem_heap_hi());
+      assert(pointerInBlock >= getHeapPointer());
       // COPY THE BIN'S POINTER TO THE BLOCK
       setBlockPointer(pointerInBlock, *getBinPointer(currentBin));
       // CHANGE THE BIN'S POINTER TO POINT TO THE BLOCK
       setBinPointer(currentBin, pointerInBlock);
       // Change values for next iteration
-      pointerInBlock = (size_t *)((char *) pointerInBlock + currentSize);
+      pointerInBlock = (size_t *)((uint8_t *) pointerInBlock + currentSize);
       currentBin++;
     }
+    assert(currentBin == largerBinNum);   // Make sure we've split up the whole block
+    assert(endBlock == pointerInBlock);
     setBinPointer(largerBinNum, 0);
   }
   
@@ -160,6 +178,8 @@ namespace my
     // Same as:
     // size_t blockValue = *blockPointer;
     // return (size_t *)blockValue;
+    assert((size_t *)*blockPointer <= mem_heap_hi());
+    assert((size_t *)*blockPointer >= getHeapPointer());
     return (size_t *)*blockPointer;
   }
   
@@ -236,6 +256,7 @@ namespace my
     // MAKE SURE THAT ALL POINTERS ARE SET TO 0
     memset(p,0,(HEAP_SIZE+PRIVATE_SIZE));
     assert(*p == 0);
+    assert(*(p+HEAP_SIZE) == 0);
     
     // ALLOCATE A PART OF THE HEAP TO MEMORIZE EMPTY BIN'S BLOCKS
     setBinPointer(log2(HEAP_SIZE), getHeapPointer());
@@ -253,7 +274,7 @@ namespace my
     // Make sure that we're aligned to 8 byte boundaries
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
     assert(size <= (my_aligned_size-8));
-    assert(size%8 = 0);
+    assert(my_aligned_size%8 = 0);
     // FIND THE BIN (ROUND UP LG(SIZE))
     uint8_t binAllocateNum = log2(my_aligned_size);
     size_t **binPtr = getBinPointer(binAllocateNum);
@@ -275,19 +296,26 @@ namespace my
       splitBlock(binToBreakNum, binAllocateNum);
       // ASSERT THAT THE BIN WE JUST BROKE UP IS EMPTY
       assert(*getBinPointer(binToBreakNum)==0);
+      // ASSERT THAT THE BIN WE JUST ADDED TO HAS 2 BLOCKS
+      assert(*getBinPointer(binToBreakNum)!=0 && **getBinPointer(binToBreakNum)!=0);
+      assert(*nextBlock(**getBinPointer(binToBreaknum))==0);
     }
     // ASSERT BIN IS NOT EMPTY
     assert(*getBinPointer(binAllocateNum)!=0);
     // REMOVE BLOCK POINTER FROM BIN
-    size_t * returnBlock = (size_t *)*getBinPointer(binAllocateNum);
+    size_t * returnBlock = *getBinPointer(binAllocateNum);
+    assert(returnBlock >= getHeapPointer());
+    assert(returnBlock <= mem_heap_hi());
     //printf("%p %p ------- BLOCK SWAP\n",returnBlock,(size_t *)*returnBlock);
-    setBinPointer(binAllocateNum, (size_t *)*returnBlock);
+    setBinPointer(binAllocateNum, nextBlock(returnBlock));
     // RECORD THE SIZE INTO THE RETURNBLOCK
     *returnBlock = my_aligned_size;
     //printf("%lu %p --- BLOCKS \n",*returnBlock,returnBlock);
     assert(*returnBlock!=0);
     returnBlock += 1;
     // RETURN BLOCK POINTER
+    assert(returnBlock >= getHeapPointer());
+    assert(returnBlock <= mem_heap_hi());
     return returnBlock;
   }
   
