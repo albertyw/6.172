@@ -38,6 +38,7 @@ namespace my
       num |= num >> power;
     }
     num++;
+    assert(num >> log2(num) == 1);
     return num;
   }
    
@@ -63,13 +64,17 @@ namespace my
    * **getBinPointer is the value in the heap
    **/
   size_t ** allocator::getBinPointer(uint8_t binNum){
+    assert(binNum <= BIN_MAX);
+    assert(binNum >= BIN_MIN);
     size_t ** temp = (size_t**)mem_heap_lo() + (binNum-3);
-    return (size_t**)mem_heap_lo() + (binNum-3);
+    return temp;
   }
   /**
    * Set the pointer in a bin (i.e. the value of the bin) to a given pointer
    **/
   void allocator::setBinPointer(uint8_t binNum, size_t *setPointer){
+    assert(binNum <= BIN_MAX);
+    assert(binNum >= BIN_MIN);
     size_t **binPointer = getBinPointer(binNum);
     *binPointer = setPointer;
   }
@@ -86,6 +91,8 @@ namespace my
   size_t * allocator::getHeapPointer(){
     return (size_t*)mem_heap_lo() + PRIVATE_SIZE;
   }
+  
+  
   
   
   //*************************** HEAP HELPER FUNCTIONS ************************//
