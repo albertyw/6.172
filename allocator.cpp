@@ -150,7 +150,7 @@ namespace my
     size_t *endBlock = pointerInBlock;
     setBinPointer(smallerBinNum, pointerInBlock);
     // WHILE CURRENTSIZE IS LESS THAN BIGGERSIZE/2
-    pointerInBlock += smallerSize;
+    pointerInBlock = (size_t*)((char*) pointerInBlock +  smallerSize);
     uint8_t currentBin = smallerBinNum;
     //printf("%p -- Pointer In Block\n",pointerInBlock);
     for(size_t currentSize = smallerSize; currentSize < biggerSize; currentSize *= 2){

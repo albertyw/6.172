@@ -78,11 +78,13 @@ static int add_range(Type *impl, range_t **ranges, char *lo,
   /* The payload must not overlap any other payloads */
   /* YOUR CODE HERE */
   range_t *pnext;
-  for (p = *ranges; p != NULL; p = pnext) {
+  for (p = *ranges; p != NULL; p = p->next) {
+    assert(lo < hi);
+    assert(p->lo < p->hi);
     assert(lo > p->hi);
     assert(hi < p->lo);
-    pnext = p->next;
-    if(pnext == NULL) break;
+    //pnext = p->next;
+    //if(pnext == NULL) break;
   }
   /* Everything looks OK, so remember the extent of this block by creating a
    * range struct and adding it the range list.
@@ -93,7 +95,7 @@ static int add_range(Type *impl, range_t **ranges, char *lo,
   new_p.hi = hi;
   new_p.next = NULL;
   range_t *asdf = &new_p;
-  if(p == NULL){
+  if(*ranges == NULL){
     *ranges = &new_p; 
   }else{
     p->next = asdf;
