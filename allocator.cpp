@@ -52,7 +52,8 @@ namespace my
    * Find 2^num
    **/
   size_t pow2(size_t num){
-    return pow(2, num);                                          //TODO: FIND A BITHACK
+    return 2 << num;
+    //return pow(2, num);                                          //TODO: FIND A BITHACK
   }
   
   //********************* POINTER MANIPULATIONS ****************//
@@ -68,7 +69,12 @@ namespace my
     assert(binNum >= BIN_MIN);
     size_t ** temp = (size_t**)mem_heap_lo() + (binNum-3);
     assert(temp >= (size_t **)mem_heap_lo());
-    assert(temp <= (size_t **)getHeapPointer());
+    printf("%i",binNum);
+    printf("%p\n", (size_t**)mem_heap_lo());
+    printf("%p\n", temp);
+    printf("%p\n", (size_t **)getHeapPointer());
+    assert(temp < (size_t **)getHeapPointer());
+    
     return temp;
   }
   /**
@@ -98,11 +104,21 @@ namespace my
    * Returns a pointer to the beginning of the public heap (after the bin pointers)
    **/
   size_t * allocator::getHeapPointer(){
-    assert(((size_t*)mem_heap_lo() + PRIVATE_SIZE)<= (size_t *)mem_heap_hi());
-    return (size_t*)mem_heap_lo() + PRIVATE_SIZE;
+    assert(sizeAddBytes((size_t*)mem_heap_lo(), (uint8_t)PRIVATE_SIZE)<= (size_t *)mem_heap_hi());
+    return sizeAddBytes((size_t*)mem_heap_lo(), (uint8_t)PRIVATE_SIZE);
   }
-  
-  
+  /**
+   * Returns a pointer moved by some number of bytes
+   **/
+  size_t * allocator::sizeAddBytes(size_t *pointer, uint8_t bytes){
+    assert(bytes >= 8);
+    assert(bytes%8 == 0);
+    assert(pointer >= mem_heap_lo());
+    assert(pointer <= mem_heap_hi());
+    assert((size_t*)((char*)pointer + bytes) >= mem_heap_lo());
+    assert((size_t*)((char*)pointer + bytes) <= mem_heap_hi());
+    return (size_t*)((char*)pointer + bytes);
+  }
   
   
   //*************************** HEAP HELPER FUNCTIONS ************************//
@@ -147,10 +163,10 @@ namespace my
     
     // MAKE THE REQUIRED BLOCK
     size_t *pointerInBlock = *getBinPointer(largerBinNum);
-    size_t *endBlock = pointerInBlock;
+    size_t *endBlock = sizeAddBytes(pointerInBlock, biggerSize);
     setBinPointer(smallerBinNum, pointerInBlock);
     // WHILE CURRENTSIZE IS LESS THAN BIGGERSIZE/2
-    pointerInBlock = (size_t*)((char*) pointerInBlock +  smallerSize);
+    pointerInBlock = sizeAddBytes(pointerInBlock, smallerSize);
     uint8_t currentBin = smallerBinNum;
     //printf("%p -- Pointer In Block\n",pointerInBlock);
     for(size_t currentSize = smallerSize; currentSize < biggerSize; currentSize *= 2){
@@ -162,7 +178,7 @@ namespace my
       // CHANGE THE BIN'S POINTER TO POINT TO THE BLOCK
       setBinPointer(currentBin, pointerInBlock);
       // Change values for next iteration
-      pointerInBlock = (size_t *)((uint8_t *) pointerInBlock + currentSize);
+      pointerInBlock = sizeAddBytes(pointerInBlock, currentSize);
       currentBin++;
     }
     assert(currentBin == largerBinNum);   // Make sure we've split up the whole block
@@ -190,7 +206,7 @@ namespace my
   int allocator::check()
   {
     // CHECK THAT EVERY FREE BLOCK HAS A POINTER WITHIN THE HEAP OR IS 0
-    size_t *minPointer = (size_t *)mem_heap_lo()+PRIVATE_SIZE;
+    size_t *minPointer = sizeAddBytes((size_t*)mem_heap_lo(), (uint8_t)PRIVATE_SIZE);;
     size_t *maxPointer = (size_t *)mem_heap_hi();
     // For every in
     for(uint8_t i = BIN_MIN; i <= BIN_MAX; i++){
@@ -244,6 +260,8 @@ namespace my
    */
   int allocator::init()
   {
+    assert(HEAP_SIZE%8 == 0);
+    assert(PRIVATE_SIZE%8 == 0);
     // ALLOCATE A STARTING HEAP
     size_t *p = (size_t *)mem_sbrk(HEAP_SIZE + PRIVATE_SIZE);
     if (p == (void *)-1) {
@@ -257,7 +275,7 @@ namespace my
     // MAKE SURE THAT ALL POINTERS ARE SET TO 0
     memset(p,0,(HEAP_SIZE+PRIVATE_SIZE));
     assert(*p == 0);
-    assert(*(p+HEAP_SIZE) == 0);
+    assert(*(sizeAddBytes(p, (uint8_t)PRIVATE_SIZE)) == 0);
     
     // ALLOCATE A PART OF THE HEAP TO MEMORIZE EMPTY BIN'S BLOCKS
     setBinPointer(log2(HEAP_SIZE), getHeapPointer());
@@ -314,7 +332,7 @@ namespace my
     *returnBlock = my_aligned_size;
     //printf("%lu %p --- BLOCKS \n",*returnBlock,returnBlock);
     assert(*returnBlock!=0);
-    returnBlock += 1;
+    returnBlock = sizeAddBytes(returnBlock, SIZE_T_SIZE);
     // RETURN BLOCK POINTER
     assert(returnBlock >= getHeapPointer());
     assert(returnBlock <= (size_t *)mem_heap_hi());
@@ -331,7 +349,7 @@ namespace my
     // DON'T DO ANYTHING FOR NULL POINTERS
     if(ptr == NULL) return;
     assert(ptr >= getHeapPointer());
-    assert(ptr <= mem_heap_hi());
+    assert((size_t *)ptr <= (size_t *)mem_heap_hi());
     
     // GO BACK AND FIND THE SIZE
     printf("%p POINTER \n",ptr);
@@ -339,26 +357,31 @@ namespace my
     size_t blockSize = *blockPointer;
     printf("%lu SIZE\n",blockSize);
     assert(roundPowUp(blockSize) == blockSize);
-    assert(blockPointer > ((size_t *)mem_heap_lo()+33));
+    assert(blockPointer > getHeapPointer());
     assert(blockPointer < (size_t *)mem_heap_hi());
     // FIND BIN THAT BLOCK IS SUPPOSED TO BELONG TO
     uint8_t binNum = log2(blockSize);
+    assert(binNum >= BIN_MIN);
+    assert(binNum <= BIN_MAX);
     // ERASE VALUES IN PTR
     memset(blockPointer,0,blockSize);
     // FIND IF CONTIGUOUS FREE BLOCKS ARE FREE
-    bool coalesceFound = false;
+    bool coalesceFound = true;
     size_t *binFreeBlockPointer;
-    while(coalesceFound == false){
+    while(coalesceFound == true){
+      coalesceFound = false;
       binFreeBlockPointer = *getBinPointer(binNum);
       for(binFreeBlockPointer; binFreeBlockPointer !=0; binFreeBlockPointer = nextBlock(binFreeBlockPointer)){
-        if(binFreeBlockPointer == blockPointer+blockSize){
+        if(binFreeBlockPointer == sizeAddBytes(blockPointer, blockSize)){
           // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
+          coalesceFound = true;
           *binFreeBlockPointer = 0;
           blockSize *=2;
           binNum++;
           break;
-        }else if(binFreeBlockPointer == blockPointer-blockSize){
+        }else if(binFreeBlockPointer == (size_t *)((char *)blockPointer+ blockSize)){
           // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
+          coalesceFound = true;
           *blockPointer = 0;
           blockPointer = binFreeBlockPointer;
           blockSize *=2;
