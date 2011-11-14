@@ -91,7 +91,7 @@ namespace my
   void allocator::setBlockPointer(size_t *blockPointer, size_t *pointerValue){
     assert(blockPointer >= getHeapPointer());
     assert(blockPointer <= (size_t *)mem_heap_hi());
-    assert(pointerValue >= getHeapPointer());
+    assert(pointerValue >= getHeapPointer() || pointerValue == 0);
     assert(pointerValue <= (size_t *)mem_heap_hi());
     size_t **pointer = (size_t **)blockPointer;
     *pointer = pointerValue;
@@ -112,11 +112,6 @@ namespace my
     assert(pointer >= mem_heap_lo());
     assert(pointer <= mem_heap_hi());
     assert((size_t*)((char*)pointer + bytes) >= mem_heap_lo());
-    printf("pointer     %p\n", pointer);
-    printf("bytes       %llu\n", bytes);
-    printf("answer      %p\n", (size_t*)((char*)pointer + bytes));
-    printf("mem_heap_hi %p\n", mem_heap_hi());
-    printf("PRIVATE     %llu\n", (uint64_t)PRIVATE_SIZE);
     assert((char*)pointer + bytes <= (char*)mem_heap_hi()+1);
     return (size_t*)((char*)pointer + bytes);
   }
@@ -164,8 +159,6 @@ namespace my
     
     // MAKE THE REQUIRED BLOCK
     size_t *pointerInBlock = *getBinPointer(largerBinNum);
-    printf("smallerBinNum %i\n", smallerBinNum);
-    printf("largerBinNum %i\n", largerBinNum);
     size_t *endBlock = sizeAddBytes(pointerInBlock, (uint64_t)biggerSize);
     assert(endBlock >= getHeapPointer());
     setBinPointer(smallerBinNum, pointerInBlock);
