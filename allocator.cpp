@@ -79,7 +79,7 @@ namespace my
   void allocator::setBinPointer(uint8_t binNum, size_t *setPointer){
     assert(binNum <= BIN_MAX);
     assert(binNum >= BIN_MIN);
-    assert(setPointer >= getHeapPointer());
+    assert(setPointer >= getHeapPointer() || setPointer == 0);
     assert(setPointer <= (size_t *)mem_heap_hi());
     size_t **binPointer = getBinPointer(binNum);
     *binPointer = setPointer;
