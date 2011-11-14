@@ -33,7 +33,8 @@ namespace my
     static void setBinPointer (uint8_t binNum, size_t *setPointer);
     static void setBlockPointer (size_t *blockPointer, size_t *pointerValue);
     static size_t * getHeapPointer ();
-    static size_t * sizeAddBytes (size_t *pointer, uint8_t bytes);
+    static size_t * sizeAddBytes (size_t *pointer, uint64_t bytes);
+    
     static uint8_t increaseHeapSize (size_t size);
     static void splitBlock (uint8_t largerBinNum,uint8_t smallerBinNum);
     static size_t * nextBlock (size_t *blockPointer);

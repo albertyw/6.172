@@ -34,11 +34,11 @@ namespace my
    **/
   size_t roundPowUp(size_t num){                                     // See http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
     num--;
-    for(uint8_t power=1; power<SIZE_T_SIZE; power*=2){
+    for(uint64_t power=1; power<SIZE_T_SIZE; power*=2){
       num |= num >> power;
     }
     num++;
-    assert((num >> (uint8_t)log2(num)) == 1);
+    assert((num >> (uint64_t)log2(num)) == 1);
     return num;
   }
    
@@ -69,12 +69,6 @@ namespace my
     assert(binNum >= BIN_MIN);
     size_t ** temp = (size_t**)mem_heap_lo() + (binNum-3);
     assert(temp >= (size_t **)mem_heap_lo());
-    printf("BinNum        %i\n",binNum);
-    printf("PRIVATE_SIZE  %i\n",(uint16_t)(8*33));
-    printf("Mem Heap Low  %p\n", (size_t**)mem_heap_lo());
-    printf("BinPointer    %p\n", temp);
-    printf("Heap Pointer  %p\n", (size_t **)getHeapPointer());
-    printf("Mem Heap High %p\n", (size_t**)mem_heap_hi());
     assert(temp < (size_t **)getHeapPointer());
     
     return temp;
@@ -106,18 +100,22 @@ namespace my
    * Returns a pointer to the beginning of the public heap (after the bin pointers)
    **/
   size_t * allocator::getHeapPointer(){
-    assert(sizeAddBytes((size_t*)mem_heap_lo(), (uint8_t)PRIVATE_SIZE)<= (size_t *)mem_heap_hi());
-    return sizeAddBytes((size_t*)mem_heap_lo(), (uint8_t)PRIVATE_SIZE);
+    assert(sizeAddBytes((size_t*)mem_heap_lo(), (uint64_t)PRIVATE_SIZE)<= (size_t *)mem_heap_hi());
+    return sizeAddBytes((size_t*)mem_heap_lo(), (uint64_t)PRIVATE_SIZE);
   }
   /**
    * Returns a pointer moved by some number of bytes
    **/
-  size_t * allocator::sizeAddBytes(size_t *pointer, uint8_t bytes){
+  size_t * allocator::sizeAddBytes(size_t *pointer, uint64_t bytes){
     assert(bytes >= 8);
     assert(bytes%SIZE_T_SIZE == 0);
     assert(pointer >= mem_heap_lo());
     assert(pointer <= mem_heap_hi());
     assert((size_t*)((char*)pointer + bytes) >= mem_heap_lo());
+    printf("pointer     %p\n", pointer);
+    printf("bytes       %llu\n", bytes);
+    printf("answer      %p\n", (size_t*)((char*)pointer + bytes));
+    printf("mem_heap_hi %p\n", mem_heap_hi());
     assert((size_t*)((char*)pointer + bytes) <= mem_heap_hi());
     return (size_t*)((char*)pointer + bytes);
   }
@@ -128,7 +126,7 @@ namespace my
    * Increase the heap size then add the extra amount to a bin
    * size should be max of current heap size and the size needed by malloc
    * size should be a power of 2 already
-   * Return a pointer to the block that is allocated
+   * Return the binNum that the extra block was added to
    **/
   uint8_t allocator::increaseHeapSize(size_t size)
   {
@@ -153,7 +151,7 @@ namespace my
    * both sizes should be a power of 2
    * return a pointer to the block size needed
    **/
-  void allocator::splitBlock(uint8_t largerBinNum,uint8_t smallerBinNum)
+  void allocator::splitBlock(uint8_t largerBinNum, uint8_t smallerBinNum)
   {
     assert(largerBinNum >= BIN_MIN);
     assert(largerBinNum <= BIN_MAX);
@@ -165,10 +163,12 @@ namespace my
     
     // MAKE THE REQUIRED BLOCK
     size_t *pointerInBlock = *getBinPointer(largerBinNum);
-    size_t *endBlock = sizeAddBytes(pointerInBlock, biggerSize);
+    size_t *endBlock = sizeAddBytes(pointerInBlock, (uint64_t)biggerSize);
+    assert(endBlock <= mem_heap_hi());
+    assert(endBlock >= getHeapPointer());
     setBinPointer(smallerBinNum, pointerInBlock);
     // WHILE CURRENTSIZE IS LESS THAN BIGGERSIZE/2
-    pointerInBlock = sizeAddBytes(pointerInBlock, smallerSize);
+    pointerInBlock = sizeAddBytes(pointerInBlock, (uint64_t)smallerSize);
     uint8_t currentBin = smallerBinNum;
     //printf("%p -- Pointer In Block\n",pointerInBlock);
     for(size_t currentSize = smallerSize; currentSize < biggerSize; currentSize *= 2){
@@ -180,7 +180,7 @@ namespace my
       // CHANGE THE BIN'S POINTER TO POINT TO THE BLOCK
       setBinPointer(currentBin, pointerInBlock);
       // Change values for next iteration
-      pointerInBlock = sizeAddBytes(pointerInBlock, currentSize);
+      pointerInBlock = sizeAddBytes(pointerInBlock, (uint64_t)currentSize);
       currentBin++;
     }
     assert(currentBin == largerBinNum);   // Make sure we've split up the whole block
@@ -208,7 +208,7 @@ namespace my
   int allocator::check()
   {
     // CHECK THAT EVERY FREE BLOCK HAS A POINTER WITHIN THE HEAP OR IS 0
-    size_t *minPointer = sizeAddBytes((size_t*)mem_heap_lo(), (uint8_t)PRIVATE_SIZE);;
+    size_t *minPointer = sizeAddBytes((size_t*)mem_heap_lo(), (uint64_t)PRIVATE_SIZE);;
     size_t *maxPointer = (size_t *)mem_heap_hi();
     // For every in
     for(uint8_t i = BIN_MIN; i <= BIN_MAX; i++){
@@ -277,7 +277,7 @@ namespace my
     // MAKE SURE THAT ALL POINTERS ARE SET TO 0
     memset(p,0,(HEAP_SIZE+PRIVATE_SIZE));
     assert(*p == 0);
-    assert(*(sizeAddBytes(p, (uint8_t)PRIVATE_SIZE)) == 0);
+    assert(*(sizeAddBytes(p, (uint64_t)PRIVATE_SIZE)) == 0);
     
     // ALLOCATE A PART OF THE HEAP TO MEMORIZE EMPTY BIN'S BLOCKS
     setBinPointer(log2(HEAP_SIZE), getHeapPointer());
@@ -334,7 +334,7 @@ namespace my
     *returnBlock = my_aligned_size;
     //printf("%lu %p --- BLOCKS \n",*returnBlock,returnBlock);
     assert(*returnBlock!=0);
-    returnBlock = sizeAddBytes(returnBlock, SIZE_T_SIZE);
+    returnBlock = sizeAddBytes(returnBlock, (uint64_t)SIZE_T_SIZE);
     // RETURN BLOCK POINTER
     assert(returnBlock >= getHeapPointer());
     assert(returnBlock <= (size_t *)mem_heap_hi());
@@ -374,7 +374,7 @@ namespace my
       coalesceFound = false;
       binFreeBlockPointer = *getBinPointer(binNum);
       for(binFreeBlockPointer; binFreeBlockPointer !=0; binFreeBlockPointer = nextBlock(binFreeBlockPointer)){
-        if(binFreeBlockPointer == sizeAddBytes(blockPointer, blockSize)){
+        if(binFreeBlockPointer == sizeAddBytes(blockPointer, (uint64_t)blockSize)){
           // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
           coalesceFound = true;
           *binFreeBlockPointer = 0;
