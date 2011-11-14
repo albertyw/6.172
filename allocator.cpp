@@ -314,8 +314,9 @@ namespace my
       // ASSERT THAT THE BIN WE JUST BROKE UP IS EMPTY
       assert(*getBinPointer(binToBreakNum)==0);
       // ASSERT THAT THE BIN WE JUST ADDED TO HAS 2 BLOCKS
-      assert(*getBinPointer(binToBreakNum)!=0 && nextBlock(*getBinPointer(binToBreakNum))!=0);
-      assert(nextBlock(nextBlock(*getBinPointer(binToBreakNum)))==0);
+      assert(*getBinPointer(binAllocateNum)!=0); //Assert that the bin is not empty
+      assert(nextBlock(*getBinPointer(binAllocateNum))!=0); // Assert that the bin points to something
+      assert(nextBlock(nextBlock(*getBinPointer(binAllocateNum)))==0); // Assert that the second block doesn't point to anything
     }
     // ASSERT BIN IS NOT EMPTY
     assert(*getBinPointer(binAllocateNum)!=0);
