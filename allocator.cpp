@@ -252,7 +252,7 @@ namespace my
       return -1;
     }
     assert(p != (void *)-1);
-    assert((size_t *)mem_heap_hi() - (size_t *)mem_heap_lo() == (HEAP_SIZE + PRIVATE_SIZE));
+    assert(((char *)mem_heap_hi() - (char *)mem_heap_lo())+1  == (HEAP_SIZE + PRIVATE_SIZE));
     
     // MAKE SURE THAT ALL POINTERS ARE SET TO 0
     memset(p,0,(HEAP_SIZE+PRIVATE_SIZE));
