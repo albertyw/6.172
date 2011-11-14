@@ -192,7 +192,7 @@ namespace my
     // size_t blockValue = *blockPointer;
     // return (size_t *)blockValue;
     assert((size_t *)*blockPointer <= (size_t *)mem_heap_hi());
-    assert((size_t *)*blockPointer >= getHeapPointer());
+    assert((size_t *)*blockPointer >= getHeapPointer() || (size_t *)*blockPointer == 0);
     return (size_t *)*blockPointer;
   }
   
