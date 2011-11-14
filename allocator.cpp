@@ -69,10 +69,12 @@ namespace my
     assert(binNum >= BIN_MIN);
     size_t ** temp = (size_t**)mem_heap_lo() + (binNum-3);
     assert(temp >= (size_t **)mem_heap_lo());
-    printf("%i",binNum);
-    printf("%p\n", (size_t**)mem_heap_lo());
-    printf("%p\n", temp);
-    printf("%p\n", (size_t **)getHeapPointer());
+    printf("BinNum        %i\n",binNum);
+    printf("PRIVATE_SIZE  %i\n",(uint16_t)(8*33));
+    printf("Mem Heap Low  %p\n", (size_t**)mem_heap_lo());
+    printf("BinPointer    %p\n", temp);
+    printf("Heap Pointer  %p\n", (size_t **)getHeapPointer());
+    printf("Mem Heap High %p\n", (size_t**)mem_heap_hi());
     assert(temp < (size_t **)getHeapPointer());
     
     return temp;
@@ -112,7 +114,7 @@ namespace my
    **/
   size_t * allocator::sizeAddBytes(size_t *pointer, uint8_t bytes){
     assert(bytes >= 8);
-    assert(bytes%8 == 0);
+    assert(bytes%SIZE_T_SIZE == 0);
     assert(pointer >= mem_heap_lo());
     assert(pointer <= mem_heap_hi());
     assert((size_t*)((char*)pointer + bytes) >= mem_heap_lo());
