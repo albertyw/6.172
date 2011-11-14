@@ -52,7 +52,7 @@ namespace my
    * Find 2^num
    **/
   size_t pow2(size_t num){
-    return 2 << num;
+    return 2 << (num-1);
     //return pow(2, num);                                          //TODO: FIND A BITHACK
   }
   
@@ -116,7 +116,8 @@ namespace my
     printf("bytes       %llu\n", bytes);
     printf("answer      %p\n", (size_t*)((char*)pointer + bytes));
     printf("mem_heap_hi %p\n", mem_heap_hi());
-    assert((size_t*)((char*)pointer + bytes) <= mem_heap_hi());
+    printf("PRIVATE     %llu\n", (uint64_t)PRIVATE_SIZE);
+    assert((char*)pointer + bytes <= (char*)mem_heap_hi()+1);
     return (size_t*)((char*)pointer + bytes);
   }
   
@@ -163,8 +164,9 @@ namespace my
     
     // MAKE THE REQUIRED BLOCK
     size_t *pointerInBlock = *getBinPointer(largerBinNum);
+    printf("smallerBinNum %i\n", smallerBinNum);
+    printf("largerBinNum %i\n", largerBinNum);
     size_t *endBlock = sizeAddBytes(pointerInBlock, (uint64_t)biggerSize);
-    assert(endBlock <= mem_heap_hi());
     assert(endBlock >= getHeapPointer());
     setBinPointer(smallerBinNum, pointerInBlock);
     // WHILE CURRENTSIZE IS LESS THAN BIGGERSIZE/2
@@ -207,7 +209,7 @@ namespace my
    **/
   int allocator::check()
   {
-    // CHECK THAT EVERY FREE BLOCK HAS A POINTER WITHIN THE HEAP OR IS 0
+    /*// CHECK THAT EVERY FREE BLOCK HAS A POINTER WITHIN THE HEAP OR IS 0
     size_t *minPointer = sizeAddBytes((size_t*)mem_heap_lo(), (uint64_t)PRIVATE_SIZE);;
     size_t *maxPointer = (size_t *)mem_heap_hi();
     // For every in
@@ -250,7 +252,7 @@ namespace my
     // Is every block in the free list marked as free?
     // Is every free block actually in the free list?
     
-    
+    */
     return 0;
   }
   
