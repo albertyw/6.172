@@ -103,25 +103,28 @@ static int add_range(Type *impl, range_t **ranges, char *lo,
  */
 static void remove_range(range_t **ranges, char *lo)
 {
-  range_t *p = NULL;
-  range_t **prevpp = ranges;
-  range_t *pnext;
+  range_t *p = *ranges;
+  range_t *prevpp = 0;
+  range_t *pnext = p->next;
 
   /* Iterate the linked list until you find the range with a matching lo
    * payload and remove it.  Remember to properly handle the case where the
    * payload is in the first node, and to free the node after unlinking it.
    */
   /* YOUR CODE HERE */
-  for (p = *ranges; p != NULL; p = pnext) {
-    pnext = p->next;
-    if(p->lo == lo){
-      (*prevpp)->next = pnext;
+  while(p !=0){
+    if(p->lo == lo){// If p is the range we're looking for
+      if(prevpp == 0){
+        *ranges = pnext;
+      }else{
+        prevpp->next = pnext;
+      }
       free(p);
+      break;
     }
-    if(ranges == prevpp){
-      ranges = &pnext;
-    }
-    prevpp = &p;
+    prevpp = p;
+    p = p->next;
+    pnext = p->next;
   }
 }
 
@@ -169,6 +172,7 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
     
     index = trace->ops[i].index;
     size = trace->ops[i].size;
+    printf("\n\n****TRACE # %i****", i);
 
     switch (trace->ops[i].type) {
       
@@ -201,7 +205,6 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
         break;
 
       case REALLOC: /* realloc */
-        printf("REALLOC");
         /* Call the student's realloc */
         oldp = trace->blocks[index];
         if ((newp = (char *) impl->realloc(oldp, size)) == NULL) {
@@ -237,8 +240,6 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
         break;
 
       case FREE: /* free */
-        printf("FREE");
-
         /* Remove region from list and call student's free function */
         p = trace->blocks[index];
         remove_range(&ranges, p);

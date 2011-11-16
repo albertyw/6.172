@@ -315,14 +315,16 @@ namespace my
   {
     // Make sure that we're aligned to 8 byte boundaries
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
-    printf("\nMALLOC_SIZE %zu\n", my_aligned_size);
-    binInfo();
+    printf("MALLOC SIZE %zu\n", my_aligned_size);
+    
     //binInfo();
     assert(size <= (my_aligned_size-8));
     assert(my_aligned_size%8 == 0);
     // FIND THE BIN (ROUND UP LG(SIZE))
     uint8_t binAllocateNum = log2(my_aligned_size);
     size_t **binPtr = getBinPointer(binAllocateNum);
+    printf("Malloc from bin %i\n", binAllocateNum);
+    binInfo();
     assert(binAllocateNum >= BIN_MIN);
     assert(binAllocateNum <= BIN_MAX);
     assert(binPtr < (size_t **)getHeapPointer());
@@ -338,7 +340,7 @@ namespace my
       // IF NO BLOCKS FOUND, ALLOCATE MORE MEMORY FOR THE HEAP
       if(binToBreakNum > BIN_MAX){
         binToBreakNum = increaseHeapSize(my_aligned_size);
-        printf("CREATE BLOCK SIZE binToBreakNum");
+        printf("CREATE BIN SIZE %i:",binToBreakNum);
         //binInfo();
       }
       
@@ -378,6 +380,8 @@ namespace my
    */
   void allocator::free(void *ptr)
   {
+    printf("FREE\n");
+    binInfo();
     // DON'T DO ANYTHING FOR NULL POINTERS
     if(ptr == NULL) return;
     assert(ptr >= getHeapPointer());
@@ -391,6 +395,7 @@ namespace my
     assert(blockPointer < (size_t *)mem_heap_hi());
     // FIND BIN THAT BLOCK IS SUPPOSED TO BELONG TO
     uint8_t binNum = log2(blockSize);
+    printf("Free into Bin %i\n",binNum); 
     assert(binNum >= BIN_MIN);
     assert(binNum <= BIN_MAX);
     // ERASE VALUES IN PTR
@@ -435,6 +440,7 @@ namespace my
    */
   void * allocator::realloc(void *ptr, size_t size)
   {
+    printf("REALLOC\n");
     if(size==0){
       free(ptr);
       ptr = 0;
