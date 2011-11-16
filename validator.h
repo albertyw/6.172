@@ -59,7 +59,6 @@ template <class Type>
 static int add_range(Type *impl, range_t **ranges, char *lo, 
 			int size, int tracenum, int opnum)
 {
-  
   char *hi = lo + size - 1;
   range_t *p = NULL;
   /* You can use this as a buffer for writing messages with sprintf. */
@@ -78,46 +77,24 @@ static int add_range(Type *impl, range_t **ranges, char *lo,
   
   /* The payload must not overlap any other payloads */
   /* YOUR CODE HERE */
-  range_t *lastP;
-  printf("size %i\n", (int)(hi-lo));
-  printf("  lo %p\n", lo);
-  printf("  hi %p\n", hi);
-  printf("\n");
   p = *ranges;
   while(p != 0){
-    //printf("psize%i\n", (int)(p->hi-p->lo));
-    printf("  lo %p\n", lo);
-    printf("p hi %p\n", p->hi);
-    printf("  hi %p\n", hi);
-    printf("p lo %p\n", p->lo);
-    printf("p next%p\n", p->next);
-    printf("\n");
     assert(lo < hi);
-    assert(p->lo < p->hi);
     assert((lo > p->hi) || (hi <  p->lo));
-    //pnext = p->next;
-    //if(pnext == NULL) break;
-    lastP = p;
     p = p->next;
   }
   /* Everything looks OK, so remember the extent of this block by creating a
    * range struct and adding it the range list.
    */
   /* YOUR CODE HERE */
-  range_t new_p;
-  new_p.lo = lo;
-  new_p.hi = hi;
-  new_p.next = 0;
-  if(*ranges == 0){
-    *ranges = &new_p;
-    assert((*ranges)->next == 0);
-  }else{
-    assert(false);
-    lastP->next = &new_p;
-  }
-  
-  //if(*ranges != 0)
-    printf("ASDLKGHASLKDHG");
+  malloc(sizeof(struct range_t));
+  struct range_t *new_p = (struct range_t*) malloc(sizeof(struct range_t));
+  new_p->lo = lo;
+  new_p->hi = hi;
+  new_p->next = *ranges;
+  *ranges = new_p;
+  assert((*ranges)->lo == lo);
+  assert((*ranges)->hi == hi);
   return 1;
 }
 
@@ -189,13 +166,14 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
 
   /* Interpret each operation in the trace in order */
   for (i = 0; i < trace->num_ops; i++) {
+    
     index = trace->ops[i].index;
     size = trace->ops[i].size;
 
     switch (trace->ops[i].type) {
+      
 
       case ALLOC: /* malloc */
-
         /* Call the student's malloc */
         if ((p = (char *) impl->malloc(size)) == NULL) {
           malloc_error(tracenum, i, "impl malloc failed.");
@@ -209,7 +187,6 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
          */
         if (add_range(impl, &ranges, p, size, tracenum, i) == 0)
           return 0;
-
         /* Fill the allocated region with some unique data that you can check
          * for if the region is copied via realloc.
          */
@@ -224,7 +201,7 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
         break;
 
       case REALLOC: /* realloc */
-
+        printf("REALLOC");
         /* Call the student's realloc */
         oldp = trace->blocks[index];
         if ((newp = (char *) impl->realloc(oldp, size)) == NULL) {
@@ -260,6 +237,7 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
         break;
 
       case FREE: /* free */
+        printf("FREE");
 
         /* Remove region from list and call student's free function */
         p = trace->blocks[index];

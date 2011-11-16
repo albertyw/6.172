@@ -12,7 +12,7 @@
 /* Starting size of the private heap area */
 #define BIN_MIN 3
 #define BIN_MAX 36            // The highest number bin
-#define NUMBER_OF_BINS (BIN_MAX-BIN_MIN)                               //TODO: OPTIMIZE 33; using 33 because we're not using bins 0,1,2
+#define NUMBER_OF_BINS (BIN_MAX-BIN_MIN+1)                               //TODO: OPTIMIZE 33; using 33 because we're not using bins 0,1,2
 #define PRIVATE_SIZE (ALIGNMENT*NUMBER_OF_BINS)                      
 #define HEAP_SIZE (ALIGNMENT*1024)                          //TODO: OPTIMIZE 1024
 // HEAP_SIZE and PRIVATE_SIZE should be a power of 2
@@ -65,6 +65,8 @@ namespace my
    * **getBinPointer is the value in the heap
    **/
   size_t ** allocator::getBinPointer(uint8_t binNum){
+    
+    printf("%i\n", binNum);
     assert(binNum <= BIN_MAX);
     assert(binNum >= BIN_MIN);
     size_t ** temp = (size_t**)mem_heap_lo() + (binNum-3);
@@ -289,7 +291,7 @@ namespace my
   {
     // Make sure that we're aligned to 8 byte boundaries
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
-    printf("%zu\n", my_aligned_size);
+    printf("MALLOC_SIZE %zu\n", my_aligned_size);
     assert(size <= (my_aligned_size-8));
     assert(my_aligned_size%8 == 0);
     // FIND THE BIN (ROUND UP LG(SIZE))
@@ -307,7 +309,7 @@ namespace my
         if(*getBinPointer(binToBreakNum) != 0) break;
       }
       // IF NO BLOCKS FOUND, ALLOCATE MORE MEMORY FOR THE HEAP
-      if(*getBinPointer(binToBreakNum) == 0){
+      if(binToBreakNum > BIN_MAX){
         binToBreakNum = increaseHeapSize(my_aligned_size);
       }
       // SPLIT BLOCK UP INTO SMALLER BINS
@@ -351,10 +353,8 @@ namespace my
     assert((size_t *)ptr <= (size_t *)mem_heap_hi());
     
     // GO BACK AND FIND THE SIZE
-    printf("%p POINTER \n",ptr);
     size_t *blockPointer = (size_t *)ptr-1;
     size_t blockSize = *blockPointer;
-    printf("%lu SIZE\n",blockSize);
     assert(roundPowUp(blockSize) == blockSize);
     assert(blockPointer > getHeapPointer());
     assert(blockPointer < (size_t *)mem_heap_hi());
