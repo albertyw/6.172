@@ -65,8 +65,6 @@ namespace my
    * **getBinPointer is the value in the heap
    **/
   size_t ** allocator::getBinPointer(uint8_t binNum){
-    
-    printf("%i\n", binNum);
     assert(binNum <= BIN_MAX);
     assert(binNum >= BIN_MIN);
     size_t ** temp = (size_t**)mem_heap_lo() + (binNum-3);
@@ -114,6 +112,9 @@ namespace my
     assert(pointer >= mem_heap_lo());
     assert(pointer <= mem_heap_hi());
     assert((size_t*)((char*)pointer + bytes) >= mem_heap_lo());
+    //printf("%p\n", (char*)pointer);
+    //printf("%p\n", (char*)pointer + bytes);
+    //printf("%p\n\n", (char*)mem_heap_hi()+1);
     assert((char*)pointer + bytes <= (char*)mem_heap_hi()+1);
     return (size_t*)((char*)pointer + bytes);
   }
@@ -151,6 +152,8 @@ namespace my
    **/
   void allocator::splitBlock(uint8_t largerBinNum, uint8_t smallerBinNum)
   {
+    assert(*getBinPointer(largerBinNum)!=0);
+    assert(*getBinPointer(smallerBinNum)==0);
     assert(largerBinNum >= BIN_MIN);
     assert(largerBinNum <= BIN_MAX);
     assert(smallerBinNum >= BIN_MIN);
@@ -197,6 +200,16 @@ namespace my
     assert((size_t *)*blockPointer >= getHeapPointer() || (size_t *)*blockPointer == 0);
     return (size_t *)*blockPointer;
   }
+  
+  /**
+   * Display information about the bins
+   **/
+   void allocator::binInfo(){
+     for(int i = BIN_MIN; i <= BIN_MAX; i++){
+       printf("%i:  %p\n", i, *getBinPointer(i));
+     }
+     printf("\n");
+   }
   
   //********************** HEAP CONSISTENCY CHECKING *****************//
   /**
@@ -292,6 +305,7 @@ namespace my
     // Make sure that we're aligned to 8 byte boundaries
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
     printf("MALLOC_SIZE %zu\n", my_aligned_size);
+    binInfo();
     assert(size <= (my_aligned_size-8));
     assert(my_aligned_size%8 == 0);
     // FIND THE BIN (ROUND UP LG(SIZE))
@@ -302,6 +316,7 @@ namespace my
     assert(binPtr < (size_t **)getHeapPointer());
     assert(binPtr >= (size_t **)mem_heap_lo());
     // IF BIN IS EMPTY
+    
     if(*binPtr == 0){                                     //TODO: USE A GLOBAL VARIABLE TO SAVE THE HIGHEST BIN NUMBER
       // SEARCH LARGER BINS FOR BLOCKS
       uint8_t binToBreakNum;
@@ -337,6 +352,7 @@ namespace my
     // RETURN BLOCK POINTER
     assert(returnBlock >= getHeapPointer());
     assert(returnBlock <= (size_t *)mem_heap_hi());
+    binInfo();
     return returnBlock;
   }
   

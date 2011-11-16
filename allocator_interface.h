@@ -38,6 +38,8 @@ namespace my
     static uint8_t increaseHeapSize (size_t size);
     static void splitBlock (uint8_t largerBinNum,uint8_t smallerBinNum);
     static size_t * nextBlock (size_t *blockPointer);
+    static void binInfo ();
+    
     static void * malloc (size_t size);
     static void * realloc (void *ptr, size_t size);
     static void free (void *ptr);
