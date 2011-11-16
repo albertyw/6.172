@@ -45,7 +45,7 @@ namespace my
   /**
    * Find the ceiling for the log of num
    **/
-  size_t log2(size_t num){
+  uint8_t log2(size_t num){
     return ceil(log(num)/log(2));                                       //TODO: FIND A BITHACK
   }
   /**
@@ -112,9 +112,6 @@ namespace my
     assert(pointer >= mem_heap_lo());
     assert(pointer <= mem_heap_hi());
     assert((size_t*)((char*)pointer + bytes) >= mem_heap_lo());
-    //printf("%p\n", (char*)pointer);
-    //printf("%p\n", (char*)pointer + bytes);
-    //printf("%p\n\n", (char*)mem_heap_hi()+1);
     assert((char*)pointer + bytes <= (char*)mem_heap_hi()+1);
     return (size_t*)((char*)pointer + bytes);
   }
@@ -130,7 +127,7 @@ namespace my
   uint8_t allocator::increaseHeapSize(size_t size)
   {
     assert(size == roundPowUp(size));
-    size = max(size, mem_heapsize());
+    size = 2*max(size, roundPowUp((size_t*)mem_heap_hi() - (size_t*)getHeapPointer()));
     uint8_t binNum = log2(size);
     assert(binNum <= BIN_MAX);
     assert(binNum >= BIN_MIN);
@@ -138,7 +135,12 @@ namespace my
     void *newMemPointer = mem_sbrk(size);
     assert((size_t *)newMemPointer >= getHeapPointer());
     assert((size_t *)newMemPointer <= (size_t *)mem_heap_hi());
+    assert((char *)mem_heap_hi() - (char*)newMemPointer + 1 == size);
     setBinPointer(binNum, (size_t *)newMemPointer);
+    printf("%llu\n", pow2(binNum));
+    printf("%llu\n", pow2(binNum));
+    printf("%i\n", binNum);
+    assert(pow2(binNum) == size);
     return binNum;
   }
   
@@ -205,8 +207,17 @@ namespace my
    * Display information about the bins
    **/
    void allocator::binInfo(){
+     size_t *p;
+     int numBlocks;
      for(int i = BIN_MIN; i <= BIN_MAX; i++){
-       printf("%i:  %p\n", i, *getBinPointer(i));
+       numBlocks = 0;
+       p = *getBinPointer(i);
+       printf("%i:  %p", i, p);
+       while(p!=0){
+         p = nextBlock(p);
+         numBlocks ++;
+       }
+       printf("  -  %i blocks\n", numBlocks);
      }
      printf("\n");
    }
@@ -304,8 +315,9 @@ namespace my
   {
     // Make sure that we're aligned to 8 byte boundaries
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
-    printf("MALLOC_SIZE %zu\n", my_aligned_size);
+    printf("\nMALLOC_SIZE %zu\n", my_aligned_size);
     binInfo();
+    //binInfo();
     assert(size <= (my_aligned_size-8));
     assert(my_aligned_size%8 == 0);
     // FIND THE BIN (ROUND UP LG(SIZE))
@@ -316,7 +328,7 @@ namespace my
     assert(binPtr < (size_t **)getHeapPointer());
     assert(binPtr >= (size_t **)mem_heap_lo());
     // IF BIN IS EMPTY
-    
+    printf("NEED BLOCK SIZE %i\n", binAllocateNum);
     if(*binPtr == 0){                                     //TODO: USE A GLOBAL VARIABLE TO SAVE THE HIGHEST BIN NUMBER
       // SEARCH LARGER BINS FOR BLOCKS
       uint8_t binToBreakNum;
@@ -326,7 +338,10 @@ namespace my
       // IF NO BLOCKS FOUND, ALLOCATE MORE MEMORY FOR THE HEAP
       if(binToBreakNum > BIN_MAX){
         binToBreakNum = increaseHeapSize(my_aligned_size);
+        printf("CREATE BLOCK SIZE binToBreakNum");
+        //binInfo();
       }
+      
       // SPLIT BLOCK UP INTO SMALLER BINS
       splitBlock(binToBreakNum, binAllocateNum);
       // ASSERT THAT THE BIN WE JUST BROKE UP IS EMPTY
@@ -352,7 +367,7 @@ namespace my
     // RETURN BLOCK POINTER
     assert(returnBlock >= getHeapPointer());
     assert(returnBlock <= (size_t *)mem_heap_hi());
-    binInfo();
+    //binInfo();
     return returnBlock;
   }
   
