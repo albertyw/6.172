@@ -199,7 +199,35 @@ namespace my
    * Returns the new binNum of block
    **/
   uint8_t allocator::joinBlocks(size_t *blockPointer, uint8_t binNum){
-      
+    size_t blockSize = pow2(binNum);
+    // FIND IF CONTIGUOUS FREE BLOCKS ARE FREE
+    bool coalesceFound = true;
+    size_t *binFreeBlockPointer;
+    while(coalesceFound == true){
+      coalesceFound = false;
+      binFreeBlockPointer = *getBinPointer(binNum);
+      for(binFreeBlockPointer; binFreeBlockPointer !=0; binFreeBlockPointer = nextBlock(binFreeBlockPointer)){
+        if(binFreeBlockPointer == sizeAddBytes(blockPointer, (uint64_t)blockSize)){
+          // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
+          coalesceFound = true;
+          *binFreeBlockPointer = 0;
+          blockSize *=2;
+          binNum++;
+          break;
+        }else if(binFreeBlockPointer == (size_t *)((char *)blockPointer+ blockSize)){
+          // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
+          coalesceFound = true;
+          *blockPointer = 0;
+          blockPointer = binFreeBlockPointer;
+          blockSize *=2;
+          binNum++;
+          break;
+        }
+      }
+      // Don't need to care about binNum too big because memory wouldn't be able to have already allocated blocks
+      assert(binNum < BIN_MAX);
+      assert(binNum > BIN_MIN);
+    }
     return binNum;
   }
   
@@ -359,8 +387,6 @@ namespace my
       
       // SPLIT BLOCK UP INTO SMALLER BINS
       splitBlock(binToBreakNum, binAllocateNum);
-      // ASSERT THAT THE BIN WE JUST BROKE UP IS EMPTY
-      //assert(*getBinPointer(binToBreakNum)==0);
       // ASSERT THAT THE BIN WE JUST ADDED TO HAS 2 BLOCKS
       assert(*getBinPointer(binAllocateNum)!=0); //Assert that the bin is not empty
       assert(nextBlock(*getBinPointer(binAllocateNum))!=0); // Assert that the bin points to something
@@ -372,17 +398,14 @@ namespace my
     size_t * returnBlock = *getBinPointer(binAllocateNum);
     assert(returnBlock >= getHeapPointer());
     assert(returnBlock <= (size_t *)mem_heap_hi());
-    //printf("%p %p ------- BLOCK SWAP\n",returnBlock,(size_t *)*returnBlock);
     setBinPointer(binAllocateNum, nextBlock(returnBlock));
     // RECORD THE SIZE INTO THE RETURNBLOCK
     *returnBlock = my_aligned_size;
-    //printf("%lu %p --- BLOCKS \n",*returnBlock,returnBlock);
     assert(*returnBlock!=0);
     returnBlock = sizeAddBytes(returnBlock, (uint64_t)SIZE_T_SIZE);
     // RETURN BLOCK POINTER
     assert(returnBlock >= getHeapPointer());
     assert(returnBlock <= (size_t *)mem_heap_hi());
-    //binInfo();
     return returnBlock;
   }
   
@@ -411,40 +434,12 @@ namespace my
     printf("Free into Bin %i\n",binNum); 
     assert(binNum >= BIN_MIN);
     assert(binNum <= BIN_MAX);
-    // ERASE VALUES IN PTR
+    // ERASE VALUES IN the freed block
     memset(blockPointer,0,blockSize);
-    // FIND IF CONTIGUOUS FREE BLOCKS ARE FREE
-    bool coalesceFound = true;
-    size_t *binFreeBlockPointer;
-    while(coalesceFound == true){
-      coalesceFound = false;
-      binFreeBlockPointer = *getBinPointer(binNum);
-      for(binFreeBlockPointer; binFreeBlockPointer !=0; binFreeBlockPointer = nextBlock(binFreeBlockPointer)){
-        if(binFreeBlockPointer == sizeAddBytes(blockPointer, (uint64_t)blockSize)){
-          // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
-          coalesceFound = true;
-          *binFreeBlockPointer = 0;
-          blockSize *=2;
-          binNum++;
-          break;
-        }else if(binFreeBlockPointer == (size_t *)((char *)blockPointer+ blockSize)){
-          // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
-          coalesceFound = true;
-          *blockPointer = 0;
-          blockPointer = binFreeBlockPointer;
-          blockSize *=2;
-          binNum++;
-          break;
-        }
-      }
-      // Don't need to care about binNum too big because memory wouldn't be able to have already allocated blocks
-      assert(binNum < BIN_MAX);
-      assert(binNum > BIN_MIN);
-    }
-    
     //ADD BLOCK TO BIN
     setBlockPointer(blockPointer, *getBinPointer(binNum));
     setBinPointer(binNum, blockPointer);
+    joinBlocks(blockPointer, binNum);
   }
   
   
