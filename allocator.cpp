@@ -164,15 +164,19 @@ namespace my
     size_t smallerSize = pow2(smallerBinNum);
     size_t biggerSize = pow2(largerBinNum);
     
-    // MAKE THE REQUIRED BLOCK
+    // GET THE REQUIRED BLOCK POINTER
     size_t *pointerInBlock = *getBinPointer(largerBinNum);
     size_t *endBlock = sizeAddBytes(pointerInBlock, (uint64_t)biggerSize);
     assert(endBlock >= getHeapPointer());
+    // EXTRACT THE REQUIRED BLOCK
+    setBinPointer(largerBinNum, nextBlock(pointerInBlock));
     setBinPointer(smallerBinNum, pointerInBlock);
+    setBlockPointer(pointerInBlock, 0);
     // WHILE CURRENTSIZE IS LESS THAN BIGGERSIZE/2
     pointerInBlock = sizeAddBytes(pointerInBlock, (uint64_t)smallerSize);
     uint8_t currentBin = smallerBinNum;
     //printf("%p -- Pointer In Block\n",pointerInBlock);
+    
     for(size_t currentSize = smallerSize; currentSize < biggerSize; currentSize *= 2){
       assert(currentSize == pow2(currentBin));
       assert(pointerInBlock <= (size_t *)mem_heap_hi());
@@ -187,7 +191,16 @@ namespace my
     }
     assert(currentBin == largerBinNum);   // Make sure we've split up the whole block
     assert(endBlock == pointerInBlock);
-    setBinPointer(largerBinNum, 0);
+  }
+  
+  /**
+   * Given a newly freed block at blockPointer with a current bin of binNum, 
+   * recursively see if it can be combined with neighboring blocks
+   * Returns the new binNum of block
+   **/
+  uint8_t allocator::joinBlocks(size_t *blockPointer, uint8_t binNum){
+      
+    return binNum;
   }
   
   /**
@@ -347,9 +360,8 @@ namespace my
       // SPLIT BLOCK UP INTO SMALLER BINS
       splitBlock(binToBreakNum, binAllocateNum);
       // ASSERT THAT THE BIN WE JUST BROKE UP IS EMPTY
-      assert(*getBinPointer(binToBreakNum)==0);
+      //assert(*getBinPointer(binToBreakNum)==0);
       // ASSERT THAT THE BIN WE JUST ADDED TO HAS 2 BLOCKS
-      binInfo();
       assert(*getBinPointer(binAllocateNum)!=0); //Assert that the bin is not empty
       assert(nextBlock(*getBinPointer(binAllocateNum))!=0); // Assert that the bin points to something
       assert(nextBlock(nextBlock(*getBinPointer(binAllocateNum)))==0); // Assert that the second block doesn't point to anything
@@ -429,6 +441,7 @@ namespace my
       assert(binNum < BIN_MAX);
       assert(binNum > BIN_MIN);
     }
+    
     //ADD BLOCK TO BIN
     setBlockPointer(blockPointer, *getBinPointer(binNum));
     setBinPointer(binNum, blockPointer);

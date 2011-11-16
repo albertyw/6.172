@@ -80,6 +80,12 @@ static int add_range(Type *impl, range_t **ranges, char *lo,
   p = *ranges;
   while(p != 0){
     assert(lo < hi);
+    if(!(lo > p->hi) && !(hi <  p->lo)){
+      printf("%p\n", lo);
+      printf("%p\n", hi);
+      printf("%p\n", p->lo);
+      printf("%p\n", p->hi);
+    }
     assert((lo > p->hi) || (hi <  p->lo));
     p = p->next;
   }
@@ -172,7 +178,7 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
     
     index = trace->ops[i].index;
     size = trace->ops[i].size;
-    printf("\n\n****TRACE # %i****", i);
+    printf("\n\n****TRACE # %i****\n", i);
 
     switch (trace->ops[i].type) {
       
