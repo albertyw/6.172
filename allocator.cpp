@@ -34,7 +34,7 @@ namespace my
    **/
   size_t roundPowUp(size_t num){                                     // See http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
     num--;
-    for(uint64_t power=1; power<SIZE_T_SIZE; power*=2){
+    for(uint64_t power=1; power<64; power*=2){
       num |= num >> power;
     }
     num++;
@@ -53,7 +53,6 @@ namespace my
    **/
   size_t pow2(size_t num){
     return 2 << (num-1);
-    //return pow(2, num);                                          //TODO: FIND A BITHACK
   }
   
   //********************* POINTER MANIPULATIONS ****************//
@@ -128,6 +127,7 @@ namespace my
   {
     assert(size == roundPowUp(size));
     size = 2*max(size, roundPowUp((size_t*)mem_heap_hi() - (size_t*)getHeapPointer()));
+    assert(size == roundPowUp(size));
     uint8_t binNum = log2(size);
     assert(binNum <= BIN_MAX);
     assert(binNum >= BIN_MIN);
@@ -137,9 +137,6 @@ namespace my
     assert((size_t *)newMemPointer <= (size_t *)mem_heap_hi());
     assert((char *)mem_heap_hi() - (char*)newMemPointer + 1 == size);
     setBinPointer(binNum, (size_t *)newMemPointer);
-    printf("%llu\n", pow2(binNum));
-    printf("%llu\n", pow2(binNum));
-    printf("%i\n", binNum);
     assert(pow2(binNum) == size);
     return binNum;
   }
@@ -175,7 +172,6 @@ namespace my
     // WHILE CURRENTSIZE IS LESS THAN BIGGERSIZE/2
     pointerInBlock = sizeAddBytes(pointerInBlock, (uint64_t)smallerSize);
     uint8_t currentBin = smallerBinNum;
-    //printf("%p -- Pointer In Block\n",pointerInBlock);
     
     for(size_t currentSize = smallerSize; currentSize < biggerSize; currentSize *= 2){
       assert(currentSize == pow2(currentBin));
