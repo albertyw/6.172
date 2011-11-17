@@ -184,6 +184,7 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
       
 
       case ALLOC: /* malloc */
+        //printf("ALLOC \n");
         /* Call the student's malloc */
         if ((p = (char *) impl->malloc(size)) == NULL) {
           malloc_error(tracenum, i, "impl malloc failed.");
@@ -202,9 +203,9 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
          */
         /* YOUR CODE HERE */
         // FILL ENTIRE REGION WITH INCREASING NUMBERS
-        //printf("MOLDSIZE %i\n", size);
+        
         //printf("%p\n\n", p);
-        for(size_t *writePointer = (size_t*)p; writePointer < (size_t*)(p+size); writePointer++){
+        for(size_t *writePointer = (size_t*)p; writePointer < (size_t*)((char*)p+size); writePointer++){
           *writePointer = (size_t)((char*)writePointer-p);
         }
         
@@ -214,6 +215,7 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
         break;
 
       case REALLOC: /* realloc */
+        //printf("REALLOC\n");
         /* Call the student's realloc */
         oldp = trace->blocks[index];
         if ((newp = (char *) impl->realloc(oldp, size)) == NULL) {
@@ -227,7 +229,7 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
         /* Check new block for correctness and add it to range list */
         if (add_range(impl, &ranges, newp, size, tracenum, i) == 0)
           return 0;
-
+        
         /* Make sure that the new block contains the data from the old block,
          * and then fill in the new block with new data that you can use to
          * verify the block was copied if it is resized again.
@@ -236,10 +238,10 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
         if (size < oldsize)
           oldsize = size;
         /* YOUR CODE HERE */
-        for(size_t *writePointer = (size_t*)oldp; writePointer < (size_t*)(oldp+oldsize); writePointer++){
+        for(size_t *writePointer = (size_t*)oldp; writePointer < (size_t*)((char*)oldp+oldsize); writePointer++){
           assert(*writePointer == (size_t)((char*)writePointer-oldp));
         }
-        for(size_t *writePointer = (size_t*)newp; writePointer < (size_t*)(newp+size); writePointer++){
+        for(size_t *writePointer = (size_t*)newp; writePointer < (size_t*)((char*)newp+size); writePointer++){
           *writePointer = (size_t)((char*)writePointer-newp);
         }
 
@@ -250,6 +252,7 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
 
       case FREE: /* free */
         /* Remove region from list and call student's free function */
+        //printf("FREE\n");
         p = trace->blocks[index];
         remove_range(&ranges, p);
         impl->free(p);

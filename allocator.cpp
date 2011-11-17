@@ -266,9 +266,10 @@ namespace my
         binNum++;
         setBlockPointer(blockPointer, *getBinPointer(binNum));
         setBinPointer(binNum, blockPointer);
-        return joinBlocks(blockPointer, binNum);
-      }else if(blockPointer == sizeAddBytes(binFreeBlockPointer, (uint64_t)blockSize)){
+        return joinBlocks(blockPointer, binNum, joinBefore);
+      }else if(blockPointer == sizeAddBytes(binFreeBlockPointer, (uint64_t)blockSize) && joinBefore){
         // blockpointer is to be deleted
+        // Delete old values
         *binFreeBlockPointer = 0;
         *blockPointer = 0;
         setBlockPointer(previousFreeBlockPointer, nextBlock(binFreeBlockPointer));
@@ -277,7 +278,7 @@ namespace my
         binNum++;
         setBlockPointer(binFreeBlockPointer, *getBinPointer(binNum));
         setBinPointer(binNum, binFreeBlockPointer);
-        return joinBlocks(binFreeBlockPointer, binNum);
+        return joinBlocks(binFreeBlockPointer, binNum, joinBefore);
       }
       previousFreeBlockPointer = nextBlock(previousFreeBlockPointer);
       binFreeBlockPointer = nextBlock(binFreeBlockPointer);
@@ -486,6 +487,7 @@ namespace my
    */
   void allocator::free(void *ptr)
   {
+    //binInfo();
     // DON'T DO ANYTHING FOR NULL POINTERS
     if(ptr == NULL) return;
     assert(ptr >= getHeapPointer());
@@ -528,6 +530,7 @@ namespace my
    */
   void * allocator::realloc(void *origPointer, size_t wantSize)
   {
+    //binInfo();
     if(wantSize==0){  // if size is 0, same as free
       free(origPointer);
       return (void*)0;
@@ -544,21 +547,26 @@ namespace my
     assert(pow2(log2(currentSize)) == currentSize);
     assert(pow2(log2(origSize)) == origSize);
     // CALCULATE DIFFERENCE IN MEMORY THAT IS NEEDED FOR THE REALLOC
-    wantSize = roundPowUp(wantSize);
+    wantSize = roundPowUp(ALIGN(wantSize) + ALIGN(SIZE_T_SIZE));
     if(wantSize == origSize){
+      assert(origPointer == blockPointer + 1);
       return origPointer;
     }
     uint8_t binNum = log2(currentSize);
-    
+    assert(binNum >= BIN_MIN);
+    assert(binNum <= BIN_MAX);
     size_t *endOfOrigBlock = sizeAddBytes(blockPointer, origSize);
-    size_t *endOfWantedBlock = sizeAddBytes(blockPointer, wantSize);
+    size_t *endOfWantedBlock = (size_t*)((char*)blockPointer + wantSize); // technically sizeAddBytes, but may be out of heap
     assert(endOfOrigBlock >= getHeapPointer());
-    assert(endOfOrigBlock <= mem_heap_hi());
+    assert(endOfOrigBlock <= (size_t*)mem_heap_hi()+1);
     if(currentSize < wantSize){        //IF REQUESTED SIZE IS LARGER
       // CHECK IF JOINING NEIGHBOR BINS WORKS
-      binNum = joinBlocks(blockPointer, binNum);
+      setBlockPointer(blockPointer, *getBinPointer(binNum));
+      setBinPointer(binNum, blockPointer);
+      binNum = joinBlocks(blockPointer, binNum, false);
       currentSize = pow2(binNum);
     }
+    
     if(currentSize > wantSize){       // IF CURRENT SIZE IS LARGER
       // FREE THE REST OF THE BLOCK
       freeBlock(endOfWantedBlock, currentSize - wantSize);
