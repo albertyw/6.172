@@ -512,10 +512,12 @@ namespace my
     size_t *blockPointer = blockHeader(origPointer);
     size_t origSize = *blockPointer;
     size_t currentSize = *blockPointer;
-    if(wantSize == currentSize) return origPointer;
     assert(pow2(log2(currentSize)) == currentSize); 
     // CALCULATE DIFFERENCE IN MEMORY THAT IS NEEDED FOR THE REALLOC
     wantSize = roundPowUp(wantSize);
+    if(wantSize == origSize){
+      return origPointer;
+    }
     uint8_t binNum = log2(currentSize);
     size_t *endOfBlock = blockPointer + wantSize;
     if(currentSize < wantSize){        //IF REQUESTED SIZE IS LARGER
@@ -528,12 +530,9 @@ namespace my
       freeBlock(endOfBlock, currentSize - wantSize);
       // CHANGE THE BLOCK SIZE
       *blockPointer = wantSize;
-      printf("QWEQWER");
       return origPointer;
     }else{                            // IF CURRENT SIZE IS STILL SMALLER THAN WANTED SIZE
       void *newBlock = malloc(wantSize);
-      printf("%llu\n", origSize);
-      printf("%llu\n", wantSize);
       std::memcpy(newBlock, origPointer, origSize);
       return newBlock;
     }

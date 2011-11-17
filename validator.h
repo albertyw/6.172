@@ -202,8 +202,10 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
          */
         /* YOUR CODE HERE */
         // FILL ENTIRE REGION WITH INCREASING NUMBERS
-        for(char *writePointer = p; writePointer < p+size; writePointer++){
-          *writePointer = writePointer-p;
+        printf("MOLDSIZE %i\n", size);
+        printf("%p\n\n", p);
+        for(size_t *writePointer = (size_t*)p; writePointer < (size_t*)(p+size); writePointer++){
+          *writePointer = (size_t)((char*)writePointer-p);
         }
         
         /* Remember region */
@@ -234,11 +236,12 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
         if (size < oldsize)
           oldsize = size;
         /* YOUR CODE HERE */
-        for(char *writePointer = p; writePointer < p+oldsize; writePointer++){
-          assert(*writePointer == writePointer-p);
+        printf("ROLDSIZE %i\n", oldsize);
+        for(size_t *writePointer = (size_t*)p; writePointer < (size_t*)(oldp+oldsize); writePointer++){
+          assert(*writePointer == (size_t)((char*)writePointer-oldp));
         }
-        for(char *writePointer = p; writePointer < p+size; writePointer++){
-          *writePointer = writePointer-p;
+        for(char *writePointer = newp; writePointer < newp+size; writePointer++){
+          *writePointer = (int)(writePointer-newp);
         }
 
         /* Remember region */
