@@ -61,9 +61,12 @@ namespace my
   inline size_t roundPowUp(size_t num){
     // See http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2 
     num--;
-    for(uint64_t power=1; power<64; power*=2){
-      num |= num >> power;
-    }
+    num |= num >> 1;
+    num |= num >> 2;
+    num |= num >> 4;
+    num |= num >> 8;
+    num |= num >> 16;
+    num |= num >> 32;
     num++;
     assert((num >> (uint64_t)log2(num)) == 1);
     return num;
@@ -84,7 +87,8 @@ namespace my
     return(x & 0x0000003f);
   }
 
-  /**                                                                                                      * Find the ceiling for the log of num  
+  /**
+   * Find the ceiling for the log of num  
    **/
   inline uint8_t log2(size_t x){
     // From http://aggregate.org/MAGIC/#Population%20Count%20%28Ones%20Count%29
@@ -180,7 +184,7 @@ namespace my
   inline uint8_t allocator::increaseHeapSize(size_t size)
   {
     assert(size == roundPowUp(size));
-    size = 2*max(size, roundPowUp((size_t*)mem_heap_hi() - (size_t*)getHeapPointer()));
+    size = max(2*size, roundPowUp((size_t*)mem_heap_hi() - (size_t*)getHeapPointer()));
     assert(size == roundPowUp(size));
     uint8_t binNum = log2(size);
     assert(binNum <= BIN_MAX);
