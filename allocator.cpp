@@ -5,6 +5,32 @@
 #include "memlib.h"
 #include <math.h>
 #include <assert.h>
+/*
+...................________
+.................,.-‘”..........``~.,
+..............,.-”..................“-.,
+.............,/.......................”:,
+..........,?...........................\,
+........./............................,}
+........./..........................,:`^`.}
+......../.........................,:”..../
+.......?...__....................:`..../
+......./__.(...“~-,_..............,:`....../
+....../(_..”~,_.....“~,_..........,:`...._/
+......{.._$;_...”=,_....“-,_...,.-~-,},.~”;/....}
+......((...*~_....”=-._...“;,,./`../”..../...../
+.......\`~,....“~.,...........`...}......../
+......(...`=-,,....`.............(...;_,,-”
+......./.`~,....`-.................\../\
+......\`~.*-,...................|,./.....\,__
+,,_.....}.>-._\..................|........`=~-,
+...`=~-,_\_...`\,.................\
+..........`=~-,,.\,................\
+................`:,,.............`\........__
+...................`=-,..........,%`>--==``
+...................._\......_,-%.....`\
+*/
+
 
 /* All blocks must have a specified minimum alignment. */
 #define ALIGNMENT 8
@@ -195,36 +221,43 @@ namespace my
    * recursively see if it can be combined with neighboring blocks
    * Returns the new binNum of block
    **/
-  uint8_t allocator::joinBlocks(size_t *blockPointer, uint8_t binNum){
+  uint8_t allocator::joinBlocks(size_t *blockPointer, uint8_t binNum, bool joinBefore=true){
     size_t blockSize = pow2(binNum);
     // FIND IF CONTIGUOUS FREE BLOCKS ARE FREE
-    bool coalesceFound = true;
-    size_t *binFreeBlockPointer;
-    while(coalesceFound == true){
-      coalesceFound = false;
-      binFreeBlockPointer = *getBinPointer(binNum);
-      for(binFreeBlockPointer; binFreeBlockPointer !=0; binFreeBlockPointer = nextBlock(binFreeBlockPointer)){
-        if(binFreeBlockPointer == sizeAddBytes(blockPointer, (uint64_t)blockSize)){
-          // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
-          coalesceFound = true;
-          *binFreeBlockPointer = 0;
-          blockSize *=2;
-          binNum++;
-          break;
-        }else if(binFreeBlockPointer == (size_t *)((char *)blockPointer+ blockSize)){
-          // IF CONTIGUOUS THEN COMBINE FREE BLOCKS
-          coalesceFound = true;
-          *blockPointer = 0;
-          blockPointer = binFreeBlockPointer;
-          blockSize *=2;
-          binNum++;
-          break;
-        }
+    size_t *previousFreeBlockPointer = (size_t*)getBinPointer(binNum);
+    size_t *binFreeBlockPointer = *getBinPointer(binNum);
+    while(binFreeBlockPointer !=0){
+      if(binFreeBlockPointer == sizeAddBytes(blockPointer, (uint64_t)blockSize)){
+        //binFreeBlockPointer ist to be deleted
+        // Delete old values
+        *binFreeBlockPointer = 0;
+        *blockPointer = 0;
+        setBlockPointer(previousFreeBlockPointer, nextBlock(binFreeBlockPointer));
+        setBinPointer(binNum, nextBlock(blockPointer));
+        // ADD NEW BLOCK TO BIN
+        binNum++;
+        setBlockPointer(blockPointer, *getBinPointer(binNum));
+        setBinPointer(binNum, blockPointer);
+        return joinBlocks(blockPointer, binNum);
+      }else if(blockPointer == sizeAddBytes(binFreeBlockPointer, (uint64_t)blockSize)){
+        // blockpointer is to be deleted
+        *binFreeBlockPointer = 0;
+        *blockPointer = 0;
+        setBlockPointer(previousFreeBlockPointer, nextBlock(binFreeBlockPointer));
+        setBinPointer(binNum, nextBlock(blockPointer));
+        // ADD NEW BLOCK TO BIN
+        binNum++;
+        setBlockPointer(binFreeBlockPointer, *getBinPointer(binNum));
+        setBinPointer(binNum, binFreeBlockPointer);
+        return joinBlocks(binFreeBlockPointer, binNum);
       }
-      // Don't need to care about binNum too big because memory wouldn't be able to have already allocated blocks
-      assert(binNum < BIN_MAX);
-      assert(binNum > BIN_MIN);
+      previousFreeBlockPointer = nextBlock(previousFreeBlockPointer);
+      binFreeBlockPointer = nextBlock(binFreeBlockPointer);
     }
+    // Don't need to care about binNum too big because memory wouldn't be able to have already allocated blocks
+    assert(binNum <= BIN_MAX);
+    assert(binNum >= BIN_MIN);
+    
     return binNum;
   }
   
@@ -236,12 +269,13 @@ namespace my
     // Same as:
     // size_t blockValue = *blockPointer;
     // return (size_t *)blockValue;
-    if(!((size_t *)*blockPointer <= (size_t *)mem_heap_hi())){
+    /*if(!((size_t *)*blockPointer <= (size_t *)mem_heap_hi())){
       printf("%p\n", (size_t *)*blockPointer);
       printf("%p\n", (size_t*)mem_heap_hi());
-    }
+    }*/
     assert((size_t *)*blockPointer <= (size_t *)mem_heap_hi());
     assert((size_t *)*blockPointer >= getHeapPointer() || (size_t *)*blockPointer == 0);
+    assert((size_t *)*blockPointer != blockPointer);
     return (size_t *)*blockPointer;
   }
   
@@ -372,19 +406,16 @@ namespace my
   {
     // Make sure that we're aligned to 8 byte boundaries
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
-    printf("MALLOC SIZE %zu\n", my_aligned_size);
     assert(size <= (my_aligned_size-8));
     assert(my_aligned_size%8 == 0);
     // FIND THE BIN (ROUND UP LG(SIZE))
     uint8_t binAllocateNum = log2(my_aligned_size);
     size_t **binPtr = getBinPointer(binAllocateNum);
-    printf("Malloc from bin %i\n", binAllocateNum);
     assert(binAllocateNum >= BIN_MIN);
     assert(binAllocateNum <= BIN_MAX);
     assert(binPtr < (size_t **)getHeapPointer());
     assert(binPtr >= (size_t **)mem_heap_lo());
     // IF BIN IS EMPTY
-    printf("NEED BLOCK SIZE %i\n", binAllocateNum);
     if(*binPtr == 0){                                     //TODO: USE A GLOBAL VARIABLE TO SAVE THE HIGHEST BIN NUMBER
       // SEARCH LARGER BINS FOR BLOCKS
       uint8_t binToBreakNum;
@@ -394,7 +425,6 @@ namespace my
       // IF NO BLOCKS FOUND, ALLOCATE MORE MEMORY FOR THE HEAP
       if(binToBreakNum > BIN_MAX){
         binToBreakNum = increaseHeapSize(my_aligned_size);
-        printf("CREATED BIN SIZE %i\n",binToBreakNum);
       }
       // SPLIT BLOCK UP INTO SMALLER BINS
       splitBlock(binToBreakNum, binAllocateNum);
@@ -427,7 +457,6 @@ namespace my
    */
   void allocator::free(void *ptr)
   {
-    printf("FREE\n");
     // DON'T DO ANYTHING FOR NULL POINTERS
     if(ptr == NULL) return;
     assert(ptr >= getHeapPointer());
@@ -437,18 +466,30 @@ namespace my
     freeBlock(blockPointer, *blockPointer);
   }
   
+  /**
+   * Given a pointer to the beginning of the block and the size of the block that 
+   * is to be freed, add the block to bins
+   **/
   void allocator::freeBlock(size_t *blockPointer, size_t blockSize){
     // FIND BIN THAT BLOCK IS SUPPOSED TO BELONG TO
-    uint8_t binNum = log2(blockSize);
-    printf("Free into Bin %i\n",binNum); 
+    uint8_t binNum;
+    if(roundPowUp(blockSize)!=blockSize){
+      binNum = log2(roundPowUp(blockSize)/2);
+    }else{
+      binNum = log2(blockSize); // we actually want the min(log(blockSize))
+    }
     assert(binNum >= BIN_MIN);
     assert(binNum <= BIN_MAX);
     // ERASE VALUES IN the freed block
     memset(blockPointer,0,blockSize);
-    //ADD BLOCK TO BIN
+    // ADD BLOCK TO BIN
     setBlockPointer(blockPointer, *getBinPointer(binNum));
     setBinPointer(binNum, blockPointer);
+    // COALESCE BLOCKS
     joinBlocks(blockPointer, binNum);
+    if(pow2(binNum) < blockSize){
+      freeBlock(blockPointer + pow2(binNum), blockSize - pow2(binNum));
+    }
   }
   
   
@@ -456,68 +497,46 @@ namespace my
   /*
    * realloc - Implemented simply in terms of malloc and free
    */
-  void * allocator::realloc(void *ptr, size_t size)
+  void * allocator::realloc(void *origPointer, size_t wantSize)
   {
-    printf("REALLOC\n");
-    if(size==0){  // if size is 0, same as free
-      free(ptr);
+    if(wantSize==0){  // if size is 0, same as free
+      free(origPointer);
       return (void*)0;
     }
-    if(ptr==0){ // if null pointer, same as malloc
-      return malloc(size);
+    if(origPointer==0){ // if null pointer, same as malloc
+      return malloc(wantSize);
     }
-    assert((size_t*)ptr >= getHeapPointer());
-    assert((size_t*)ptr + size <= mem_heap_hi());
+    assert((size_t*)origPointer >= getHeapPointer());
+    assert((size_t*)origPointer <= mem_heap_hi());
     // GO BACK AND FIND THE SIZE
-    size_t *blockPointer = blockHeader(ptr);
-    size_t blockSize = *blockPointer;
-    // CALCULATE DIFFERENCE IN MEMORY IS NEEDED FOR THE REALLOC
-    if(blockSize >= size){ //IF REQUESTED SIZE IS SMALLER
-      // FREE THE REST OF THE BLOCK
-      size_t *freePointer = blockPointer + size;
-      
-    }else{
-    
-    //IF REQUESTED SIZE IS LARGER
-    
-    // CREATE A POINTER TO END OF ALLOCATION
-    
-    // WHILE VALUE OF POINTER IS IN A BIN
-      // INCREASE THE POINTER TO THE END OF THE UNALLOCATED BLOCK
-      
-    // IF THE POINTER IS IN AN ALLOCATED AREA
-      // MALLOC FULL SIZE
-      // MOVE DATA TO THE NEW MALLOC AREA
-    // ELSE
-      // COMBINE BLOCKS
+    size_t *blockPointer = blockHeader(origPointer);
+    size_t origSize = *blockPointer;
+    size_t currentSize = *blockPointer;
+    if(wantSize == currentSize) return origPointer;
+    assert(pow2(log2(currentSize)) == currentSize); 
+    // CALCULATE DIFFERENCE IN MEMORY THAT IS NEEDED FOR THE REALLOC
+    wantSize = roundPowUp(wantSize);
+    uint8_t binNum = log2(currentSize);
+    size_t *endOfBlock = blockPointer + wantSize;
+    if(currentSize < wantSize){        //IF REQUESTED SIZE IS LARGER
+      // CHECK IF JOINING NEIGHBOR BINS WORKS
+      binNum = joinBlocks(blockPointer, binNum);
+      currentSize = pow2(binNum);
     }
-    void *newptr;
-    size_t copy_size;
-
-    /* Allocate a new chunk of memory, and fail if that allocation fails. */
-    newptr = malloc(size);
-    if (NULL == newptr)
-      return NULL;
-
-    /* Get the size of the old block of memory.  Take a peek at malloc(),
-       where we stashed this in the SIZE_T_SIZE bytes directly before the
-       address we returned.  Now we can back up by that many bytes and read
-       the size. */
-    copy_size = *(size_t*)((uint8_t*)ptr - SIZE_T_SIZE);
-
-    /* If the new block is smaller than the old one, we have to stop copying
-       early so that we don't write off the end of the new block of memory. */
-    if (size < copy_size)
-      copy_size = size;
-
-    /* This is a standard library call that performs a simple memory copy. */
-    std::memcpy(newptr, ptr, copy_size);
-
-    /* Release the old block. */
-    free(ptr);
-
-    /* Return a pointer to the new block. */
-    return newptr;
+    if(currentSize > wantSize){       // IF CURRENT SIZE IS LARGER
+      // FREE THE REST OF THE BLOCK
+      freeBlock(endOfBlock, currentSize - wantSize);
+      // CHANGE THE BLOCK SIZE
+      *blockPointer = wantSize;
+      printf("QWEQWER");
+      return origPointer;
+    }else{                            // IF CURRENT SIZE IS STILL SMALLER THAN WANTED SIZE
+      void *newBlock = malloc(wantSize);
+      printf("%llu\n", origSize);
+      printf("%llu\n", wantSize);
+      std::memcpy(newBlock, origPointer, origSize);
+      return newBlock;
+    }
   }
 
   

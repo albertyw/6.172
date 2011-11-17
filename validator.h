@@ -178,7 +178,7 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
     
     index = trace->ops[i].index;
     size = trace->ops[i].size;
-    printf("\n\n****TRACE # %i****\n", i);
+    //printf("\n\n****TRACE # %i****\n", i);
 
     switch (trace->ops[i].type) {
       
@@ -201,6 +201,7 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
          * for if the region is copied via realloc.
          */
         /* YOUR CODE HERE */
+        // FILL ENTIRE REGION WITH INCREASING NUMBERS
         for(char *writePointer = p; writePointer < p+size; writePointer++){
           *writePointer = writePointer-p;
         }
