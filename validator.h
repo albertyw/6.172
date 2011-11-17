@@ -80,12 +80,12 @@ static int add_range(Type *impl, range_t **ranges, char *lo,
   p = *ranges;
   while(p != 0){
     assert(lo < hi);
-    if(!(lo > p->hi) && !(hi <  p->lo)){
+    /*if(!(lo > p->hi) && !(hi <  p->lo)){
       printf("%p\n", lo);
       printf("%p\n", hi);
       printf("%p\n", p->lo);
       printf("%p\n", p->hi);
-    }
+    }*/
     assert((lo > p->hi) || (hi <  p->lo));
     p = p->next;
   }
@@ -236,7 +236,6 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
         if (size < oldsize)
           oldsize = size;
         /* YOUR CODE HERE */
-        printf("ROLDSIZE %i\n", oldsize);
         for(size_t *writePointer = (size_t*)oldp; writePointer < (size_t*)(oldp+oldsize); writePointer++){
           assert(*writePointer == (size_t)((char*)writePointer-oldp));
         }
