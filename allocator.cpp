@@ -404,12 +404,14 @@ namespace my
    */
   void * allocator::malloc(size_t size)
   {
+    //binInfo();
     // Make sure that we're aligned to 8 byte boundaries
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
     assert(size <= (my_aligned_size-8));
     assert(my_aligned_size%8 == 0);
     // FIND THE BIN (ROUND UP LG(SIZE))
     uint8_t binAllocateNum = log2(my_aligned_size);
+    printf("%i\n", binAllocateNum);
     size_t **binPtr = getBinPointer(binAllocateNum);
     assert(binAllocateNum >= BIN_MIN);
     assert(binAllocateNum <= BIN_MAX);
@@ -510,16 +512,21 @@ namespace my
     assert((size_t*)origPointer <= mem_heap_hi());
     // GO BACK AND FIND THE SIZE
     size_t *blockPointer = blockHeader(origPointer);
-    size_t origSize = *blockPointer;
-    size_t currentSize = *blockPointer;
-    assert(pow2(log2(currentSize)) == currentSize); 
+    uint64_t origSize = (uint64_t)*blockPointer;
+    uint64_t currentSize = (uint64_t)*blockPointer;
+    assert(pow2(log2(currentSize)) == currentSize);
+    assert(pow2(log2(origSize)) == origSize);
     // CALCULATE DIFFERENCE IN MEMORY THAT IS NEEDED FOR THE REALLOC
     wantSize = roundPowUp(wantSize);
     if(wantSize == origSize){
       return origPointer;
     }
     uint8_t binNum = log2(currentSize);
-    size_t *endOfBlock = blockPointer + wantSize;
+    
+    size_t *endOfOrigBlock = sizeAddBytes(blockPointer, origSize);
+    size_t *endOfWantedBlock = sizeAddBytes(blockPointer, wantSize);
+    assert(endOfOrigBlock >= getHeapPointer());
+    assert(endOfOrigBlock <= mem_heap_hi());
     if(currentSize < wantSize){        //IF REQUESTED SIZE IS LARGER
       // CHECK IF JOINING NEIGHBOR BINS WORKS
       binNum = joinBlocks(blockPointer, binNum);
@@ -527,7 +534,7 @@ namespace my
     }
     if(currentSize > wantSize){       // IF CURRENT SIZE IS LARGER
       // FREE THE REST OF THE BLOCK
-      freeBlock(endOfBlock, currentSize - wantSize);
+      freeBlock(endOfWantedBlock, currentSize - wantSize);
       // CHANGE THE BLOCK SIZE
       *blockPointer = wantSize;
       return origPointer;

@@ -237,11 +237,11 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
           oldsize = size;
         /* YOUR CODE HERE */
         printf("ROLDSIZE %i\n", oldsize);
-        for(size_t *writePointer = (size_t*)p; writePointer < (size_t*)(oldp+oldsize); writePointer++){
+        for(size_t *writePointer = (size_t*)oldp; writePointer < (size_t*)(oldp+oldsize); writePointer++){
           assert(*writePointer == (size_t)((char*)writePointer-oldp));
         }
-        for(char *writePointer = newp; writePointer < newp+size; writePointer++){
-          *writePointer = (int)(writePointer-newp);
+        for(size_t *writePointer = (size_t*)newp; writePointer < (size_t*)(newp+size); writePointer++){
+          *writePointer = (size_t)((char*)writePointer-newp);
         }
 
         /* Remember region */
