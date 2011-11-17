@@ -202,8 +202,8 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
          */
         /* YOUR CODE HERE */
         // FILL ENTIRE REGION WITH INCREASING NUMBERS
-        printf("MOLDSIZE %i\n", size);
-        printf("%p\n\n", p);
+        //printf("MOLDSIZE %i\n", size);
+        //printf("%p\n\n", p);
         for(size_t *writePointer = (size_t*)p; writePointer < (size_t*)(p+size); writePointer++){
           *writePointer = (size_t)((char*)writePointer-p);
         }

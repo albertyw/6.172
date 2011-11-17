@@ -58,7 +58,8 @@ namespace my
    * Round up to the next highest power
    * This rounds up to 2**SIZE_T_SIZE
    **/
-  size_t roundPowUp(size_t num){                                     // See http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+  inline size_t roundPowUp(size_t num){
+    // See http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2 
     num--;
     for(uint64_t power=1; power<64; power*=2){
       num |= num >> power;
@@ -67,17 +68,44 @@ namespace my
     assert((num >> (uint64_t)log2(num)) == 1);
     return num;
   }
-   
-  /**
-   * Find the ceiling for the log of num
-   **/
-  uint8_t log2(size_t num){
-    return ceil(log(num)/log(2));                                       //TODO: FIND A BITHACK
+
+  inline size_t ones(register size_t x) {
+    // From http://aggregate.org/MAGIC/#Population%20Count%20%28Ones%20Count%29
+    /* 32-bit recursive reduction using SWAR...
+      but first step is mapping 2-bit values 
+       into sum of 2 1-bit values in sneaky way
+    */
+    x -= ((x >> 1) & 0x55555555);
+    x = (((x >> 2) & 0x33333333) + (x & 0x33333333));
+    x = (((x >> 4) + x) & 0x0f0f0f0f);
+    x += (x >> 8);
+    x += (x >> 16);
+    x += (x >> 32);
+    return(x & 0x0000003f);
   }
+
+  /**                                                                                                      * Find the ceiling for the log of num  
+   **/
+  inline uint8_t log2(size_t x){
+    // From http://aggregate.org/MAGIC/#Population%20Count%20%28Ones%20Count%29
+    //same as
+   //return ceil(log(num)/log(2)); //TODO: FIND A BITHACK                                       
+    register size_t y = (x & (x - 1));
+    y |= -y;
+    y >>= 63;
+    x |= (x >> 1);
+    x |= (x >> 2);
+    x |= (x >> 4);
+    x |= (x >> 8);
+    x |= (x >> 16);
+    x |= (x >> 32);
+    return (uint8_t)(ones(x >> 1) - y);
+  }
+ 
   /**
    * Find 2^num
    **/
-  size_t pow2(size_t num){
+  inline size_t pow2(size_t num){
     return 2 << (num-1);
   }
   
@@ -89,7 +117,7 @@ namespace my
    * *getBinPointer is the pointer from the bin to the heap
    * **getBinPointer is the value in the heap
    **/
-  size_t ** allocator::getBinPointer(uint8_t binNum){
+  inline size_t ** allocator::getBinPointer(uint8_t binNum){
     assert(binNum <= BIN_MAX);
     assert(binNum >= BIN_MIN);
     size_t ** temp = (size_t**)mem_heap_lo() + (binNum-3);
@@ -101,7 +129,7 @@ namespace my
   /**
    * Set the pointer in a bin (i.e. the value of the bin) to a given pointer
    **/
-  void allocator::setBinPointer(uint8_t binNum, size_t *setPointer){
+  inline void allocator::setBinPointer(uint8_t binNum, size_t *setPointer){
     assert(binNum <= BIN_MAX);
     assert(binNum >= BIN_MIN);
     assert(setPointer >= getHeapPointer() || setPointer == 0);
@@ -113,7 +141,7 @@ namespace my
   /**
    * Set the value of blockPointer to pointerValue
    **/
-  void allocator::setBlockPointer(size_t *blockPointer, size_t *pointerValue){
+  inline void allocator::setBlockPointer(size_t *blockPointer, size_t *pointerValue){
     assert(blockPointer >= getHeapPointer());
     assert(blockPointer <= (size_t *)mem_heap_hi());
     assert(pointerValue >= getHeapPointer() || pointerValue == 0);
@@ -124,14 +152,14 @@ namespace my
   /**
    * Returns a pointer to the beginning of the public heap (after the bin pointers)
    **/
-  size_t * allocator::getHeapPointer(){
+  inline size_t * allocator::getHeapPointer(){
     assert(sizeAddBytes((size_t*)mem_heap_lo(), (uint64_t)PRIVATE_SIZE)<= (size_t *)mem_heap_hi());
     return sizeAddBytes((size_t*)mem_heap_lo(), (uint64_t)PRIVATE_SIZE);
   }
   /**
    * Returns a pointer moved by some number of bytes
    **/
-  size_t * allocator::sizeAddBytes(size_t *pointer, uint64_t bytes){
+  inline size_t * allocator::sizeAddBytes(size_t *pointer, uint64_t bytes){
     assert(bytes >= 8);
     assert(bytes%SIZE_T_SIZE == 0);
     assert(pointer >= mem_heap_lo());
@@ -149,7 +177,7 @@ namespace my
    * size should be a power of 2 already
    * Return the binNum that the extra block was added to
    **/
-  uint8_t allocator::increaseHeapSize(size_t size)
+  inline uint8_t allocator::increaseHeapSize(size_t size)
   {
     assert(size == roundPowUp(size));
     size = 2*max(size, roundPowUp((size_t*)mem_heap_hi() - (size_t*)getHeapPointer()));
@@ -176,7 +204,7 @@ namespace my
    * both sizes should be a power of 2
    * return a pointer to the block size needed
    **/
-  void allocator::splitBlock(uint8_t largerBinNum, uint8_t smallerBinNum)
+  inline void allocator::splitBlock(uint8_t largerBinNum, uint8_t smallerBinNum)
   {
     assert(*getBinPointer(largerBinNum)!=0);
     assert(*getBinPointer(smallerBinNum)==0);
@@ -221,7 +249,7 @@ namespace my
    * recursively see if it can be combined with neighboring blocks
    * Returns the new binNum of block
    **/
-  uint8_t allocator::joinBlocks(size_t *blockPointer, uint8_t binNum, bool joinBefore=true){
+  inline uint8_t allocator::joinBlocks(size_t *blockPointer, uint8_t binNum, bool joinBefore=true){
     size_t blockSize = pow2(binNum);
     // FIND IF CONTIGUOUS FREE BLOCKS ARE FREE
     size_t *previousFreeBlockPointer = (size_t*)getBinPointer(binNum);
@@ -265,7 +293,7 @@ namespace my
    * Given a pointer to a block where the value stored in the block is also a pointer,
    * return that value as a pointer
    **/
-  size_t * allocator::nextBlock(size_t *blockPointer){
+  inline size_t * allocator::nextBlock(size_t *blockPointer){
     // Same as:
     // size_t blockValue = *blockPointer;
     // return (size_t *)blockValue;
@@ -283,7 +311,7 @@ namespace my
    * Given a pointer to a block that is already malloced, move the pointer back 
    * to the correct place
    **/
-  size_t * allocator::blockHeader(void *ptr){
+  inline size_t * allocator::blockHeader(void *ptr){
     // GO BACK AND FIND THE SIZE
     size_t *blockPointer = (size_t *)ptr-1;
     assert(roundPowUp(*blockPointer) == *blockPointer);
@@ -470,7 +498,7 @@ namespace my
    * Given a pointer to the beginning of the block and the size of the block that 
    * is to be freed, add the block to bins
    **/
-  void allocator::freeBlock(size_t *blockPointer, size_t blockSize){
+  inline void allocator::freeBlock(size_t *blockPointer, size_t blockSize){
     // FIND BIN THAT BLOCK IS SUPPOSED TO BELONG TO
     uint8_t binNum;
     if(roundPowUp(blockSize)!=blockSize){
