@@ -133,6 +133,7 @@ namespace my
     assert(binNum >= BIN_MIN);
     assert(*getBinPointer(binNum)==0);
     void *newMemPointer = mem_sbrk(size);
+    memset(newMemPointer, 0, size);
     assert((size_t *)newMemPointer >= getHeapPointer());
     assert((size_t *)newMemPointer <= (size_t *)mem_heap_hi());
     assert((char *)mem_heap_hi() - (char*)newMemPointer + 1 == size);
@@ -235,9 +236,26 @@ namespace my
     // Same as:
     // size_t blockValue = *blockPointer;
     // return (size_t *)blockValue;
+    if(!((size_t *)*blockPointer <= (size_t *)mem_heap_hi())){
+      printf("%p\n", (size_t *)*blockPointer);
+      printf("%p\n", (size_t*)mem_heap_hi());
+    }
     assert((size_t *)*blockPointer <= (size_t *)mem_heap_hi());
     assert((size_t *)*blockPointer >= getHeapPointer() || (size_t *)*blockPointer == 0);
     return (size_t *)*blockPointer;
+  }
+  
+  /**
+   * Given a pointer to a block that is already malloced, move the pointer back 
+   * to the correct place
+   **/
+  size_t * allocator::blockHeader(void *ptr){
+    // GO BACK AND FIND THE SIZE
+    size_t *blockPointer = (size_t *)ptr-1;
+    assert(roundPowUp(*blockPointer) == *blockPointer);
+    assert(blockPointer >= getHeapPointer());
+    assert(blockPointer < (size_t *)mem_heap_hi());
+    return blockPointer;
   }
   
   /**
@@ -251,6 +269,8 @@ namespace my
        p = *getBinPointer(i);
        printf("%i:  %p", i, p);
        while(p!=0){
+         assert(p <= (size_t *)mem_heap_hi());
+         assert(p >= getHeapPointer() || p == 0);
          p = nextBlock(p);
          numBlocks ++;
        }
@@ -353,15 +373,12 @@ namespace my
     // Make sure that we're aligned to 8 byte boundaries
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
     printf("MALLOC SIZE %zu\n", my_aligned_size);
-    
-    //binInfo();
     assert(size <= (my_aligned_size-8));
     assert(my_aligned_size%8 == 0);
     // FIND THE BIN (ROUND UP LG(SIZE))
     uint8_t binAllocateNum = log2(my_aligned_size);
     size_t **binPtr = getBinPointer(binAllocateNum);
     printf("Malloc from bin %i\n", binAllocateNum);
-    binInfo();
     assert(binAllocateNum >= BIN_MIN);
     assert(binAllocateNum <= BIN_MAX);
     assert(binPtr < (size_t **)getHeapPointer());
@@ -377,10 +394,8 @@ namespace my
       // IF NO BLOCKS FOUND, ALLOCATE MORE MEMORY FOR THE HEAP
       if(binToBreakNum > BIN_MAX){
         binToBreakNum = increaseHeapSize(my_aligned_size);
-        printf("CREATE BIN SIZE %i:",binToBreakNum);
-        //binInfo();
+        printf("CREATED BIN SIZE %i\n",binToBreakNum);
       }
-      
       // SPLIT BLOCK UP INTO SMALLER BINS
       splitBlock(binToBreakNum, binAllocateNum);
       // ASSERT THAT THE BIN WE JUST ADDED TO HAS 2 BLOCKS
@@ -413,18 +428,16 @@ namespace my
   void allocator::free(void *ptr)
   {
     printf("FREE\n");
-    binInfo();
     // DON'T DO ANYTHING FOR NULL POINTERS
     if(ptr == NULL) return;
     assert(ptr >= getHeapPointer());
     assert((size_t *)ptr <= (size_t *)mem_heap_hi());
-    
     // GO BACK AND FIND THE SIZE
-    size_t *blockPointer = (size_t *)ptr-1;
-    size_t blockSize = *blockPointer;
-    assert(roundPowUp(blockSize) == blockSize);
-    assert(blockPointer > getHeapPointer());
-    assert(blockPointer < (size_t *)mem_heap_hi());
+    size_t *blockPointer = blockHeader(ptr);
+    freeBlock(blockPointer, *blockPointer);
+  }
+  
+  void allocator::freeBlock(size_t *blockPointer, size_t blockSize){
     // FIND BIN THAT BLOCK IS SUPPOSED TO BELONG TO
     uint8_t binNum = log2(blockSize);
     printf("Free into Bin %i\n",binNum); 
@@ -446,21 +459,24 @@ namespace my
   void * allocator::realloc(void *ptr, size_t size)
   {
     printf("REALLOC\n");
-    if(size==0){
+    if(size==0){  // if size is 0, same as free
       free(ptr);
-      ptr = 0;
-      return ptr;
+      return (void*)0;
     }
-    if(ptr==0){
+    if(ptr==0){ // if null pointer, same as malloc
       return malloc(size);
     }
-    // FIND CURRENT SIZE OF ALLOCATION
-    
+    assert((size_t*)ptr >= getHeapPointer());
+    assert((size_t*)ptr + size <= mem_heap_hi());
+    // GO BACK AND FIND THE SIZE
+    size_t *blockPointer = blockHeader(ptr);
+    size_t blockSize = *blockPointer;
     // CALCULATE DIFFERENCE IN MEMORY IS NEEDED FOR THE REALLOC
-    
-    // IF REQUESTED SIZE IS SMALLER
-    // CHANGE THE CURRENT SIZE OF ALLOCATION
-    // DIVIDE UP THE EXTRA MEMORY INTO BINS
+    if(blockSize >= size){ //IF REQUESTED SIZE IS SMALLER
+      // FREE THE REST OF THE BLOCK
+      size_t *freePointer = blockPointer + size;
+      
+    }else{
     
     //IF REQUESTED SIZE IS LARGER
     
@@ -474,7 +490,7 @@ namespace my
       // MOVE DATA TO THE NEW MALLOC AREA
     // ELSE
       // COMBINE BLOCKS
-    
+    }
     void *newptr;
     size_t copy_size;
 
