@@ -334,10 +334,11 @@ namespace my
      for(int i = BIN_MIN; i <= BIN_MAX; i++){
        numBlocks = 0;
        p = *getBinPointer(i);
-       printf("%i:  %p", i, p);
+       printf("%i:  - ", i);
        while(p!=0){
          assert(p <= (size_t *)mem_heap_hi());
          assert(p >= getHeapPointer() || p == 0);
+         printf("% p ", p);
          p = nextBlock(p);
          numBlocks ++;
        }
@@ -352,50 +353,51 @@ namespace my
    **/
   int allocator::check()
   {
-    /*// CHECK THAT EVERY FREE BLOCK HAS A POINTER WITHIN THE HEAP OR IS 0
-    size_t *minPointer = sizeAddBytes((size_t*)mem_heap_lo(), (uint64_t)PRIVATE_SIZE);;
-    size_t *maxPointer = (size_t *)mem_heap_hi();
-    // For every in
+    // CHECK THAT EVERY FREE BLOCK HAS A POINTER WITHIN THE HEAP OR IS 0
+    // For every bin
+    size_t *blockPointer;
     for(uint8_t i = BIN_MIN; i <= BIN_MAX; i++){
-      size_t *blockPointer = *getBinPointer(i);
+      blockPointer = (size_t*)getBinPointer(i);
+      assert(blockPointer >= (size_t*)mem_heap_lo());
+      assert(blockPointer <= getHeapPointer());
+      blockPointer = nextBlock(blockPointer);
       // For every block
       while(blockPointer != 0){
         // Check that the pointer in the block does not point to somewhere wrong
-        if(blockPointer != 0 && (blockPointer<minPointer || blockPointer>maxPointer)){
-          printf("Free Block has a pointer pointing outside of range");
-          return -1;
-        }
+        assert(blockPointer >= getHeapPointer());
+        assert(blockPointer <= (size_t*)mem_heap_hi());
         blockPointer = nextBlock(blockPointer);
       }
     }
     
+    // CHECK THAT THERE ARE NO LOOPS IN THE LINKED BLOCKS
     // CHECK THAT THERE ARE NO CONTIGUOUS COALESCEABLE BLOCKS
     // For every bin
+    size_t blockSize;
+    size_t *blockPointer2;
     for(uint8_t i = BIN_MIN; i <= BIN_MAX; i++){
-      size_t block_size = pow2(i);
-      size_t *blockPointer = *getBinPointer(i);
+      blockSize = pow2(i);
+      blockPointer = *getBinPointer(i);
       // Compare every two blocks
-      while(*blockPointer != 0){
-        size_t *block2Pointer = *getBinPointer(i);
-        while(*block2Pointer != 0){
-          // And check whether the blocks are adjacent
-          if(blockPointer + block_size == block2Pointer || blockPointer - block_size == block2Pointer){
-            printf("Contiguous Coalescable block found in bin %i", i);
-            return -1;
-          }
-          block2Pointer = nextBlock(block2Pointer);
+      while(blockPointer != 0){
+        blockPointer2 = nextBlock(blockPointer);
+        while(blockPointer2 != 0){
+          // Check whether the blocks are adjacent
+          assert((size_t*)((char*)blockPointer + (char)blockSize) != blockPointer2);
+          assert((size_t*)((char*)blockPointer - (char)blockSize) != blockPointer2);
+          // check whether blocks are circular
+          assert(blockPointer != blockPointer2);
+          blockPointer2 = nextBlock(blockPointer2);
         }
         blockPointer = nextBlock(blockPointer);
       }
     }
-    
     //  CHECK THAT THERE ARE NO OVERLAPPING ALLOCATED BLOCKS
     
     
     // Is every block in the free list marked as free?
     // Is every free block actually in the free list?
     
-    */
     return 0;
   }
   
