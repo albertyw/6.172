@@ -593,6 +593,9 @@ KhetPiece KhetState::strToPiece(string sq) {
   else if(sq[1] == 'r') {
     pc.rot = RIGHT;
   }
+  else {
+    pc.rot = UP;
+  }
   return pc;
 
 

@@ -4,7 +4,7 @@
 
 string best_move_buf;
 void uci();
-void uci_loop();
+
 void inputThread() {
   char s[4096];
   istr.p = 0;
@@ -31,8 +31,6 @@ string getInput() {
   inputMtx.unlock();
   return s;
 }
-//initializes game state to state represented in s
-//startpos referes to classic starting layout
 
 void notate_helper(int best_move, int depth, int score, int nc, double tt) {
   best_move_buf = gameHis[ply].getMove(best_move);
@@ -77,47 +75,47 @@ int parseString(string s, string (&tokens)[1024] ) {
   tokens[count] = "";
   return count;
 }
-
-void uci_loop() {
-  while(1) {
-    uci();
-    usleep(200);
-  }
-}
-
+/*
+Starts a search of search_time milliseconds and outputs
+best move in string format when done
+*/
 void start_search(int search_time, int depth) { 
   if(search_time == 0) search_time = 1;
   _ABSEARCH::ABSearch(&gameHis[ply], depth, search_time, notate_helper);
 
   cout << "bestmove " << best_move_buf << endl;
 }
-
+/*
+Process uki commmands from input buffer
+*/
 void uci() {
-  string s;
-  string tokens[1024];
-  //TODO
-  if( 1 ) {
+  while( 1 ) {
+    usleep(200);
+ 
+    string s;
+    string tokens[1024];
     s = getInput();
     int token_count = parseString(s, tokens);
     
-    if(token_count == 0) return;
+    if(token_count == 0) {
+      continue;
+    }
 
     if(tokens[0].compare("uki") == 0) {
-      //TODO print info
       cout << "id name Khet "<< version << endl;
       cout << "id author YOUR NAME" << endl;
       cout << "ukiok" << endl;
-      return;
+      continue;
     }
     else if(tokens[0].compare("isready") == 0) {
       cout << "readyok" << endl;
-      return;
+      continue;;
     }
     else if(tokens[0].compare("ukinewgame") == 0) {
-      return;
+      continue;
     }
     else if(tokens[0].compare("setoption") == 0) {
-      return;
+      continue;
     }
     else if(tokens[0].compare("position")== 0) {
       ply = 0;
@@ -172,28 +170,33 @@ void uci() {
       if(search_time != -1)
         search_time = search_time * .02 + (increment/1000) * 0.8;
       cilk_spawn start_search(search_time, depth);
-      //returning is an implicit cilk_sync force to call uci_loop
-      uci_loop();
+      continue;
     }
     else if(tokens[0].compare("stop")== 0) {
       _ABSEARCH::abortSearch();
     }
+    //prints out string format of board
     else if(tokens[0].compare("display")== 0) {
       string bd = gameHis[ply].getBoardPrettyStr();
       cout << bd << endl ;
     }
+    //forces a move generation of current board
     else if(tokens[0].compare("gen")== 0) {
       cout << gameHis[ply].gen() << endl;
     }
     else if(tokens[0].compare("quit")== 0) {
       exit(0);
     }
+    //Not part of uki, prints out list of all possible moves form current state
     else if(tokens[0].compare("debug")== 0) {
       gameHis[ply].debugMoves();
     }
     else if(tokens[0].compare("eval")== 0) {
       cout << gameHis[ply].evaluate() <<endl;
     }
+    //The perft command is not part of UKI
+    //prints out the counts of possible moves at from current position at depth i
+    //ie the leaves of the game tree. Good move gen debug method
     else if(tokens[0].compare("perft")== 0) {
       int depth = 1;
       for(;depth < atoi(tokens[1].c_str()); depth++) {
@@ -243,6 +246,8 @@ int main(int argc, char *argv[])
   //prepare our hash table
   for (int i = 0; i < FILE_COUNT; i++) {
     for (int j = 0; j < RANK_COUNT; j++) {
+      //k represents the enumeration of all possible khetpieces as an int
+      //see khetpiece::id()
       for (int k = 0; k < 150; k++) {
         KhetState::zob[i][j][k] = myrand();
       }
@@ -251,6 +256,6 @@ int main(int argc, char *argv[])
   //this will be reading input in the background
   cilk_spawn inputThread();
   ply = 0;
-  uci_loop();
+  uci();
   return 0;
 }

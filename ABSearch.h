@@ -55,7 +55,7 @@ static int   nodec[32]; /* array of nodecoun, one per processor */
 Alpha beta search function
 g: initial state
 max_depth: progressive deepening is used to this depth
-search_time: maximum time in seconds to search
+search_time: maximum time in milliseconds to search
 f(int,int,int,int): optional callback function 
 is called with best move index, depth, score, and nodes searched, and time
 taken to search this depth
@@ -401,6 +401,7 @@ int ABSearch(ABState* g, int max_depth, int search_time,
 //  }
 
   global_abort = false;
+  cilk_spawn timer_thread();
   //iterative deepening loop
   for (int depth=1; depth <= max_depth; depth++)
   {
@@ -410,7 +411,6 @@ int ABSearch(ABState* g, int max_depth, int search_time,
 
     search_done = 0;
 
-    cilk_spawn timer_thread();
     
     score = root_search( g, depth );
 
