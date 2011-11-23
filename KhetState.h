@@ -1,6 +1,6 @@
 /*
-  Represents a game state in Khet.
-  Contains layout of board, and can generate possible subsequent states
+Represents a game state in Khet.
+Contains layout of board, and can generate possible subsequent states
 */
 #ifndef KHET_STATE_HDR
 #define KHET_STATE_HDR
@@ -34,50 +34,50 @@ static string fileLetters = "abcdefghij";
         -  -  -  -  -  -  yD -  -  -
         -  -  -  -  -  -  -  Yr -  -
         -  -  Yr Au Pu Au -  -  -  Hu w
-	
-	where h -> Sphinx
-	      a -> Anubis
-	      p -> Pharoah
-	      y -> Pyramid
-	      s -> Scarab
- 
-	the letters u,d,l,r represent rotation of piece with down
-	representing rotation with mirror facing bottom right corner  
-	lowercase letters for pieces indicate black(red in Khet) player(top)
-  The last element in the string is a space followed by the  color to move
+    
+    where h -> Sphinx
+        a -> Anubis
+        p -> Pharoah
+        y -> Pyramid
+        s -> Scarab
+
+    the letters u,d,l,r represent rotation of piece with down
+    representing rotation with mirror facing bottom right corner  
+    lowercase letters for pieces indicate black(red in Khet) player(top)
+The last element in the string is a space followed by the  color to move
 */
 
 //str[0] should correspond to rank 8 file a ie top left
 static string classicOpen = "hd------adpdadyd----"  
-                            "----yl--------------"  
-                            "------Yu------------" 
-                            "yr--Yl--slsu--yd--Yu" 
-                            "yd--Yu--SuSl--yr--Yl" 
-                            "------------yd------" 
-                            "--------------Yr----" 
-                            "----YuAuPuAu------Hu w";
+"----yl--------------"  
+"------Yu------------" 
+"yr--Yl--slsu--yd--Yu" 
+"yd--Yu--SuSl--yr--Yl" 
+"------------yd------" 
+"--------------Yr----" 
+"----YuAuPuAu------Hu w";
 
 static string dynastyOpen = "hd------yladyd------"
-                            "----------pd--------"
-                            "yr------yladsd------"
-                            "yd--sr--Yu--Yd------"
-                            "------yu--yd--Sl--Yu"
-                            "------SuAuYr------Yl"
-                            "--------Pu----------"
-                            "------YuAuYr------Hu w";
+"----------pd--------"
+"yr------yladsd------"
+"yd--sr--Yu--Yd------"
+"------yu--yd--Sl--Yu"
+"------SuAuYr------Yl"
+"--------Pu----------"
+"------YuAuYr------Hu w";
 
 static string imhotepOpen = "hd------adpdadsd----"  
-                            "--------------------"  
-                            "------Yu----yr------" 
-                            "yrYl----Ydsu----ydYu" 
-                            "ydYu----Suyu----yrYl" 
-                            "------Yl----yd------" 
-                            "--------------------" 
-                            "----SuAuPuAu------Hu w";
- 
+"--------------------"  
+"------Yu----yr------" 
+"yrYl----Ydsu----ydYu" 
+"ydYu----Suyu----yrYl" 
+"------Yl----yd------" 
+"--------------------" 
+"----SuAuPuAu------Hu w";
+
 
 class KhetState : public _ABSEARCH::ABState<KhetState> {
-  public:
+public:
     KhetState();
     KhetState(KhetState* s, KhetMove* mv);
     KhetState(string b);
@@ -112,7 +112,7 @@ class KhetState : public _ABSEARCH::ABState<KhetState> {
     static LaserHitInfo fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
     int closestToFile, int closestToRank);
     
-  private:
+private:
     uint64_t hashBoard();
     Board board;
     PlayerColor ctm; //color to move
