@@ -4,7 +4,7 @@
 
 // Detect if lines l1 and l2 will be intersected between now and the
 // next time step.
-IntersectionType intersect(Line *l1, Line *l2, double time)
+IntersectionType intersect(Line *l1, Line *l2, int time)
 {
    Vec vel;
    Vec  p1, p2;
@@ -12,6 +12,12 @@ IntersectionType intersect(Line *l1, Line *l2, double time)
 
    // Get relative velocity
    vel = l2->vel - l1->vel;
+   
+   // If no relative velocity, then no intersection
+   double threshold = 0.0001;
+   if(fabs(vel.x) <= threshold && fabs(vel.y) <= threshold){
+     return NO_INTERSECTION;
+   }
 
    // Get the parallelogram
    p1 = l2->p1 + (vel * time);
@@ -72,7 +78,7 @@ IntersectionType intersect(Line *l1, Line *l2, double time)
 }
 
 // Check if a point is in the parallelogram
-bool pointInParallelogram(Vec point,
+inline bool pointInParallelogram(Vec point,
                           Vec p1, Vec p2,
                           Vec p3, Vec p4)
 {
@@ -133,7 +139,7 @@ Vec getIntersectionPoint(Vec p1, Vec p2, Vec p3, Vec p4)
 
 
 // Check the direction of two lines (pi, pj) and (pi, pk)
-double direction(Vec pi, Vec pj, Vec pk)
+inline double direction(Vec pi, Vec pj, Vec pk)
 {
    return crossProduct(pk.x - pi.x,
                        pk.y - pi.y,
@@ -143,7 +149,7 @@ double direction(Vec pi, Vec pj, Vec pk)
 
 
 // Check if a point pk is in the line segment (pi, pj)
-bool onSegment(Vec pi, Vec pj, Vec pk)
+inline bool onSegment(Vec pi, Vec pj, Vec pk)
 {
    if (((pi.x <= pk.x && pk.x <= pj.x) ||
          (pj.x <= pk.x && pk.x <= pi.x)) &&
@@ -157,7 +163,7 @@ bool onSegment(Vec pi, Vec pj, Vec pk)
 
 
 // Calculate the cross product
-double crossProduct(double x1, double y1, double x2, double y2)
+inline double crossProduct(double x1, double y1, double x2, double y2)
 {
    return x1 * y2 - x2 * y1;
 }

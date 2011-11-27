@@ -42,6 +42,10 @@ void LineDemo::createLines()
 
       // convert window velocity to box velocity
       velocityWindowToBox(&line->vel.x, &line->vel.y, vx, vy);
+      
+      // Divide velocity by 2 because timestep has been changed from 0.5 to 1
+      line->vel.x /=2;
+      line->vel.y /=2;
 
       // store color
       line->isGray = isGray;

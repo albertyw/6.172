@@ -36,7 +36,7 @@ protected:
    int boxHeight;
 
    // Time step used for simulation
-   double  timeStep;
+   int  timeStep;
 
    // Container holding all the lines
    vector<Line*> lines;

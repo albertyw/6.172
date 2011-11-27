@@ -3,13 +3,14 @@
 
 #include "Line.h"
 #include "Vec.h"
+#include <cilk/cilk.h>
 
 typedef enum {NO_INTERSECTION, L1_WITH_L2, L2_WITH_L1,
               ALREADY_INTERSECTED
              } IntersectionType;
 
 // Detect if line l1 and l2 will be intersected in the next time step.
-IntersectionType intersect(Line *l1, Line *l2, double time);
+IntersectionType intersect(Line *l1, Line *l2, int time);
 
 // Check if a point is in the parallelogram.
 bool pointInParallelogram(Vec point, Vec p1, Vec p2,

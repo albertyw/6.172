@@ -18,7 +18,7 @@ CollisionWorld::CollisionWorld()
 {
    numLineWallCollisions = 0;
    numLineLineCollisions = 0;
-   timeStep = 0.5;
+   timeStep = 1;
    maxQuadTreeRecursions = 7;  // Maximum recursion depth
    minElementsToSplit = 25;    // Minimum quadtree size
 }
@@ -145,15 +145,11 @@ int CollisionWorld::quadTree(float xMax, float xMin, float yMax, float yMin, lis
  * If a line is exactly on a quadrant border (i.e. one of the axes), return LEAF
  **/
 LineLocation CollisionWorld::lineInsideQuadrant(float xMax, float xMin, float xAvg, float yMax, float yMin, float yAvg, Line *line){
-   LineLocation location = OUTSIDE;
    // Math Stuff
-   float xVel = fabs((*line).vel.x);
-   float yVel = fabs((*line).vel.y);
-
-   double xMinVec = std::min((*line).p1.x, (*line).p2.x);
-   double xMaxVec = std::max((*line).p1.x, (*line).p2.x);
-   double yMinVec = std::min((*line).p1.y, (*line).p2.y);
-   double yMaxVec = std::max((*line).p1.y, (*line).p2.y);
+   double xMinVec = std::min(line->p1.x, line->p2.x);
+   double xMaxVec = std::max(line->p1.x, line->p2.x);
+   double yMinVec = std::min(line->p1.y, line->p2.y);
+   double yMaxVec = std::max(line->p1.y, line->p2.y);
 
    //test whether any point is outside the rectangle
    // We don't need to test this anymore because quadTrees never gives bad lines to children
@@ -204,13 +200,10 @@ list<IntersectionInfo> CollisionWorld::detectIntersectionNew(list<Line*> Lines1,
   cilk::reducer_list_append<IntersectionInfo> intersections;
   for (list<Line*>::iterator it1 = Lines1.begin(); it1 != Lines1.end(); ++it1) {
     list<Line*>::iterator it2;
-    Line *l1 = *it1;
     for (it2 = Lines2.begin(); it2 != Lines2.end(); ++it2) {
-      Line *l2 = *it2;
-      if(l1 == l2) continue; // Don't compare a line against itself
-      IntersectionType intersectionType = intersect(l1, l2, timeStep);
+      IntersectionType intersectionType = intersect(*it1, *it2, timeStep);
       if (intersectionType != NO_INTERSECTION) {
-         IntersectionInfo intersection = IntersectionInfo(l1, l2, intersectionType);
+         IntersectionInfo intersection = IntersectionInfo(*it1, *it2, intersectionType);
          intersections.push_back(intersection);
       }
     }
@@ -239,12 +232,10 @@ list<IntersectionInfo> CollisionWorld::detectIntersectionNewSame(list<Line*> Lin
 
 /**
  * Solve all of the collisions in the list<IntersectionInfo>
+ * Return the number of line line collisions found
  **/
 int CollisionWorld::allCollisionSolver(list<IntersectionInfo> intersections){
-  list<IntersectionInfo>::iterator i;/*
-  numLineLineCollisionsLock.lock();
-  numLineLineCollisions += intersections.size(); // Check for race conditions
-  numLineLineCollisionsLock.unlock();*/
+  list<IntersectionInfo>::iterator i;
   for(i=intersections.begin(); i!=intersections.end(); ++i){// If we coarsen this loop, we can make it parallel
     collisionSolver(i->l1, i->l2, i->intersectionType);
   }
@@ -256,19 +247,19 @@ int CollisionWorld::allCollisionSolver(list<IntersectionInfo> intersections){
 
 
 // Update line positions.
-void CollisionWorld::updatePosition()
+inline void CollisionWorld::updatePosition()
 {
    double t = timeStep;
    vector<Line*>::iterator it;
    for (it = lines.begin(); it != lines.end(); ++it) {
       Line *line = *it;
-      line->p1 += (line->vel * t);
-      line->p2 += (line->vel * t);
+      line->p1 += (line->vel);
+      line->p2 += (line->vel);
    }
 }
 
 
-void CollisionWorld::collisionSolver(Line *l1, Line *l2, IntersectionType
+inline void CollisionWorld::collisionSolver(Line *l1, Line *l2, IntersectionType
                                      intersectionType)
 {
    // Despite our efforts to determine whether lines will intersect ahead of
@@ -332,7 +323,7 @@ void CollisionWorld::collisionSolver(Line *l1, Line *l2, IntersectionType
 
 
 // Handle line to wall collisions
-void CollisionWorld::lineWallCollision()
+inline void CollisionWorld::lineWallCollision()
 {
    vector<Line*>::iterator it;
    for (it = lines.begin(); it != lines.end(); ++it) {
