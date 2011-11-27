@@ -32,6 +32,7 @@ cilk::reducer_opadd<unsigned int> poll_count;
 #endif
 #include <tbb/mutex.h>
 #include <stdio.h>
+
 /*
 Abort class for speculative computation
 Functions can use Abort obejcts to signal termination to spawned
@@ -68,32 +69,33 @@ with the return value of such computatiosn, which includes logic for
 determining if the value is valid, and/or signalling abort. See ABSearch.h for 
 an example
 */
+#define FIXED_GRANULARITY 2
+
 class Abort
 {
 public:
     Abort() : aborted(false), parent(NULL) {
-        pollGranularity = 1;
-        count = 0;
+        // pollGranularity = 1;
+        count = 1;
     }
 
     explicit Abort(Abort *p) : aborted(false), parent(p) {
-        pollGranularity = 1;
-        count = 0;
+        // pollGranularity = 1;
+        count = 1;
     }
-    void setGranularity(int newGranularity) {
-        pollGranularity = newGranularity;
-    }
+    // void setGranularity(int newGranularity) {
+    //     pollGranularity = newGranularity;
+    // }
 
     int isAborted() {
         //allows for polling every i'th call
-        if(count >= pollGranularity - 1 ) {
-            count = 0;
-        }
-        else {
+        if(count >= FIXED_GRANULARITY ) {
+            count = 1;
+        } else {
             count++;
-            return 0;
+            return aborted;
         }
-        return aborted || (parent && this->parent->isAborted());
+        return aborted = aborted || (parent && this->parent->isAborted());
     }
 
     void abort() {
@@ -108,7 +110,7 @@ public:
 private:
     Abort *parent; 
     bool aborted;
-    int pollGranularity;
+    // int pollGranularity;
     int count;
 };
 

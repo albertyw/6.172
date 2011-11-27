@@ -39,7 +39,7 @@
 
 namespace _ABSEARCH {
     static int   timeout;
-    static bool global_abort;
+    Abort *global_abort;
     static int   search_done;
     static u64   start_wall_time;
     static int   bestmove;
@@ -52,27 +52,27 @@ namespace _ABSEARCH {
     static int   nodec[32]; /* array of nodecoun, one per processor */
 
     /*
-Alpha beta search function
-g: initial state
-max_depth: progressive deepening is used to this depth
-search_time: maximum time in milliseconds to search
-f(int,int,int,int): optional callback function 
-is called with best move index, depth, score, and nodes searched, and time
-taken to search this depth
-at the end of each search to depth n from 1..max_depth
+    Alpha beta search function
+    g: initial state
+    max_depth: progressive deepening is used to this depth
+    search_time: maximum time in milliseconds to search
+    f(int,int,int,int): optional callback function 
+    is called with best move index, depth, score, and nodes searched, and time
+    taken to search this depth
+    at the end of each search to depth n from 1..max_depth
 
-NOT threadsafe due to use of globals, running multiple searchs concurrently
-results in undefined behavior
-*/
+    NOT threadsafe due to use of globals, running multiple searchs concurrently
+    results in undefined behavior
+    */
     template <class ABState>
     int ABSearch(ABState* g, int max_depth, int search_time, 
     void(*f)(int best_move,int depth, int score ,int nodes, double time));
 
     /*
-aborts currently running alpha beta search
-*/
+    aborts currently running alpha beta search
+    */
     static void abortSearch() {
-        global_abort = true;
+        global_abort->abort();
     }
 
     //can be called to get the index of the best known move so far
@@ -203,13 +203,13 @@ aborts currently running alpha beta search
     }
 
     static void  putEntry(
-    ttab *x,
-    u64 key,
-    int depth,
-    int score,
-    int type,
-    int move
-    )
+                            ttab *x,
+                            u64 key,
+                            int depth,
+                            int score,
+                            int type,
+                            int move
+                            )
     {
         uint64_t  ix;
         ttRec     *e;         // current one we are looking at
@@ -274,8 +274,8 @@ aborts currently running alpha beta search
         e = x->tt[ix].set;
 
         for (i=0; i<4; i++, e++)
-        if (e->verify == key)
-        return e;
+            if (e->verify == key)
+                return e;
 
         return NULL;
     }
@@ -294,7 +294,7 @@ aborts currently running alpha beta search
     {
         for (;;) {
             if (new_wall_time() >= (u64) timeout * 1000 + start_wall_time) {
-                global_abort = true;
+                global_abort->abort();
                 return;
             }
             if (search_done) return;
@@ -304,7 +304,7 @@ aborts currently running alpha beta search
 
     static void timeout_handler( int signum )
     {
-        global_abort = true;
+        global_abort->abort();
     }
 
 
@@ -353,17 +353,17 @@ aborts currently running alpha beta search
 
 
     /*
-Alpha beta search function
-g: initial state
-max_depth: progressive deepening is used to this depth
-search_time: maximum time in milliseconds to search
-f(int,int,int,int): optional callback function 
-is called with best move index, depth, score, and nodes searched, and time
-taken to search this depth
-at the end of each search to depth n from 1..max_depth
-NOT threadsafe, running multiple searchs concurrently results in undefined
-behavior
-*/
+    Alpha beta search function
+    g: initial state
+    max_depth: progressive deepening is used to this depth
+    search_time: maximum time in milliseconds to search
+    f(int,int,int,int): optional callback function 
+        is called with best move index, depth, score, and nodes searched, and time
+        taken to search this depth
+        at the end of each search to depth n from 1..max_depth
+        NOT threadsafe, running multiple searchs concurrently results in undefined
+        behavior
+    */
     template <class ABState>
     int ABSearch(ABState* g, int max_depth, int search_time, 
     void(*f)(int best_move,int depth, int score ,int nodes, double time)){
@@ -399,8 +399,11 @@ behavior
         //  if(f) {
         //    (*f)(0, depth, score, nc, tt);
         //  }
+        
+        if (global_abort)
+            delete global_abort;
+        global_abort = new Abort();
 
-        global_abort = false;
         cilk_spawn timer_thread();
         //iterative deepening loop
         for (int depth=1; depth <= max_depth; depth++)
@@ -419,7 +422,7 @@ behavior
             nc += nodec[i];
             total_nc += nc;
 
-            if (global_abort) 
+            if (global_abort->isAborted()) 
             break;
             tt = seconds() - starttime;
             if(f) {
@@ -432,14 +435,15 @@ behavior
         //at the very least clear instead of alloc
         freeHashTable(&tt);
 #endif  
+        delete global_abort;
         return bestmove; 
     }
 
     /*
-starts ABSearch assuming g is the root
-need this special case because this inlet should update
-global var bestmove
-*/
+    starts ABSearch assuming g is the root
+    need this special case because this inlet should update
+    global var bestmove
+    */
     template<class ABState>
     int root_search(ABState *g, int depth) {
         int          mv;
@@ -488,14 +492,14 @@ global var bestmove
         g->getPossibleStates(next_moves);
         /* search best move from previous iteration first */
         ABState* best_state = &next_moves[prev_move];
-        root_search_catch( search( g, best_state, depth-1), prev_move);
+        root_search_catch( search( g, best_state, depth-1), prev_move, global_abort);
         
         /* cycle through all the moves */
-        for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
+        #pragma cilk grainsize = 1
+        cilk_for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
             ABState* next_state = &next_moves[stateInd]; 
             if( stateInd != prev_move) { 
-                if( root_search_catch( search(g, next_state, depth-1),stateInd ) )
-                break;
+                root_search_catch( search(g, next_state, depth-1, global_abort),stateInd);
             }
         }
         //update best move for next iteration
@@ -506,7 +510,7 @@ global var bestmove
     }
 
     template <class ABState>
-    int search(ABState *prev, ABState *next, int depth ) {
+    int search(ABState *prev, ABState *next, int depth, Abort *parent_abort) {
 
         tbb::mutex m;
         int local_best_move = INF;
@@ -515,6 +519,7 @@ global var bestmove
         int old_alpha = prev->alpha;
         int saw_rep = 0;
         std::vector<ABState> next_moves;
+        Abort *local_abort = new Abort(parent_abort);
         
         auto search_catch = [&] (int ret_sc, int ret_mv )->int {
             m.lock(); 
@@ -540,7 +545,7 @@ global var bestmove
             return prune;
         };
 
-        if (global_abort) {
+        if (local_abort->isAborted()) {
             return 0;
         }
         
@@ -570,11 +575,11 @@ global var bestmove
             ht_move = entry->move;
         }
 #endif
-        
         //too deep
         if (depth <= 0) {
             return next->evaluate();
         }
+
         next->getPossibleStates(next_moves);
 
         if(next_moves.size() == 0) {
@@ -588,7 +593,7 @@ global var bestmove
         //paranoia check to make sure hash table isnot  malfunctioning
         if(next_moves.size() > ht_move ) {
             //focus all resources on searching this move first
-            sc = search( next, &next_moves.at(ht_move), depth-1);
+            sc = search( next, &next_moves.at(ht_move), depth-1, local_abort);
             sc = -sc;
             if (sc > bestscore) { 
                 bestscore = sc;
@@ -607,15 +612,16 @@ global var bestmove
         /* cycle through all the moves */
 
         //if  aborted this result does not matter
-        if (global_abort) {
+        if (local_abort->isAborted) {
             return 0;
         }
 
-        for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
+        #pragma cilk grainsize = 1
+        cilk_for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
             if (stateInd != ht_move) {   /* don't try this again */
                 ABState* next_state = &next_moves[stateInd]; 
                 //search catch returns 1 if pruned
-                if( search_catch( search(next, next_state, depth-1), stateInd) ) break;
+                search_catch( search(next, next_state, depth-1, local_abort), stateInd);
             }
         }
 #if HASH
@@ -629,7 +635,7 @@ global var bestmove
             putEntry( &tt, next->key, depth, bestscore, EXACT_SCORE, local_best_move );
         }
 #endif
-
+        
         return bestscore;
 
     }
