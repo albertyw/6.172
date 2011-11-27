@@ -26,8 +26,10 @@ struct IntersectionInfo {
 /**************NEW FUNCTIONS ABOVE HERE*********************/
 
 
+
 class CollisionWorld
 {
+  
 protected:
    // The size of the collision world
    int boxWidth;
@@ -94,7 +96,7 @@ public:
    /**** NEW FUNCTIONS BELOW HERE ****/
 
    // Run quadTree recursive function
-   void quadTree(float xMax, float xMin, float yMax, float yMin, vector<Line*> currentLines, int recursions);
+   int quadTree(float xMax, float xMin, float yMax, float yMin, list<Line*> currentLines, int recursions);
 
    // Given a quadtree box and a line, find if a line is inside of a quadrant
    // Use LineLocations
@@ -105,18 +107,18 @@ public:
    // Return QUAD3 if line is inside third quadrant (between xAvg, xMin, yAvg, yMin)
    // Return QUAD4 if line is insde fourth quadrant (between xMax, xAvg, yAvg, yMin)
    // If a line is exactly on a quadrant border (i.e. one of the axes), return LEAF
-   LineLocation lineInsideQuadrant(float xMax, float xMin, float yMax, float yMin, Line *line);
+   LineLocation lineInsideQuadrant(float xMax, float xMin, float xAvg, float yMax, float yMin, float yAvg, Line *line);
    
    // Test for intersection between each line in Line1 against each line in Lines2
-   list<IntersectionInfo> detectIntersectionNew(vector<Line*> Lines1, vector<Line*> Lines2);
+   list<IntersectionInfo> detectIntersectionNew(list<Line*> Lines1, list<Line*> Lines2);
    
    // Test for intersection between each line in Lines
-   list<IntersectionInfo> detectIntersectionNewSame(vector<Line*> Lines);  
+   list<IntersectionInfo> detectIntersectionNewSame(list<Line*> Lines);  
    
    /**
    * Solve all of the collisions in the list<IntersectionInfo>
    **/
-  void allCollisionSolver(list<IntersectionInfo> intersections);
+  int allCollisionSolver(list<IntersectionInfo> intersections);
   
   void smallCollisionSolver(int *i, _List_iterator<IntersectionInfo> distance);
 };
