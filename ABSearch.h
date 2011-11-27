@@ -39,7 +39,7 @@
 
 namespace _ABSEARCH {
     static int   timeout;
-    Abort *global_abort;
+    static Abort *global_abort;
     static int   search_done;
     static u64   start_wall_time;
     static int   bestmove;
@@ -66,7 +66,7 @@ namespace _ABSEARCH {
     */
     template <class ABState>
     int ABSearch(ABState* g, int max_depth, int search_time, 
-    void(*f)(int best_move,int depth, int score ,int nodes, double time));
+				 void(*f)(int best_move,int depth, int score ,int nodes, double time));
 
     /*
     aborts currently running alpha beta search
@@ -492,7 +492,7 @@ namespace _ABSEARCH {
         g->getPossibleStates(next_moves);
         /* search best move from previous iteration first */
         ABState* best_state = &next_moves[prev_move];
-        root_search_catch( search( g, best_state, depth-1), prev_move, global_abort);
+        root_search_catch( search( g, best_state, depth-1, global_abort), prev_move);
         
         /* cycle through all the moves */
         #pragma cilk grainsize = 1
@@ -612,7 +612,7 @@ namespace _ABSEARCH {
         /* cycle through all the moves */
 
         //if  aborted this result does not matter
-        if (local_abort->isAborted) {
+        if (local_abort->isAborted()) {
             return 0;
         }
 
