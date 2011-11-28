@@ -26,7 +26,7 @@ string KhetState::getMove(int i) {
     return alg(moves[i]);
 }
 
-KhetMove KhetState::getMove(int i) {
+KhetMove KhetState::getMove2(int i) {
     return moves[i];
 }
 

@@ -91,15 +91,16 @@ public:
     KhetState* makeMove(KhetMove m);
 
     string getMove(int i);
-    KhetMove getMove(int i);
+    KhetMove getMove2(int i);
     string getCtmStr();
 
     
     static uint64_t zob[FILE_COUNT][RANK_COUNT][150];
     //attempts to make move in the from of "a8a7" or "a8r" in algstr
-    //returns empty str if move is invalid, returns algrstr otherwise
-    string move(string algstr);
-    string move(string algstr);
+    //returns 1 if move is invalid, returns 0 otherwise
+    int move(string algstr);
+    
+
     bool isWon();
     //counts the number of possible states up to depth. Useful for 
     //debugging move generator
