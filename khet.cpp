@@ -49,11 +49,7 @@ int uciMakeMove(KhetState* prevState, KhetState* newState, string move) {
     *newState = *prevState;
     //maintain history for repetition checking
     newState->his = prevState;
-    if(newState->makeMove(move).compare(move) == 0) {
-        return 0;
-    }
-    return 1;
-    
+    return newState->move(move);
 }
 
 

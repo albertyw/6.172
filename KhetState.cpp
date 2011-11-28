@@ -12,16 +12,22 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) {
     his = s;
     //move should be valid
     //string result*/ 
-    makeMove(alg(*mv)); 
+    move(alg(*mv)); 
     //assert(result.compare("") != 0);
 }
+
 KhetState::KhetState(string strBoard) {
     initBoard(strBoard);
     his = NULL;
     //first move
 }
+
 string KhetState::getMove(int i) {
     return alg(moves[i]);
+}
+
+KhetMove KhetState::getMove(int i) {
+    return moves[i];
 }
 
 string KhetState::getCtmStr() {
@@ -55,7 +61,7 @@ uint64_t KhetState::perft(int depth) {
     for(int i = 0; i < moves.size(); i++) {
         KhetState next = localState;
 
-        next.makeMove(alg(moves[i]));
+        next.move(alg(moves[i]));
         if(next.isWon()){
             nodec += 1;
         }
@@ -124,18 +130,17 @@ string KhetState::alg(KhetMove mv) {
 
 //attenots to make move in the from of "a8R" or a8a7 in algstr
 //returns empty str if move is invalid, returns algrstr otherwise
-string KhetState::makeMove(string algstr) {
+int KhetState::move(string algstr) {
     string s = "";
     gen();
     for(int i = 0; i < moves.size(); i++) {
         if(alg(moves[i]).compare(algstr) == 0) {
             //move is in list, should be valid
             imake(moves[i]);
-            s = algstr;
-            break;
+            return 0;
         }
     }
-    return s;
+    return 1;
 }
 
 uint64_t KhetState::hashBoard() {
