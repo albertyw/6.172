@@ -27,10 +27,13 @@ namespace _ABSEARCH {
     */
 
     typedef uint64_t u64;
-    template<class GameState>
+    template<class GameState, class GameMove>
     class ABState {
     public:
-        void getPossibleStates(std::vector<GameState> &v ) {
+        GameState* makeMove(GameMove m) {
+            static_cast<GameState*>(this)->makeMove(m);
+        }
+        void getPossibleStates(std::vector<GameMove> &v ) {
             static_cast<GameState*>(this)->getPossibleStates(v);
         }
         int evaluate() {

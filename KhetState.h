@@ -76,7 +76,7 @@ static string imhotepOpen = "hd------adpdadsd----"
 "----SuAuPuAu------Hu w";
 
 
-class KhetState : public _ABSEARCH::ABState<KhetState> {
+class KhetState : public _ABSEARCH::ABState<KhetState,KhetMove> {
 public:
     KhetState();
     KhetState(KhetState* s, KhetMove* mv);
@@ -87,7 +87,8 @@ public:
 
     //functions needed by ABState
     int evaluate();
-    void getPossibleStates(std::vector<KhetState> &v);
+    void getPossibleStates(std::vector<KhetMove> &v);
+    KhetState* makeMove(KhetMove m);
 
     string getMove(int i);
     string getCtmStr();

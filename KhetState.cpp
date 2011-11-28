@@ -32,13 +32,17 @@ bool KhetState::isWon() {
     return gameOver;
 }
 
-void KhetState::getPossibleStates(std::vector<KhetState> &v) {
+void KhetState::getPossibleStates(std::vector<KhetMove> &v) {
     if(gameOver) return;
     gen();
     for(int i = 0; i < moves.size(); i++) {
-        v.push_back(KhetState(this, &moves[i]));
+        v.push_back(moves[i]);
     }
     return;
+}
+
+KhetState* makeMove(KhetMove m) {
+     return new KhetState(this,&m);
 }
 
 uint64_t KhetState::perft(int depth) {
