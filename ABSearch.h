@@ -495,8 +495,8 @@ namespace _ABSEARCH {
         root_search_catch( search( g, best_state, depth-1, global_abort), prev_move);
         
         /* cycle through all the moves */
-        #pragma cilk grainsize = 1
-        cilk_for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
+        // #pragma cilk grainsize = 1
+        for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
             ABState* next_state = &next_moves[stateInd]; 
             if( stateInd != prev_move) { 
                 root_search_catch( search(g, next_state, depth-1, global_abort),stateInd);
@@ -616,8 +616,8 @@ namespace _ABSEARCH {
             return 0;
         }
 
-        #pragma cilk grainsize = 1
-        cilk_for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
+        // #pragma cilk grainsize = 1
+        for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
             if (stateInd != ht_move) {   /* don't try this again */
                 ABState* next_state = &next_moves[stateInd]; 
                 //search catch returns 1 if pruned
