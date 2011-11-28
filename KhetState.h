@@ -123,7 +123,10 @@ private:
     PlayerColor ctm; //color to move
     KhetPiece strToPiece(string sq);
     void initBoard(string board); 
+    
     vector<KhetMove> moves;
+    bool moves_init;
+
     //performs move on this state, assumes move is valid
     void imake(KhetMove mv);
     //converts a move into str notation

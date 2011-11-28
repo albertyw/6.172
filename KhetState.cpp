@@ -1,9 +1,9 @@
 #include "KhetState.h"
 
-KhetState::KhetState() {
+KhetState::KhetState() : moves_init(false) {
 }
 
-KhetState::KhetState(KhetState* s, KhetMove* mv) {
+KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
     ctm = s->ctm;
     memcpy(board, s->board, sizeof(board));
     gameOver = s->gameOver;
@@ -12,11 +12,11 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) {
     his = s;
     //move should be valid
     //string result*/ 
-    move(*mv); 
+    imove(*mv); 
     //assert(result.compare("") != 0);
 }
 
-KhetState::KhetState(string strBoard) {
+KhetState::KhetState(string strBoard) : moves_init(false) {
     initBoard(strBoard);
     his = NULL;
     //first move
@@ -429,6 +429,8 @@ void KhetState::initBoard(string strBoard) {
 //generates all moves and returns the number of moves 
 long KhetState::gen() 
 {
+    if (moves_init) return;
+    moves_init = true;
     PlayerColor fctm = ctm;
     moves.clear();
 
