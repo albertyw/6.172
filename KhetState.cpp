@@ -168,18 +168,19 @@ uint64_t KhetState::hashBoard() {
 //performs move on this state, assumes move is valid
 void KhetState::imake(KhetMove mv) {
     //move piece
+	KhetPiece origPiece = board[mv.fromFile][mv.fromRank];
     KhetPiece targetPiece = board[mv.toFile][mv.toRank];
     if(targetPiece.type != EMPTY &&
             mv.fromRot == mv.toRot) {//if its rotation target wont be empty
-        assert(board[mv.fromFile][mv.fromRank].type == SCARAB);
+        assert(origPiece.type == SCARAB);
         assert(targetPiece.type == ANUBIS || targetPiece.type == PYRAMID);
         //scarab swap
         board[mv.fromFile][mv.fromRank] = targetPiece;
-        board[mv.toFile][mv.toRank] = mv.piece;
+        board[mv.toFile][mv.toRank] = origPiece;
     }
     else {
         board[mv.fromFile][mv.fromRank].type = EMPTY;
-        board[mv.toFile][mv.toRank] = mv.piece;  
+        board[mv.toFile][mv.toRank] = origPiece;  
         board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
     }
     key = hashBoard();
