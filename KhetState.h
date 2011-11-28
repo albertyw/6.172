@@ -99,6 +99,7 @@ public:
     //attempts to make move in the from of "a8a7" or "a8r" in algstr
     //returns 1 if move is invalid, returns 0 otherwise
     int move(string algstr);
+    int move(KhetMove move);
     
 
     bool isWon();

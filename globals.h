@@ -77,6 +77,15 @@ typedef struct KhetMove {
         cout << " toRank" << toRank;
         cout << " toRot" << toRot << endl;
     }
+    bool operator==(const KhetMove& lhs, const KhetMove& rhs)
+    {
+        return lhs.fromFile == rhs.fromFile &&
+                lhs.fromRank == rhs.fromRank &&
+                lhs.fromRot == rhs.fromRot &&
+                lhs.toFile == rhs.toFile &&
+                lhs.toRank == rhs.toRank &&
+                lhs.toRot == rhs.toRot
+    }
 } KhetMove;
 typedef KhetPiece Board[FILE_COUNT][RANK_COUNT];
 

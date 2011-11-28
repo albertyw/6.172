@@ -12,7 +12,7 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) {
     his = s;
     //move should be valid
     //string result*/ 
-    move(alg(*mv)); 
+    move(*mv); 
     //assert(result.compare("") != 0);
 }
 
@@ -61,7 +61,7 @@ uint64_t KhetState::perft(int depth) {
     for(int i = 0; i < moves.size(); i++) {
         KhetState next = localState;
 
-        next.move(alg(moves[i]));
+        next.move(moves[i]);
         if(next.isWon()){
             nodec += 1;
         }
@@ -131,10 +131,21 @@ string KhetState::alg(KhetMove mv) {
 //attenots to make move in the from of "a8R" or a8a7 in algstr
 //returns empty str if move is invalid, returns algrstr otherwise
 int KhetState::move(string algstr) {
-    string s = "";
     gen();
     for(int i = 0; i < moves.size(); i++) {
         if(alg(moves[i]).compare(algstr) == 0) {
+            //move is in list, should be valid
+            imake(moves[i]);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int KhetState::move(KhetMove move) {
+    gen();
+    for(int i = 0; i < moves.size(); i++) {
+        if(moves[i] == move) {
             //move is in list, should be valid
             imake(moves[i]);
             return 0;
