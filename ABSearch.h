@@ -34,7 +34,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include "Abort.h"
-#include "KhetState.h"
+#include "ABState.h"
 
 
 namespace _ABSEARCH {
@@ -64,8 +64,8 @@ namespace _ABSEARCH {
     NOT threadsafe due to use of globals, running multiple searchs concurrently
     results in undefined behavior
     */
-    // template <class KhetState>
-    int ABSearch(KhetState* g, int max_depth, int search_time, 
+    template <class ABState>
+    int ABSearch(ABState* g, int max_depth, int search_time, 
 				 void(*f)(int best_move,int depth, int score ,int nodes, double time));
 
     /*
@@ -364,8 +364,8 @@ namespace _ABSEARCH {
         NOT threadsafe, running multiple searchs concurrently results in undefined
         behavior
     */
-    // template <class KhetState>
-    int ABSearch(KhetState* g, int max_depth, int search_time, 
+    template <class ABState>
+    int ABSearch(ABState* g, int max_depth, int search_time, 
     void(*f)(int best_move,int depth, int score ,int nodes, double time)){
 
         char    buf[8];
@@ -444,8 +444,8 @@ namespace _ABSEARCH {
     need this special case because this inlet should update
     global var bestmove
     */
-    // template<class KhetState>
-    int root_search(KhetState *g, int depth) {
+    template<class ABState>
+    int root_search(ABState *g, int depth) {
         int          mv;
         int          sc;
         static int   prev_move=0;   /* best move from last iteration */
@@ -488,16 +488,16 @@ namespace _ABSEARCH {
         g->alpha = -INF;
         g->beta = INF;
         
-        std::vector<KhetState> next_moves;
+        std::vector<ABState> next_moves;
         g->getPossibleStates(next_moves);
         /* search best move from previous iteration first */
-        KhetState* best_state = &next_moves[prev_move];
+        ABState* best_state = &next_moves[prev_move];
         root_search_catch( search( g, best_state, depth-1, global_abort), prev_move);
         
         /* cycle through all the moves */
         #pragma cilk grainsize = 1
         cilk_for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
-            KhetState* next_state = &next_moves[stateInd]; 
+            ABState* next_state = &next_moves[stateInd]; 
             if( stateInd != prev_move) { 
                 root_search_catch( search(g, next_state, depth-1, global_abort),stateInd);
             }
@@ -509,8 +509,8 @@ namespace _ABSEARCH {
         
     }
 
-    // template <class KhetState>
-    int search(KhetState *prev, KhetState *next, int depth, Abort *parent_abort) {
+    template <class ABState>
+    int search(ABState *prev, ABState *next, int depth, Abort *parent_abort) {
 
         tbb::mutex m;
         int local_best_move = INF;
@@ -518,7 +518,7 @@ namespace _ABSEARCH {
         int sc;
         int old_alpha = prev->alpha;
         int saw_rep = 0;
-        std::vector<KhetState> next_moves;
+        std::vector<ABState> next_moves;
         Abort *local_abort = new Abort(parent_abort);
         
         auto search_catch = [&] (int ret_sc, int ret_mv )->int {
@@ -557,7 +557,7 @@ namespace _ABSEARCH {
         //Some games its a loss if ANY repeats occurs, otehrs if repeated X times 
         // a row
         int count = 0;
-        for ( KhetState* rep = next->his; rep; rep = rep->his) {
+        for ( ABState* rep = next->his; rep; rep = rep->his) {
             if (rep->key == next->key) {
                 count++;
             }
@@ -619,7 +619,7 @@ namespace _ABSEARCH {
         #pragma cilk grainsize = 1
         cilk_for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
             if (stateInd != ht_move) {   /* don't try this again */
-                KhetState* next_state = &next_moves[stateInd]; 
+                ABState* next_state = &next_moves[stateInd]; 
                 //search catch returns 1 if pruned
                 search_catch( search(next, next_state, depth-1, local_abort), stateInd);
             }
