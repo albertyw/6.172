@@ -12,7 +12,7 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
     his = s;
     //move should be valid
     //string result*/ 
-    imove(*mv); 
+    imake(*mv); 
     //assert(result.compare("") != 0);
 }
 
@@ -429,7 +429,7 @@ void KhetState::initBoard(string strBoard) {
 //generates all moves and returns the number of moves 
 long KhetState::gen() 
 {
-    if (moves_init) return;
+	if (moves_init) return moves.size();
     moves_init = true;
     PlayerColor fctm = ctm;
     moves.clear();
