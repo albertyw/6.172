@@ -134,7 +134,7 @@ private:
     inline
     static bool isOppositeDirections(Rotation dir1, Rotation dir2)
     {
-        return (((int)dir1)^((int) dir2)) == 2
+	  return (((int)dir1)^((int) dir2)) == 2;
     }
 };
 

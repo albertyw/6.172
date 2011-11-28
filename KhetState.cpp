@@ -287,7 +287,7 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
             switch(laserDir) {
             case UP:
                 //scarab has two mirrors
-                if (((int)targetPiece.rot)&1){
+                if (targetPiece.rot == UP || targetPiece.rot == DOWN) {
                     laserDir = RIGHT;
                 }
                 else {
@@ -295,7 +295,7 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
                 }
                 break;
             case DOWN:  
-                if (((int)targetPiece.rot)&1{
+				if (targetPiece.rot == UP || targetPiece.rot == DOWN) {
                     laserDir = LEFT;
                 }
                 else {
@@ -303,7 +303,7 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
                 }
                 break;
             case LEFT:
-                if (((int)targetPiece.rot)&1){
+                if (targetPiece.rot == UP || targetPiece.rot == DOWN) {
                     laserDir = DOWN;
                 }
                 else {
@@ -311,7 +311,7 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
                 }
                 break;
             case RIGHT:
-                if (((int)targetPiece.rot)&1){
+                if (targetPiece.rot == UP || targetPiece.rot == DOWN) {
                     laserDir = UP;
                 }
                 else {
