@@ -241,7 +241,7 @@ void KhetState::imake(KhetMove mv) {
 }
 
 LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
-int closestToFile, int closestToRank) {
+                                    int closestToFile, int closestToRank) {
     KhetPiece targetPiece;
     targetPiece.type = EMPTY;
 
@@ -286,7 +286,7 @@ int closestToFile, int closestToRank) {
             switch(laserDir) {
             case UP:
                 //scarab has two mirrors
-                if(targetPiece.rot == UP || targetPiece.rot == DOWN){
+                if (((int)targetPiece.rot)&1){
                     laserDir = RIGHT;
                 }
                 else {
@@ -294,7 +294,7 @@ int closestToFile, int closestToRank) {
                 }
                 break;
             case DOWN:  
-                if(targetPiece.rot == UP || targetPiece.rot == DOWN){
+                if (((int)targetPiece.rot)&1{
                     laserDir = LEFT;
                 }
                 else {
@@ -302,7 +302,7 @@ int closestToFile, int closestToRank) {
                 }
                 break;
             case LEFT:
-                if(targetPiece.rot == UP || targetPiece.rot == DOWN){
+                if (((int)targetPiece.rot)&1){
                     laserDir = DOWN;
                 }
                 else {
@@ -310,7 +310,7 @@ int closestToFile, int closestToRank) {
                 }
                 break;
             case RIGHT:
-                if(targetPiece.rot == UP || targetPiece.rot == DOWN){
+                if (((int)targetPiece.rot)&1){
                     laserDir = UP;
                 }
                 else {

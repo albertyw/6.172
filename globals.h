@@ -24,8 +24,8 @@ enum PlayerColor {
 enum Rotation {
     RIGHT = 0,
     UP = 1,
-    LEFT = 3,
-    DOWN = 2
+    LEFT = 2,
+    DOWN = 3
 };
 
 typedef struct KhetPiece {

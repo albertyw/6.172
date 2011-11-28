@@ -132,9 +132,9 @@ private:
     PlayerColor winner;
 
     inline
-    bool isOppositeDirections(Rotation dir1, Rotation dir2)
+    static bool isOppositeDirections(Rotation dir1, Rotation dir2)
     {
-        return (((int)dir1)^((int) dir2)) == 3
+        return (((int)dir1)^((int) dir2)) == 2
     }
 };
 
