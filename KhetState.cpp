@@ -171,7 +171,7 @@ void KhetState::imake(KhetMove mv) {
     KhetPiece targetPiece = board[mv.toFile][mv.toRank];
     if(targetPiece.type != EMPTY &&
             mv.fromRot == mv.toRot) {//if its rotation target wont be empty
-        assert(mv.piece.type == SCARAB);
+        assert(board[mv.fromFile][mv.fromRank].type == SCARAB);
         assert(targetPiece.type == ANUBIS || targetPiece.type == PYRAMID);
         //scarab swap
         board[mv.fromFile][mv.fromRank] = targetPiece;
@@ -405,25 +405,25 @@ void KhetState::initBoard(string strBoard) {
     }
 }
 
-bool KhetState::isOppositeDirections(Rotation dir1, Rotation dir2) {
-    switch (dir1) {
-    case LEFT:
-        return dir2 == RIGHT;
-        break;
-    case RIGHT:
-        return dir2 == LEFT;
-        break;
-    case UP:
-        return dir2 == DOWN;
-        break;
-    case DOWN:
-        return dir2 == UP;
-        break;
-    default:
-        cout << "Err in opp dir" << endl;
-    }
-    return true;
-}
+// bool KhetState::isOppositeDirections(Rotation dir1, Rotation dir2) {
+//     switch (dir1) {
+//     case LEFT:
+//         return dir2 == RIGHT;
+//         break;
+//     case RIGHT:
+//         return dir2 == LEFT;
+//         break;
+//     case UP:
+//         return dir2 == DOWN;
+//         break;
+//     case DOWN:
+//         return dir2 == UP;
+//         break;
+//     default:
+//         cout << "Err in opp dir" << endl;
+//     }
+//     return true;
+// }
 
 //generates all moves and returns the number of moves 
 long KhetState::gen() 
@@ -443,22 +443,22 @@ long KhetState::gen()
                 //rotations only
                 if(fctm == SILVER) {
                     if(rot1 == UP || rot1 == LEFT) {
-                        moves.push_back(KhetMove(piece, file, rank, piece.rot,
-                        file, rank, rot1));
+                        moves.push_back(KhetMove(file, rank, piece.rot,
+                                                    file, rank, rot1));
                     }
                     if(rot2 == UP || rot2 == LEFT) {
-                        moves.push_back(KhetMove(piece, file, rank, piece.rot,
-                        file, rank, rot2));
+                        moves.push_back(KhetMove(file, rank, piece.rot,
+                                                    file, rank, rot2));
                     }
                 }
                 else {
                     if(rot1 == DOWN || rot1 == RIGHT) {
-                        moves.push_back(KhetMove(piece, file, rank, piece.rot,
-                        file, rank, rot1));
+                        moves.push_back(KhetMove(file, rank, piece.rot,
+                                                    file, rank, rot1));
                     }
                     if(rot2 == DOWN || rot2 == RIGHT) {
-                        moves.push_back(KhetMove(piece, file, rank, piece.rot,
-                        file, rank, rot2));
+                        moves.push_back(KhetMove(file, rank, piece.rot,
+                                                    file, rank, rot2));
                     }
                 }
                 break;
@@ -492,8 +492,8 @@ long KhetState::gen()
                             KhetPiece otherPiece = board[toFile][toRank];
                             if(otherPiece.type == PYRAMID || otherPiece.type == ANUBIS) {
                                 //valid swap move
-                                moves.push_back(KhetMove(piece, file, rank, piece.rot, 
-                                toFile, toRank, piece.rot));
+                                moves.push_back(KhetMove(file, rank, piece.rot, 
+                                                            toFile, toRank, piece.rot));
                             }
                             else {
                                 continue;
@@ -501,15 +501,15 @@ long KhetState::gen()
                         }
                         else {
                             //valid move
-                            moves.push_back(KhetMove(piece, file, rank, piece.rot, 
-                            toFile, toRank, piece.rot));
+                            moves.push_back(KhetMove(file, rank, piece.rot, 
+                                                        toFile, toRank, piece.rot));
                         }
                     }
                 }
                 //rotations 
-                moves.push_back(KhetMove(piece, file, rank, piece.rot, file, rank, rot1));
+                moves.push_back(KhetMove(file, rank, piece.rot, file, rank, rot1));
                 //if(piece.type != SCARAB) {
-                moves.push_back(KhetMove(piece, file, rank, piece.rot, file, rank, rot2));
+                moves.push_back(KhetMove(file, rank, piece.rot, file, rank, rot2));
                 //}
                 break;
             default:

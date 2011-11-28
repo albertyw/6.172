@@ -130,7 +130,12 @@ private:
     string alg(KhetMove mv);
     bool gameOver;
     PlayerColor winner;
-    bool isOppositeDirections(Rotation dir1, Rotation dir2);
+
+    inline
+    bool isOppositeDirections(Rotation dir1, Rotation dir2)
+    {
+        return (((int)dir1)^((int) dir2)) == 3
+    }
 };
 
 #endif //KHET_STATE_HDR

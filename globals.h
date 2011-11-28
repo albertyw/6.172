@@ -18,14 +18,14 @@ enum PieceType {
 
 enum PlayerColor {
     SILVER = 0,
-    RED
+    RED = 1
 };
 
 enum Rotation {
     RIGHT = 0,
-    UP,
-    LEFT,
-    DOWN
+    UP = 1,
+    LEFT = 3,
+    DOWN = 2
 };
 
 typedef struct KhetPiece {
@@ -33,7 +33,7 @@ typedef struct KhetPiece {
     Rotation rot;
     PlayerColor color;
     int id() {
-        return 100*(int)color + 10*(int)rot + (int)type;
+        return ((int)color)|(((int)rot)<<1)|(((int)type)<<3);
     }
 } KhetPiece;
 
@@ -45,7 +45,7 @@ typedef struct LaserHitInfo {
     Rotation laserDir;
 
     int closest; //closest manhattan distance of any pt on laser path
-    // to some target file and rank
+                 //to some target file and rank
     bool bounced; //true if laser was reflected at any point
 
 } LaserHitInfo;
@@ -53,16 +53,16 @@ typedef struct LaserHitInfo {
 
 
 typedef struct KhetMove {
-    KhetPiece piece;
+    // KhetPiece piece;
     int fromFile;
     int fromRank;
     int fromRot;
     int toFile;
     int toRank;
     int toRot;
-    KhetMove(KhetPiece p, int fFile, int fRank, int fRot, int tFile, int tRank,
-    int tRot) {
-        piece = p;
+    KhetMove(int fFile, int fRank, int fRot, int tFile, int tRank,
+                int tRot) {
+        // piece = p;
         fromFile = fFile;
         fromRank = fRank;
         fromRot = fRot;
