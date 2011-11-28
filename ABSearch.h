@@ -69,9 +69,10 @@ namespace _ABSEARCH {
 				 void(*f)(int best_move,int depth, int score ,int nodes, double time));
 
 	template<class ABState, class ABMove>
-	  int root_search(ABState *g, int depth);
-	 template <class ABState, class ABMove>
-	   int search(ABState *prev, ABState *next, int depth, Abort *parent_abort);
+	int root_search(ABState *g, int depth);
+
+	template <class ABState, class ABMove>
+	int search(ABState *prev, ABMove nextMove, int depth, Abort *parent_abort);
 	
     /*
     aborts currently running alpha beta search
@@ -496,16 +497,16 @@ namespace _ABSEARCH {
         std::vector<ABMove> next_moves;
         g->getPossibleStates(next_moves);
         /* search best move from previous iteration first */
-        ABState* best_state = g->makeMove(next_moves[prev_move]);
-        root_search_catch( search<ABState,ABMove>( g, best_state, depth-1, global_abort), prev_move);
+        //ABState* best_state = g->makeMove(next_moves[prev_move]);
+        root_search_catch( search<ABState,ABMove>( g, next_moves[prev_move], depth-1, global_abort), prev_move);
         
         /* cycle through all the moves */
         // #pragma cilk grainsize = 1
         for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
-            ABState* next_state = g->makeMove(next_moves[stateInd]); 
+			//ABState* next_state = g->makeMove(next_moves[stateInd]); 
             if( stateInd != prev_move) { 
                 // root_search_catch( search(g, next_state, depth-1, global_abort),stateInd);
-			  if (root_search_catch( search<ABState,ABMove>(g, next_state, depth-1, global_abort),stateInd))break;
+			  if (root_search_catch( search(g, next_moves[stateInd], depth-1, global_abort),stateInd))break;
             }
         }
         //update best move for next iteration
@@ -516,7 +517,7 @@ namespace _ABSEARCH {
     }
 
     template <class ABState, class ABMove>
-    int search(ABState *prev, ABState *next, int depth, Abort *parent_abort) {
+    int search(ABState *prev, ABMove nextMove, int depth, Abort *parent_abort) {
 
         tbb::mutex m;
         int local_best_move = INF;
@@ -526,7 +527,16 @@ namespace _ABSEARCH {
         int saw_rep = 0;
         std::vector<ABMove> next_moves;
         Abort *local_abort = new Abort(parent_abort);
-        
+		ABState *next;
+
+		//if  aborted this result does not matter
+        if (local_abort->isAborted()) {
+            return 0;
+        }
+
+		next = prev->makeMove(nextMove);
+
+		
         auto search_catch = [&] (int ret_sc, int ret_mv )->int {
             m.lock(); 
             int prune = 0;
@@ -599,7 +609,7 @@ namespace _ABSEARCH {
         //paranoia check to make sure hash table isnot  malfunctioning
         if(next_moves.size() > ht_move ) {
             //focus all resources on searching this move first
-		  sc = search<ABState,ABMove>( next, next->makeMove(next_moves[ht_move]), depth-1, local_abort);
+		  sc = search( next, next_moves[ht_move], depth-1, local_abort);
             sc = -sc;
             if (sc > bestscore) { 
                 bestscore = sc;
@@ -625,10 +635,10 @@ namespace _ABSEARCH {
         // #pragma cilk grainsize = 1
         for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
             if (stateInd != ht_move) {   /* don't try this again */
-                ABState* next_state = next->makeMove(next_moves[stateInd]); 
+				//ABState* next_state = next->makeMove(next_moves[stateInd]); 
                 //search catch returns 1 if pruned
                 // search_catch( search(next, next_state, depth-1, local_abort), stateInd);
-                if (search_catch( search<ABState,ABMove>(next, next_state, depth-1, local_abort), stateInd)) break;
+                if (search_catch( search(next, next_moves[stateInd], depth-1, local_abort), stateInd)) break;
             }
         }
 #if HASH
