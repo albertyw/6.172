@@ -14,7 +14,7 @@ IntersectionType intersect(Line *l1, Line *l2, int time)
    vel = l2->vel - l1->vel;
    
    // If no relative velocity, then no intersection
-   double threshold = 0.0001;
+   double threshold = 0.00007;
    if(fabs(vel.x) <= threshold && fabs(vel.y) <= threshold){
      return NO_INTERSECTION;
    }
