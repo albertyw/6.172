@@ -41,7 +41,7 @@ void KhetState::getPossibleStates(std::vector<KhetMove> &v) {
     return;
 }
 
-KhetState* makeMove(KhetMove m) {
+KhetState* KhetState::makeMove(KhetMove m) {
      return new KhetState(this,&m);
 }
 

@@ -81,7 +81,7 @@ best move in string format when done
 */
 void start_search(int search_time, int depth) { 
     if(search_time == 0) search_time = 1;
-    _ABSEARCH::ABSearch(&gameHis[ply], depth, search_time, notate_helper);
+    _ABSEARCH::ABSearch<KhetState,KhetMove>(&gameHis[ply], depth, search_time, notate_helper);
 
     cout << "bestmove " << best_move_buf << endl;
 }

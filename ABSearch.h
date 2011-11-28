@@ -68,6 +68,11 @@ namespace _ABSEARCH {
     int ABSearch(ABState* g, int max_depth, int search_time, 
 				 void(*f)(int best_move,int depth, int score ,int nodes, double time));
 
+	template<class ABState, class ABMove>
+	  int root_search(ABState *g, int depth);
+	 template <class ABState, class ABMove>
+	   int search(ABState *prev, ABState *next, int depth, Abort *parent_abort);
+	
     /*
     aborts currently running alpha beta search
     */
@@ -415,7 +420,7 @@ namespace _ABSEARCH {
             search_done = 0;
 
             
-            score = root_search( g, depth );
+            score = root_search<ABState,ABMove>( g, depth );
 
             nc = 0;
             for (int i = 0; i < __cilkrts_get_nworkers(); ++i)
@@ -492,7 +497,7 @@ namespace _ABSEARCH {
         g->getPossibleStates(next_moves);
         /* search best move from previous iteration first */
         ABState* best_state = g->makeMove(next_moves[prev_move]);
-        root_search_catch( search( g, best_state, depth-1, global_abort), prev_move);
+        root_search_catch( search<ABState,ABMove>( g, best_state, depth-1, global_abort), prev_move);
         
         /* cycle through all the moves */
         // #pragma cilk grainsize = 1
@@ -500,7 +505,7 @@ namespace _ABSEARCH {
             ABState* next_state = g->makeMove(next_moves[stateInd]); 
             if( stateInd != prev_move) { 
                 // root_search_catch( search(g, next_state, depth-1, global_abort),stateInd);
-                if (root_search_catch( search(g, next_state, depth-1, global_abort),stateInd))break;
+			  if (root_search_catch( search<ABState,ABMove>(g, next_state, depth-1, global_abort),stateInd))break;
             }
         }
         //update best move for next iteration
@@ -594,7 +599,7 @@ namespace _ABSEARCH {
         //paranoia check to make sure hash table isnot  malfunctioning
         if(next_moves.size() > ht_move ) {
             //focus all resources on searching this move first
-            sc = search( next, next->makeMove(next_moves[ht_move]), depth-1, local_abort);
+		  sc = search<ABState,ABMove>( next, next->makeMove(next_moves[ht_move]), depth-1, local_abort);
             sc = -sc;
             if (sc > bestscore) { 
                 bestscore = sc;
@@ -623,7 +628,7 @@ namespace _ABSEARCH {
                 ABState* next_state = next->makeMove(next_moves[stateInd]); 
                 //search catch returns 1 if pruned
                 // search_catch( search(next, next_state, depth-1, local_abort), stateInd);
-                if (search_catch( search(next, next_state, depth-1, local_abort), stateInd)) break;
+                if (search_catch( search<ABState,ABMove>(next, next_state, depth-1, local_abort), stateInd)) break;
             }
         }
 #if HASH
