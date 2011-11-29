@@ -84,17 +84,12 @@ void start_search(int search_time, int depth) {
 /*
 Process uki commmands from input buffer
 */
-int count = 0;
 void uci() {
     while( 1 ) {
         usleep(200);
         string s;
-        if (count == 0) s = "uki";
-        else if (count == 1) s = "position classic";
-        else if (count == 2) s = "go depth 6";
-        ++count;
         string tokens[1024];
-        //s = getInput();
+        s = getInput();
         int token_count = parseString(s, tokens);
         
         if(token_count == 0) {
@@ -170,8 +165,6 @@ void uci() {
             if(search_time != -1)
             search_time = search_time * .02 + (increment/1000) * 0.8;
             cilk_spawn start_search(search_time, depth);
-            cilk_sync;
-            exit(0);
             continue;
         }
         else if(tokens[0].compare("stop")== 0) {
