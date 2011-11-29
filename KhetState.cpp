@@ -470,6 +470,17 @@ long KhetState::gen()
               if(board[toFile][toRank].type != EMPTY) {
                 if(piece.type != SCARAB) continue;//scarabs can swap
                 KhetPiece otherPiece = board[toFile][toRank];
+                  
+                //dont swap the other piece into an illegal square
+                if(otherPiece.color == RED) {
+                  if(file == 9) continue;
+                  if(file == 1 && (rank == 0 || rank == 7)) continue;
+                }
+                if(otherPiece.color == SILVER) {
+                  if(file == 0) continue;
+                  if(file == 8 && (rank == 0 || rank == 7)) continue;
+                }
+
                 if(otherPiece.type == PYRAMID || otherPiece.type == ANUBIS) {
                   //valid swap move
                   moves.push_back(KhetMove(piece, file, rank, piece.rot, 

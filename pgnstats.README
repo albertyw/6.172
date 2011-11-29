@@ -1,0 +1,50 @@
+
+pgnstats.c is source code for a utility which parses a pgn file
+produced by the automated test in order extract time and depth
+information.
+
+Note that pgnstats DOES NOT rate the programs.  Download the freely
+available bayeselo utility for that.  
+
+It requires a single command line argument, the name of a pgn file.
+
+An optional second argument can be give which is the name of a
+reference program.
+
+compile it with the math library.
+
+  gcc -O3 pgnstats.c -o pgnstats -lm  
+
+
+example usage:
+
+drd@odie:~/kauto$ pgnstats lmr.pgn 
+
+      TIME       RATIO    log(r)     NODES    log(r)  ave DEPTH    GAMES   PLAYER
+ ---------  ----------  --------  --------  --------  ---------  -------   ----
+    1.1179       1.000     0.000     3.254     0.000     7.0000       24   1047
+    2.0148       1.802     0.589     5.847     0.586     7.0000       24   1046
+
+
+Note that the fastest program is by default the reference program, in
+this case version 1047.
+
+I can specify a different reference program:
+
+drd@odie:~/kauto$ pgnstats lmr.pgn 1046
+
+      TIME       RATIO    log(r)     NODES    log(r)  ave DEPTH    GAMES   PLAYER
+ ---------  ----------  --------  --------  --------  ---------  -------   ----
+    1.1179       0.555    -0.589     3.254    -0.586     7.0000       24   1047
+    2.0148       1.000     0.000     5.847     0.000     7.0000       24   1046
+
+
+This is obvious a 7 ply fixed depth test.  The output comes in 2
+sections, time and nodes.  The log(r) is a more useful way to present
+the ratio's where negtive numbers indicate a speedup over the
+reference program and simple subtraction can be used to compare any
+two programs.
+
+
+
+

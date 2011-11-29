@@ -43,6 +43,7 @@ static bool global_abort;
 static int   search_done;
 static u64   start_wall_time;
 static int   bestmove;
+static int   prev_move=0;   /* best move from last iteration */
 
 static double  seconds();
 static void  init_hash_table();
@@ -399,9 +400,13 @@ int ABSearch(ABState* g, int max_depth, int search_time,
 //  if(f) {
 //    (*f)(0, depth, score, nc, tt);
 //  }
+  //remember best move from iterations of root search
+  //done in only this ABSearch
+  prev_move = 0;
 
   global_abort = false;
   cilk_spawn timer_thread();
+  search_done = 0;
   //iterative deepening loop
   for (int depth=1; depth <= max_depth; depth++)
   {
@@ -409,7 +414,6 @@ int ABSearch(ABState* g, int max_depth, int search_time,
     double  tt;
     int nc;
 
-    search_done = 0;
 
     
     score = root_search( g, depth );
@@ -432,6 +436,8 @@ int ABSearch(ABState* g, int max_depth, int search_time,
   //at the very least clear instead of alloc
   freeHashTable(&tt);
 #endif  
+  //we finished search before time. end timer_thread
+  search_done = 1;
   return bestmove; 
 }
 
@@ -444,7 +450,6 @@ template<class ABState>
 int root_search(ABState *g, int depth) {
 	 int          mv;
 	 int          sc;
-	 static int   prev_move=0;   /* best move from last iteration */
 	 int bestscore = -INF;
    tbb::mutex m;
 
@@ -500,7 +505,6 @@ int root_search(ABState *g, int depth) {
    }
    //update best move for next iteration
 	 prev_move = bestmove;
-	 search_done = 1;
 	 return bestscore;
 	 
 }

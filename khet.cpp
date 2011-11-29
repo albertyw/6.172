@@ -35,12 +35,13 @@ string getInput() {
 void notate_helper(int best_move, int depth, int score, int nc, double tt) {
   best_move_buf = gameHis[ply].getMove(best_move);
   INFO(( stdout, 
-        "info depth %2d time %7.1f score %6d  currmove %s nps %7.1f\n", 
+        "info depth %d time %7.1f score %6d  currmove %s nodes %d nps %7.1f \n", 
         depth, 
         tt, 
         score, 
         best_move_buf.c_str(), 
-        nc / tt ));
+        nc,
+        (nc / tt) ));
 }
 //uses old state and move to generate a new state and save it in newState
 //returns 0 if ok, 1 otherwise
@@ -83,6 +84,8 @@ void start_search(int search_time, int depth) {
   if(search_time == 0) search_time = 1;
   _ABSEARCH::ABSearch(&gameHis[ply], depth, search_time, notate_helper);
 
+  //best-move_buf could be empty if you did not have time to complete a search
+  //to depth 1. You should consider how this case should be handled
   cout << "bestmove " << best_move_buf << endl;
 }
 /*
@@ -138,6 +141,7 @@ void uci() {
 
     }
     else if(tokens[0].compare("go")== 0) {
+      best_move_buf = ""; //clear buf
       int search_time = -1; //indicates infintie
       int increment = 0;
       int depth = 10;
