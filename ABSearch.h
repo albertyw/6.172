@@ -80,7 +80,6 @@ namespace _ABSEARCH {
     static void abortSearch() {
         global_abort->abort();
     }
-
     //can be called to get the index of the best known move so far
     //using the callback function on ABSearch() may be easier, but this is slightly
     //more up to date as the callback is invoked only when a round of iterative
@@ -405,6 +404,10 @@ namespace _ABSEARCH {
         //  if(f) {
         //    (*f)(0, depth, score, nc, tt);
         //  }
+        //remember best move from iterations of root search
+        //done in only this ABSearch
+        prev_move = 0;
+        search_done = 0;
         
         if (global_abort)
             delete global_abort;
@@ -442,9 +445,10 @@ namespace _ABSEARCH {
         freeHashTable(&tt);
 #endif  
         delete global_abort;
+        //we finished search before time. end timer_thread
+        search_done = 1;
         return bestmove; 
     }
-
     /*
     starts ABSearch assuming g is the root
     need this special case because this inlet should update
