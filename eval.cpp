@@ -120,13 +120,13 @@ int eval(Board b, PlayerColor ctm) {
     }
 }
 
-bool isEdge(int file, int rank) {
+inline bool isEdge(int file, int rank) {
     if (file == 9 || file == 0) return true;
     if (rank == 7 || rank == 0) return true;
     return false;
 } 
 
-int adjacentEmptySquares(Board b, int file, int rank) {
+inline int adjacentEmptySquares(Board b, int file, int rank) {
     int count = 0;
     for(int fileOffset = -1; fileOffset < 2; fileOffset++) {
         for(int rankOffset = -1; rankOffset < 2; rankOffset++) {
