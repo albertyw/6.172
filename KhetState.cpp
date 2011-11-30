@@ -484,8 +484,7 @@ long KhetState::gen()
                         if(piece.color == RED) {
                             if(toFile == 9) continue;
                             if(toFile == 1 && (toRank == 0 || toRank == 7)) continue;
-                        }
-                        if(piece.color == SILVER) {
+                        } else if(piece.color == SILVER) {
                             if(toFile == 0) continue;
                             if(toFile == 8 && (toRank == 0 || toRank == 7)) continue;
                         }

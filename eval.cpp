@@ -72,7 +72,7 @@ int eval(Board b, PlayerColor ctm) {
     //exposure checks 
     for(int rot = RIGHT; rot != (DOWN + 1); ++rot) {
         lInfo = KhetState::fireLaser(b, rPharaohFile, rPharaohRank,
-        (Rotation)rot, 0, 0);
+                                        (Rotation)rot, 0, 0);
         if(lInfo.bounced) {
             redScore += exposed;
             break;
@@ -80,7 +80,7 @@ int eval(Board b, PlayerColor ctm) {
     }
     for(int rot = RIGHT; rot !=( DOWN + 1); ++rot) {
         lInfo = KhetState::fireLaser(b, sPharaohFile, sPharaohRank,
-        (Rotation)rot, 0, 0);
+                                        (Rotation)rot, 0, 0);
         if(lInfo.bounced)  {
             silverScore += exposed;
             break;
@@ -90,24 +90,24 @@ int eval(Board b, PlayerColor ctm) {
     Rotation sSphRot = b[sSphFile][sSphRank].rot;
 
     lInfo = KhetState::fireLaser(b, sSphFile, sSphRank,
-    sSphRot, sPharaohFile, sPharaohRank);
+                                    sSphRot, sPharaohFile, sPharaohRank);
 
     silverScore += friendlyLaserDistance * lInfo.closest;
 
     lInfo = KhetState::fireLaser(b, sSphFile, sSphRank,
-    sSphRot, rPharaohFile, rPharaohRank);
+                                    sSphRot, rPharaohFile, rPharaohRank);
 
     silverScore += enemyLaserDistance * lInfo.closest;
     //closest pharaoh for red
     Rotation rSphRot = b[rSphFile][rSphRank].rot;
 
     lInfo = KhetState::fireLaser(b, rSphFile, rSphRank,
-    rSphRot, rPharaohFile, rPharaohRank);
+                                    rSphRot, rPharaohFile, rPharaohRank);
 
     redScore += friendlyLaserDistance * lInfo.closest;
 
     lInfo = KhetState::fireLaser(b, rSphFile, rSphRank,
-    rSphRot, sPharaohFile, sPharaohRank);
+                                    rSphRot, sPharaohFile, sPharaohRank);
 
     redScore += enemyLaserDistance * lInfo.closest;
 
