@@ -1,6 +1,8 @@
 #include "KhetState.h"
 
 KhetState::KhetState() : moves_init(false) {
+	 key = hashBoard();
+
 }
 
 KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
@@ -19,6 +21,8 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
 KhetState::KhetState(string strBoard) : moves_init(false) {
     initBoard(strBoard);
     his = NULL;
+    key = hashBoard();
+
     //first move
 }
 
@@ -170,6 +174,8 @@ void KhetState::imake(KhetMove mv) {
     //move piece
 	KhetPiece origPiece = board[mv.fromFile][mv.fromRank];
     KhetPiece targetPiece = board[mv.toFile][mv.toRank];
+    key ^=KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
+    key ^=KhetState::zob[mv.toFile][mv.toRank][board[mv.toFile][mv.toRank].id()];
     if(targetPiece.type != EMPTY &&
             mv.fromRot == mv.toRot) {//if its rotation target wont be empty
         assert(origPiece.type == SCARAB);
@@ -183,7 +189,10 @@ void KhetState::imake(KhetMove mv) {
         board[mv.toFile][mv.toRank] = origPiece;  
         board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
     }
-    key = hashBoard();
+    key ^=KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
+    key ^=KhetState::zob[mv.toFile][mv.toRank][board[mv.toFile][mv.toRank].id()];
+
+   
     //shoot laser
     KhetPiece sph;
     int tFile;
