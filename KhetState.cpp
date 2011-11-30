@@ -1,48 +1,47 @@
 #include "KhetState.h"
 
+map<uint64_t,KhetState*> KhetState::khet_cache;
+
 KhetState* KhetState::getKhetState(uint64_t key)
 {
-    CacheEntry e = khet_cache[key&KHET_CACHE_MASK];
-    if (e==key) return (KhetState*)e.obj;
-    return (KhetState*)0;
+	if (KhetState::khet_cache.count(key))
+	{
+		return KhetState::khet_cache[key];
+	} else
+	{
+		return (KhetState*)0;
+	}
 }
 
-KhetState* KhetState::getKhetState(KhetState* s, KhetMove* mv);
+KhetState* KhetState::getKhetState(KhetState* s, KhetMove* mv)
 {
     KhetState* newstate = new KhetState(s,mv);
-    key = newstate->key;
-    CacheEntry e = khet_cache[key&KHET_CACHE_MASK];
-
-    if (e==key)
-    {
-        delete newstate;
-        return (KhetState*)e.obj;
-    } else
-    {
-        if (e.obj) delete e.obj;
-        e.key = newstate->key;
-        e.obj = newstate;
-        return newstate;
-    }
+    uint64_t key = newstate->key;
+	if (KhetState::khet_cache.count(key))
+	{
+		delete newstate;
+		return KhetState::khet_cache[key];
+	} else
+	{
+		KhetState::khet_cache[key] = newstate;
+		return newstate;
+	}
 }
 
-KhetState* KhetState::getKhetState(string b);
+KhetState* KhetState::getKhetState(string b)
 {
     KhetState* newstate = new KhetState(b);
-    key = newstate->key;
-    CacheEntry e = khet_cache[key&KHET_CACHE_MASK];
+    uint64_t key = newstate->key;
 
-    if (e==key)
-    {
-        delete newstate;
-        return (KhetState*)e.obj;
-    } else
-    {
-        if (e.obj) delete e.obj;
-        e.key = newstate->key;
-        e.obj = newstate;
-        return newstate;
-    }
+	if (KhetState::khet_cache.count(key))
+	{
+		delete newstate;
+		return KhetState::khet_cache[key];
+	} else
+	{
+		KhetState::khet_cache[key] = newstate;
+		return newstate;
+	}
 }
 
 

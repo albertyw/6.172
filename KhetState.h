@@ -14,6 +14,7 @@ Contains layout of board, and can generate possible subsequent states
 #include <sstream>
 #include <iostream>
 #include <assert.h>
+#include <map>
 
 
 using namespace std;
@@ -82,9 +83,9 @@ static string imhotepOpen = "hd------adpdadsd----"
 typedef struct CacheEntry {
     uint64_t key;
     void* obj;
-};
+} CacheEntry;
 
-CacheEntry khet_cache[KHET_CACHE_SIZE];
+
 
 
 class KhetState : public _ABSEARCH::ABState<KhetState,KhetMove> {
@@ -135,7 +136,9 @@ public:
     //returns a LaserHitInfo with information about hit piece if any
     static LaserHitInfo fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
     int closestToFile, int closestToRank);
-    
+    //static CacheEntry khet_cache[KHET_CACHE_SIZE];
+	static map<uint64_t,KhetState*> khet_cache;
+	
 private:
     inline
     static bool isOppositeDirections(Rotation dir1, Rotation dir2)
