@@ -410,8 +410,6 @@ namespace _ABSEARCH {
         prev_move = 0;
         search_done = 0;
         
-        if (global_abort)
-            delete global_abort;
         global_abort = new Abort();
 
         cilk_spawn timer_thread();
