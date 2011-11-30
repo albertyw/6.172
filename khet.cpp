@@ -1,7 +1,7 @@
 #include "khet.h"
 
 #define INFO(a) fprintf a
-
+#define PERF 6
 string best_move_buf;
 void uci();
 
@@ -87,12 +87,31 @@ void start_search(int search_time, int depth) {
 /*
 Process uki commmands from input buffer
 */
+
+#ifdef PERF
+int count = 0;
+#endif
+
 void uci() {
     while( 1 ) {
         usleep(200);
         string s;
+#ifdef PERF
+        if (count==0) s = "uki";
+        else if (count == 1) s = "position classic";
+        else if (count == 2) {
+           
+            stringstream perf;
+            perf  << PERF;
+            s = "go depth ";
+            s.append(perf.str());
+        }
+        ++count;
+#endif
         string tokens[1024];
+#ifndef PERF
         s = getInput();
+#endif
         int token_count = parseString(s, tokens);
         
         if(token_count == 0) {
@@ -168,6 +187,10 @@ void uci() {
             if(search_time != -1)
             search_time = search_time * .02 + (increment/1000) * 0.8;
             cilk_spawn start_search(search_time, depth);
+#ifdef PERF
+            cilk_sync;
+            exit(0);
+#endif
             continue;
         }
         else if(tokens[0].compare("stop")== 0) {

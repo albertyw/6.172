@@ -43,7 +43,7 @@ namespace _ABSEARCH {
     static int   search_done;
     static u64   start_wall_time;
     static int   bestmove;
-	static int	 prev_move;
+    static int	 prev_move;
 
     static double  seconds();
     static void  init_hash_table();
