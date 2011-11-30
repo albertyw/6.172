@@ -1,7 +1,7 @@
 #include "khet.h"
 
 #define INFO(a) fprintf a
-#define PERF 6
+#define PERF_DEPTH 6
 string best_move_buf;
 void uci();
 
@@ -102,7 +102,7 @@ void uci() {
         else if (count == 2) {
            
             stringstream perf;
-            perf  << PERF;
+            perf  << PERF_DEPTH;
             s = "go depth ";
             s.append(perf.str());
         }
