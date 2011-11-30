@@ -464,6 +464,7 @@ void KhetState::initBoard(string strBoard) {
     else {
         ctm = RED;
     }
+	key = hashBoard();
 }
 
 // bool KhetState::isOppositeDirections(Rotation dir1, Rotation dir2) {
