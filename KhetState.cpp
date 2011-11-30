@@ -1,5 +1,51 @@
 #include "KhetState.h"
 
+KhetState* KhetState::getKhetState(uint64_t key)
+{
+    CacheEntry e = khet_cache[key&KHET_CACHE_MASK];
+    if (e==key) return (KhetState*)e.obj;
+    return (KhetState*)0;
+}
+
+KhetState* KhetState::getKhetState(KhetState* s, KhetMove* mv);
+{
+    KhetState* newstate = new KhetState(s,mv);
+    key = newstate->key;
+    CacheEntry e = khet_cache[key&KHET_CACHE_MASK];
+
+    if (e==key)
+    {
+        delete newstate;
+        return (KhetState*)e.obj;
+    } else
+    {
+        if (e.obj) delete e.obj;
+        e.key = newstate->key;
+        e.obj = newstate;
+        return newstate;
+    }
+}
+
+KhetState* KhetState::getKhetState(string b);
+{
+    KhetState* newstate = new KhetState(b);
+    key = newstate->key;
+    CacheEntry e = khet_cache[key&KHET_CACHE_MASK];
+
+    if (e==key)
+    {
+        delete newstate;
+        return (KhetState*)e.obj;
+    } else
+    {
+        if (e.obj) delete e.obj;
+        e.key = newstate->key;
+        e.obj = newstate;
+        return newstate;
+    }
+}
+
+
 KhetState::KhetState() : moves_init(false) {
 	 key = hashBoard();
 
@@ -52,7 +98,7 @@ void KhetState::getPossibleStates(std::vector<KhetMove> &v) {
 }
 
 KhetState* KhetState::makeMove(KhetMove m) {
-     return new KhetState(this,&m);
+     return getKhetState(this,&m);
 }
 
 uint64_t KhetState::perft(int depth) {
@@ -174,8 +220,8 @@ void KhetState::imake(KhetMove mv) {
     //move piece
 	KhetPiece origPiece = board[mv.fromFile][mv.fromRank];
     KhetPiece targetPiece = board[mv.toFile][mv.toRank];
-    key ^=KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
-    key ^=KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
+    key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
+    key ^= KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
     if(targetPiece.type != EMPTY &&
             mv.fromRot == mv.toRot) {//if its rotation target wont be empty
         assert(origPiece.type == SCARAB);
@@ -189,8 +235,8 @@ void KhetState::imake(KhetMove mv) {
         board[mv.toFile][mv.toRank] = origPiece;  
         board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
     }
-    key ^=KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
-    key ^=KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
+    key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
+    key ^= KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
 
    
     //shoot laser
@@ -225,16 +271,22 @@ void KhetState::imake(KhetMove mv) {
     case ANUBIS:
         //anubis can take hit on front
         if(!isOppositeDirections(laserHitInfo.laserDir, targetPiece.rot)) {
+            key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
             board[tFile][tRank].type = EMPTY;
+            key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
         }
         break;
     case PHAROAH:
+        key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
         board[tFile][tRank].type = EMPTY;
+        key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
         gameOver = true;
         winner = (targetPiece.color == RED) ? SILVER : RED;
         break;
     case PYRAMID:
+        key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
         board[tFile][tRank].type = EMPTY;
+        key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
         break;
     case SCARAB:
         cout << "ERROR: scarab being removed" << endl;

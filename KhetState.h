@@ -75,12 +75,31 @@ static string imhotepOpen = "hd------adpdadsd----"
 "--------------------" 
 "----SuAuPuAu------Hu w";
 
+#define KHET_CACHE_SIZE 1<<26
+#define KHET_CACHE_MASK 0x3ffffff
+
+
+typedef struct CacheEntry {
+    uint64_t key;
+    void* obj;
+};
+
+CacheEntry khet_cache[KHET_CACHE_SIZE];
+
 
 class KhetState : public _ABSEARCH::ABState<KhetState,KhetMove> {
 public:
+
+
+    static KhetState* getKhetState(uint64_t key);
+    static KhetState* getKhetState(KhetState* s, KhetMove* mv);
+    static KhetState* getKhetState(string b);
+
+
     KhetState();
     KhetState(KhetState* s, KhetMove* mv);
     KhetState(string b);
+
     int init(string b);
     string getBoardStr();
     string getBoardPrettyStr();
@@ -118,6 +137,11 @@ public:
     int closestToFile, int closestToRank);
     
 private:
+    inline
+    static bool isOppositeDirections(Rotation dir1, Rotation dir2)
+    {
+      return (((int)dir1)^((int) dir2)) == 2;
+    }
     uint64_t hashBoard();
     Board board;
     PlayerColor ctm; //color to move
@@ -133,12 +157,7 @@ private:
     string alg(KhetMove mv);
     bool gameOver;
     PlayerColor winner;
-
-    inline
-    static bool isOppositeDirections(Rotation dir1, Rotation dir2)
-    {
-	  return (((int)dir1)^((int) dir2)) == 2;
-    }
+    
 };
 
 #endif //KHET_STATE_HDR
