@@ -7,7 +7,7 @@
 #include <cilk/cilk.h>
 #include "KhetState.h"
 
-#define TOKEN_SIZE 500
+#define TOKEN_SIZE 4096
 #define I_BUF_SIZE 512
 #define version 0.1
 

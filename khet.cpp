@@ -6,15 +6,14 @@ string best_move_buf;
 void uci();
 
 void inputThread() {
-    char s[4096];
+    char s[TOKEN_SIZE];
     istr.p = 0;
     istr.count = 0;
 
     while(fgets(s, 4095, stdin) != NULL) {
         inputMtx.lock();
         strcpy(istr.buf[istr.count], s);
-        //TODO modulo wraparound
-        istr.count = istr.count + 1;
+        istr.count = (istr.count + 1) % I_BUF_SIZE;
         inputMtx.unlock();
     }
 }
@@ -26,8 +25,7 @@ string getInput() {
         return "";
     }
     string s = string(istr.buf[istr.p]);
-    istr.p++;
-
+    istr.p = (istr.p + 1) % I_BUF_SIZE;
     inputMtx.unlock();
     return s;
 }
