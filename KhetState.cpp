@@ -54,7 +54,9 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
     ctm = s->ctm;
     memcpy(board, s->board, sizeof(board));
     gameOver = s->gameOver;
-
+    for(int i = 0; i<26; i++){
+        pieces[i] = s->pieces[i];
+    }
     //maintain history pointer for repeition checking
     his = s;
     //move should be valid
@@ -217,8 +219,28 @@ uint64_t KhetState::hashBoard() {
 //performs move on this state, assumes move is valid
 void KhetState::imake(KhetMove mv) {
     //move piece
-	KhetPiece origPiece = board[mv.fromFile][mv.fromRank];
+    KhetPiece origPiece = board[mv.fromFile][mv.fromRank];
     KhetPiece targetPiece = board[mv.toFile][mv.toRank];
+    int searchIndex = ((int)origPiece.color)*13;
+    switch(origPiece.type){
+    case(PYRAMID):
+	searchIndex+=6;
+        break;
+    case(ANUBIS):
+	searchIndex+=4;
+        break;
+    case(SCARAB):
+	searchIndex+=1;
+        break;
+    case(SPHINX): 
+	break;
+    case(PHAROAH):
+	searchIndex+=3;
+    }
+    while(pieces[searchIndex].first!=mv.fromFile || pieces[searchIndex].second!=mv.fromRank){
+        searchIndex++;
+    }
+    pieces[searchIndex] = make_pair(mv.toFile,mv.toRank);
     key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
     key ^= KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
     if(targetPiece.type != EMPTY &&
@@ -226,6 +248,26 @@ void KhetState::imake(KhetMove mv) {
         assert(origPiece.type == SCARAB);
         assert(targetPiece.type == ANUBIS || targetPiece.type == PYRAMID);
         //scarab swap
+        searchIndex=((int)targetPiece.color)*13;
+        switch(targetPiece.type){
+        case(PYRAMID):
+    	searchIndex+=6;
+            break;
+        case(ANUBIS):
+    	    searchIndex+=4;
+            break;
+        case(SCARAB):
+        	searchIndex+=1;
+            break;
+        case(SPHINX): 
+        	break;
+        case(PHAROAH):
+        	searchIndex+=3;
+        }
+        while(pieces[searchIndex].first!=mv.toFile || pieces[searchIndex].second!=mv.toRank){
+            searchIndex++;
+        }
+        pieces[searchIndex] = make_pair(mv.fromFile, mv.fromRank);
         board[mv.fromFile][mv.fromRank] = targetPiece;
         board[mv.toFile][mv.toRank] = origPiece;
     }
@@ -265,7 +307,7 @@ void KhetState::imake(KhetMove mv) {
     targetPiece = laserHitInfo.hitPiece;
     tFile = laserHitInfo.hitFile;
     tRank = laserHitInfo.hitRank;
-
+    searchIndex = ((int)targetPiece.color)*13;
     switch(targetPiece.type) {
     case ANUBIS:
         //anubis can take hit on front
@@ -273,6 +315,11 @@ void KhetState::imake(KhetMove mv) {
             key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
             board[tFile][tRank].type = EMPTY;
             key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
+            searchIndex+=4;
+            while(pieces[searchIndex].first!=tFile || pieces[searchIndex].second!=tRank){
+                searchIndex++;
+            }
+            pieces[searchIndex] = make_pair(-1,-1); 
         }
         break;
     case PHAROAH:
@@ -281,11 +328,22 @@ void KhetState::imake(KhetMove mv) {
         key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
         gameOver = true;
         winner = (targetPiece.color == RED) ? SILVER : RED;
+        searchIndex+=3;
+        while(pieces[searchIndex].first!=tFile || pieces[searchIndex].second!=tRank){
+            searchIndex++;
+        }
+        pieces[searchIndex] = make_pair(-1,-1);
         break;
     case PYRAMID:
         key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
         board[tFile][tRank].type = EMPTY;
         key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
+        searchIndex+=6;
+        while(pieces[searchIndex].first!=tFile || pieces[searchIndex].second!=tRank){
+            searchIndex++;
+        }
+        pieces[searchIndex] = make_pair(-1,-1);
+
         break;
     case SCARAB:
         cout << "ERROR: scarab being removed" << endl;
@@ -448,6 +506,17 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
 
 void KhetState::initBoard(string strBoard) {
     gameOver = false;
+    int piecesIndex = 0;
+    KhetPiece piece;
+    //Silver
+    int sscarabInt = 1;
+    int sanubisInt = 4;
+    int spyramidInt = 6;
+    //Red
+    int rscarabInt = 1;
+    int ranubisInt = 4;
+    int rpyramidInt = 6;
+
     for(int i = 0; i < 80; i++) {
         int file = i % 10;
         int rank = 8 - (i / 10);//rank goes from 1 to 8 not 0 indexed
@@ -456,7 +525,49 @@ void KhetState::initBoard(string strBoard) {
         string sq = "";
         sq += strBoard[i * 2];
         sq += strBoard[i * 2 + 1];
-        board[file][rank] = strToPiece(sq);
+	board[file][rank]=strToPiece(sq);
+	piece = board[file][rank];
+	piecesIndex = ((int)piece.color)*13;
+	if(piece.color==RED){
+	        switch(piece.type){
+		case(PYRAMID):
+			pieces[piecesIndex+rpyramidInt] = make_pair(file,rank);
+			rpyramidInt++;
+			break;
+		case(ANUBIS):
+			pieces[piecesIndex+ranubisInt] = make_pair(file,rank);
+			ranubisInt++;
+			break;
+		case(SCARAB):
+			pieces[piecesIndex+rscarabInt] = make_pair(file,rank);
+			rscarabInt++;
+			break;
+		case(SPHINX): pieces[piecesIndex] = make_pair(file,rank); break;
+		case(PHAROAH):
+			pieces[piecesIndex+3] = make_pair(file,rank);
+			break;
+		}
+	}else{
+	        switch(piece.type){
+		case(PYRAMID):
+			pieces[piecesIndex+spyramidInt] = make_pair(file,rank);
+			spyramidInt++;
+			break;
+		case(ANUBIS):
+			pieces[piecesIndex+sanubisInt] = make_pair(file,rank);
+			sanubisInt++;
+			break;
+		case(SCARAB):
+			pieces[piecesIndex+sscarabInt] = make_pair(file,rank);
+			sscarabInt++;
+			break;
+		case(SPHINX): pieces[piecesIndex] = make_pair(file,rank); break;
+		case(PHAROAH):
+			pieces[piecesIndex+3] = make_pair(file,rank);
+			break;
+		}
+
+	}
     }
     if(strBoard[strBoard.length() - 1] == 'w') {
         ctm = SILVER;
@@ -464,7 +575,7 @@ void KhetState::initBoard(string strBoard) {
     else {
         ctm = RED;
     }
-	key = hashBoard();
+    key = hashBoard();
 }
 
 // bool KhetState::isOppositeDirections(Rotation dir1, Rotation dir2) {
@@ -490,17 +601,20 @@ void KhetState::initBoard(string strBoard) {
 //generates all moves and returns the number of moves 
 long KhetState::gen() 
 {
-	if (moves_init) return moves.size();
+    if (moves_init) return moves.size();
     moves_init = true;
     PlayerColor fctm = ctm;
     moves.clear();
-
-    for (int rank = 0; rank < 8; rank++) {
-        for (int file = 0; file < 10; file++) {
+    int pieceIndex = ((int) fctm)*13;
+    int rot1, rot2, file, rank;
+    for (pieceIndex; pieceIndex<((int)fctm+1)*13; pieceIndex++) {
+	    file = pieces[pieceIndex].first;
+	    rank = pieces[pieceIndex].second;
+        if(file<0 || rank <0) continue;
             KhetPiece piece = board[file][rank];	
             if(( piece.type == EMPTY) || (piece.color !=fctm)) continue;
-            int rot1 = (piece.rot + 1) % 4;
-            int rot2 = (piece.rot + 3) % 4;
+            rot1 = (piece.rot + 1) % 4;
+            rot2 = (piece.rot + 3) % 4;
             //cout << file << " " << rank << endl;
             switch (piece.type) {
             case SPHINX: 
@@ -589,7 +703,6 @@ long KhetState::gen()
                 cout << "unknown piece in gen: " << piece.type  << endl;
             }
 
-        }	
     }
     return moves.size();
 }

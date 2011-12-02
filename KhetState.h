@@ -154,6 +154,11 @@ private:
     vector<KhetMove> moves;
     bool moves_init;
 
+    //location of pieces, 0-12 are silver, 13-25 are red
+    //0 = sphinx, 1-2 = scarab, 3 = pharaoh, 4-5 = anubis, 6-12 = pyramids
+    //+12 for silver pieces
+    pair<int,int> pieces[26];
+
     //performs move on this state, assumes move is valid
     void imake(KhetMove mv);
     //converts a move into str notation
