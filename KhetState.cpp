@@ -54,9 +54,10 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
     ctm = s->ctm;
     memcpy(board, s->board, sizeof(board));
     gameOver = s->gameOver;
-    for(int i = 0; i<26; i++){
-        pieces[i] = s->pieces[i];
-    }
+    memcpy(pieces,s->pieces, 26*sizeof(pair<int,int>));
+//    for(int i = 0; i<26; i++){
+//        pieces[i] = s->pieces[i];
+//    }
     //maintain history pointer for repeition checking
     his = s;
     //move should be valid
