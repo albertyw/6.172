@@ -109,12 +109,11 @@ uint64_t KhetState::perft(int depth) {
     if (depth == 0) return 1;
 
     gen();
-    KhetState localState = *this;
+    KhetState *localState = this;
     if(depth == 1) return moves.size();
     for(int i = 0; i < moves.size(); i++) {
-        KhetState next = localState;
-
-        next.move(moves[i]);
+        KhetState *next = getKhetState(localState,&moves[i]);
+        
         if(next.isWon()){
             nodec += 1;
         }
