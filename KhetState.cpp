@@ -56,7 +56,7 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
     gameOver = s->gameOver;
 
     //maintain history pointer for repeition checking
-    his = s;
+    // his = s;
     //move should be valid
     //string result*/ 
     imake(*mv); 
@@ -65,7 +65,7 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
 
 KhetState::KhetState(string strBoard) : moves_init(false) {
     initBoard(strBoard);
-    his = NULL;
+    // his = NULL;
     key = hashBoard();
 
     //first move

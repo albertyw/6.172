@@ -272,6 +272,11 @@ int main(int argc, char *argv[])
             }
         }
     }
+
+    for (int i=0; i<500; i++) {
+        _ABSEARCH::ABState::ABzob[i] = myrand();
+    }
+
     //this will be reading input in the background
     cilk_spawn inputThread();
     ply = 0;

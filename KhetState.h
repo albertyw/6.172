@@ -7,7 +7,7 @@ Contains layout of board, and can generate possible subsequent states
 
 #include <string>
 #include <vector>
-#include "ABSearch.h"
+#include "ABState.h"
 #include "eval.h"
 #include "globals.h"
 #include <locale>
@@ -88,7 +88,7 @@ typedef struct CacheEntry {
 
 
 
-class KhetState : public _ABSEARCH::ABState<KhetState,KhetMove> {
+class KhetState {
 public:
 
 
@@ -138,6 +138,8 @@ public:
     int closestToFile, int closestToRank);
     //static CacheEntry khet_cache[KHET_CACHE_SIZE];
 	static map<uint64_t,KhetState*> khet_cache;
+
+    u64 key;
 	
 private:
     inline

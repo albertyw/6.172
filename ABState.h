@@ -2,6 +2,8 @@
 #define ABSTATE_H
 
 #include <vector>
+#include "KhetState.h"
+
 namespace _ABSEARCH {
     /*
     Interface for user defined search states
@@ -27,18 +29,18 @@ namespace _ABSEARCH {
     */
 
     typedef uint64_t u64;
-    template<class GameState, class GameMove>
+
     class ABState {
     public:
-        GameState* makeMove(GameMove m) {
-            static_cast<GameState*>(this)->makeMove(m);
-        }
-        void getPossibleStates(std::vector<GameMove> &v ) {
-            static_cast<GameState*>(this)->getPossibleStates(v);
-        }
-        int evaluate() {
-            return static_cast<GameState*>(this)->evaluate();
-        }
+        // GameState* makeMove(GameMove m) {
+        //     static_cast<GameState*>(this)->makeMove(m);
+        // }
+        // void getPossibleStates(std::vector<GameMove> &v ) {
+        //     static_cast<GameState*>(this)->getPossibleStates(v);
+        // }
+        // int evaluate() {
+        //     return static_cast<GameState*>(this)->evaluate();
+        // }
         //These fields are used by the Search gunctions and so must be public
         //use friendship instead?
         int alpha;
@@ -46,8 +48,24 @@ namespace _ABSEARCH {
         //this key is used for ABSearches hashtable, should be update appropriately
         //by derived class code
         u64     key;
+        KhetState  *ks;
         ABState  *his;         /* pointer to last position for repeat check*/
         int     ply_of_game;
+        static uint64_t ABzob [500];
+
+        ABState(KhetState* _ks) {
+            ks = _ks;
+            ply_of_game = 0;
+            key = ks->key^ABzob[0];
+            his = 0;
+        }
+
+        ABState(ABState *prev, KhetMove mv) {
+            ks = prev->ks->makeMove(mv);
+            ply_of_game = prev->ply_of_game+1;
+            key = ks->key^ABzob[ply_of_game];
+            his = prev;
+        }
     };
 
 }
