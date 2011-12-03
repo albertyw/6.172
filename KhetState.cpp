@@ -59,6 +59,7 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
     // his = s;
     //move should be valid
     //string result*/ 
+    key = s->key;
     imake(*mv); 
     //assert(result.compare("") != 0);
 }

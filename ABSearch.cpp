@@ -41,7 +41,7 @@ namespace _ABSEARCH {
 #endif  
         //node count stats
         for (int i = 0; i < __cilkrts_get_nworkers(); ++i)
-        nodec[i]=0;
+            nodec[i]=0;
         int total_nc = 0;
         starttime = seconds();
 
@@ -71,7 +71,7 @@ namespace _ABSEARCH {
 
             nc = 0;
             for (int i = 0; i < __cilkrts_get_nworkers(); ++i)
-            nc += nodec[i];
+                nc += nodec[i];
             total_nc += nc;
 
             if (global_abort->isAborted()) 
@@ -127,7 +127,7 @@ namespace _ABSEARCH {
             if (ret_sc > bestscore) { 
                 bestscore = ret_sc;
                 bestmove = ret_mv;
-                if (ret_sc >= g->beta) {
+                if (ret_sc >= MATE) {
                     prune = 1;
                 }
                 if (ret_sc > g->alpha) g->alpha = ret_sc;
@@ -152,7 +152,8 @@ namespace _ABSEARCH {
 			//ABState* next_state = g->makeMove(next_moves[stateInd]); 
             if( stateInd != prev_move) { 
                 // root_search_catch( search(g, next_state, depth-1, global_abort),stateInd);
-			  if (root_search_catch( search(g, next_moves[stateInd], depth-1, global_abort),stateInd))break;
+                root_search_catch( search(g, next_moves[stateInd], depth-1, global_abort),stateInd);
+
             }
         }
         //update best move for next iteration
@@ -219,7 +220,7 @@ namespace _ABSEARCH {
         // a row
         int count = 0;
         for ( ABState* rep = next->his; rep; rep = rep->his) {
-            if (rep->key == next->key) {
+            if (rep->ks->key == next->ks->key) {
                 count++;
             }
         } 
@@ -268,6 +269,18 @@ namespace _ABSEARCH {
         }
         else {
             //error inhash
+            ht_move = 0;
+            sc = search( next, next_moves[ht_move], depth-1, local_abort);
+            sc = -sc;
+            if (sc > bestscore) { 
+                bestscore = sc;
+                local_best_move = ht_move;
+                if (sc > next->alpha) next->alpha = sc;
+                if (sc >= next->beta) {
+                    //prune
+                    return bestscore;
+                }
+            } 
         }
 
         /* cycle through all the moves */
