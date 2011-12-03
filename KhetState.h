@@ -6,8 +6,10 @@ Contains layout of board, and can generate possible subsequent states
 #define KHET_STATE_HDR
 
 #include <string>
+#include <string.h>
+#include <stdlib.h>
 #include <vector>
-#include "ABState.h"
+//#include "ABState.h"
 #include "eval.h"
 #include "globals.h"
 #include <locale>
@@ -101,7 +103,7 @@ public:
     KhetState(KhetState* s, KhetMove* mv);
     KhetState(string b);
 
-    int init(string b);
+    string* init(string b);
     string getBoardStr();
     string getBoardPrettyStr();
 
@@ -109,6 +111,7 @@ public:
     int evaluate();
     void getPossibleStates(std::vector<KhetMove> &v);
     KhetState* makeMove(KhetMove m);
+	KhetState* makeMove(int i);
 
     string getMove(int i);
     KhetMove getMove2(int i);
@@ -116,6 +119,8 @@ public:
 
     
     static uint64_t zob[FILE_COUNT][RANK_COUNT][150];
+	static uint64_t ABzob [500];
+	
     //attempts to make move in the from of "a8a7" or "a8r" in algstr
     //returns 1 if move is invalid, returns 0 otherwise
     int move(string algstr);

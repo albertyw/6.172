@@ -51,21 +51,26 @@ namespace _ABSEARCH {
         KhetState  *ks;
         ABState  *his;         /* pointer to last position for repeat check*/
         int     ply_of_game;
-        static uint64_t ABzob [500];
+        //static uint64_t ABzob [500];
 
         ABState(KhetState* _ks) {
             ks = _ks;
             ply_of_game = 0;
-            key = ks->key^ABzob[0];
+            key = ks->key^KhetState::ABzob[0];
             his = 0;
         }
 
         ABState(ABState *prev, KhetMove mv) {
             ks = prev->ks->makeMove(mv);
             ply_of_game = prev->ply_of_game+1;
-            key = ks->key^ABzob[ply_of_game];
+            key = ks->key^KhetState::ABzob[ply_of_game];
             his = prev;
         }
+
+		ABState() {
+		  his = 0;
+		  ks = new KhetState();
+		}
     };
 
 }

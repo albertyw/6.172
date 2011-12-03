@@ -31,7 +31,7 @@ string getInput() {
 }
 
 void notate_helper(int best_move, int depth, int score, int nc, double tt) {
-  best_move_buf = gameHis[ply].getMove(best_move);
+  best_move_buf = gameHis[ply].ks->getMove(best_move);
   INFO(( stdout, 
         "info depth %d time %7.1f score %6d  currmove %s nodes %d nps %7.1f \n", 
         depth, 
@@ -43,12 +43,15 @@ void notate_helper(int best_move, int depth, int score, int nc, double tt) {
 }
 //uses old state and move to generate a new state and save it in newState
 //returns 0 if ok, 1 otherwise
-int uciMakeMove(KhetState* prevState, KhetState* newState, string move) {
+int uciMakeMove(_ABSEARCH::ABState* prevState, _ABSEARCH::ABState* newState, string move) {
 
-    *newState = *prevState;
+	*newState = *prevState;
     //maintain history for repetition checking
     newState->his = prevState;
-    return newState->move(move);
+	int index = newState->ks->move(move);
+	if (index<0) return 1;
+	newState->ks = newState->ks->makeMove(index);
+    return 0;
 }
 
 
@@ -76,7 +79,7 @@ best move in string format when done
 */
 void start_search(int search_time, int depth) { 
     if(search_time == 0) search_time = 1;
-    _ABSEARCH::ABSearch<KhetState,KhetMove>(&gameHis[ply], depth, search_time, notate_helper);
+    _ABSEARCH::ABSearch(&gameHis[ply], depth, search_time, notate_helper);
 
     //best-move_buf could be empty if you did not have time to complete a search
     //to depth 1. You should consider how this case should be handled
@@ -134,10 +137,12 @@ void uci() {
         }
         else if(tokens[0].compare("position")== 0) {
             ply = 0;
-            if(gameHis[ply].init(tokens[1]) != 0) {
+			string* boardstr = gameHis[ply].ks->init(tokens[1]);
+            if(boardstr == 0) {
                 cout << "invalid input position" << endl;
                 exit(1);
             }
+			gameHis[ply].ks = KhetState::getKhetState(*boardstr);
             //make all moves inlist
             if(token_count > 2 && tokens[2].compare("moves") != 0) {
                 cout << "invalid input position" << endl;
@@ -196,22 +201,22 @@ void uci() {
         }
         //prints out string format of board
         else if(tokens[0].compare("display")== 0) {
-            string bd = gameHis[ply].getBoardPrettyStr();
+            string bd = gameHis[ply].ks->getBoardPrettyStr();
             cout << bd << endl ;
         }
         //forces a move generation of current board
         else if(tokens[0].compare("gen")== 0) {
-            cout << gameHis[ply].gen() << endl;
+            cout << gameHis[ply].ks->gen() << endl;
         }
         else if(tokens[0].compare("quit")== 0) {
             exit(0);
         }
         //Not part of uki, prints out list of all possible moves form current state
         else if(tokens[0].compare("debug")== 0) {
-            gameHis[ply].debugMoves();
+            gameHis[ply].ks->debugMoves();
         }
         else if(tokens[0].compare("eval")== 0) {
-            cout << gameHis[ply].evaluate() <<endl;
+            cout << gameHis[ply].ks->evaluate() <<endl;
         }
         //The perft command is not part of UKI
         //prints out the counts of possible moves at from current position at depth i
@@ -219,7 +224,7 @@ void uci() {
         else if(tokens[0].compare("perft")== 0) {
             int depth = 1;
             for(;depth < atoi(tokens[1].c_str()); depth++) {
-                uint64_t nodec = gameHis[ply].perft(depth);
+                uint64_t nodec = gameHis[ply].ks->perft(depth);
                 cout << "Node count for depth " << depth << " is " << nodec << endl;
             }
         }
@@ -258,7 +263,7 @@ unsigned long long myrand()
 }
 
 uint64_t KhetState::zob[FILE_COUNT][RANK_COUNT][150];
-
+uint64_t KhetState::ABzob[500];
 //initalizes input thread and then starts UCI loop
 int main(int argc, char *argv[])
 {
@@ -274,7 +279,7 @@ int main(int argc, char *argv[])
     }
 
     for (int i=0; i<500; i++) {
-        _ABSEARCH::ABState::ABzob[i] = myrand();
+        KhetState::ABzob[i] = myrand();
     }
 
     //this will be reading input in the background

@@ -4,10 +4,10 @@
 namespace _ABSEARCH {
     /*
     aborts currently running alpha beta search
-    */
+    
     static void abortSearch() {
         global_abort->abort();
-    }
+		}*/
     //can be called to get the index of the best known move so far
     //using the callback function on ABSearch() may be easier, but this is slightly
     //more up to date as the callback is invoked only when a round of iterative
@@ -16,6 +16,7 @@ namespace _ABSEARCH {
         return bestmove;
     }
 
+ #ifdef HASH
     static int recUsable(ttRec *tt, int depth, int beta)
     {
         if (tt->quality < depth) return 0;
@@ -296,7 +297,7 @@ namespace _ABSEARCH {
             search_done = 0;
 
             
-            score = root_search g, depth );
+            score = root_search( g, depth );
 
             nc = 0;
             for (int i = 0; i < __cilkrts_get_nworkers(); ++i)
@@ -467,13 +468,13 @@ namespace _ABSEARCH {
 #endif
         //too deep
         if (depth <= 0) {
-            return next->evaluate();
+            return next->ks->evaluate();
         }
 
         next->ks->getPossibleStates(next_moves);
 
         if(next_moves.size() == 0) {
-            return next->evaluate(); //won game?
+            return next->ks->evaluate(); //won game?
         }
         //flip AB values and search negamax
         next->alpha = -prev->beta;
@@ -530,5 +531,5 @@ namespace _ABSEARCH {
         return bestscore;
 
     }
-}
+};
 

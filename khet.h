@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <tbb/mutex.h>
 #include <cilk/cilk.h>
+#include "ABState.h"
+#include "ABSearch.h"
 #include "KhetState.h"
 
 #define TOKEN_SIZE 4096
@@ -26,7 +28,7 @@ typedef struct
 
 i_buf istr;
 
-KhetState gameHis[1024];
+_ABSEARCH::ABState gameHis[1024];
 int ply;
 
 

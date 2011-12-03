@@ -100,6 +100,10 @@ KhetState* KhetState::makeMove(KhetMove m) {
      return getKhetState(this,&m);
 }
 
+KhetState* KhetState::makeMove(int i) {
+     return getKhetState(this,&moves[i]);
+}
+
 uint64_t KhetState::perft(int depth) {
     uint64_t nodec = 0;
     if (depth == 0) return 1;
@@ -128,21 +132,21 @@ void KhetState::debugMoves() {
         cout << alg(moves[i]) << endl;
     }
 }
-int KhetState::init(string strBoard) {
+string* KhetState::init(string strBoard) {
     if(strBoard.compare("classic") == 0){
-        initBoard(classicOpen);
-        return 0;
+	  //initBoard(classicOpen);
+        return &classicOpen;
     }
     else if(strBoard.compare("dynasty") == 0){
-        initBoard(dynastyOpen);
-        return 0;
+	  // initBoard(dynastyOpen);
+        return &dynastyOpen;
     }
     else if(strBoard.compare("imhotep") == 0){
-        initBoard(imhotepOpen);
-        return 0;
+	  //initBoard(imhotepOpen);
+        return &imhotepOpen;
     }
     else {
-        return 1;
+        return 0;
     }
 }
 int KhetState::evaluate() {
@@ -184,11 +188,10 @@ int KhetState::move(string algstr) {
     for(int i = 0; i < moves.size(); i++) {
         if(alg(moves[i]).compare(algstr) == 0) {
             //move is in list, should be valid
-            imake(moves[i]);
-            return 0;
+            return i;
         }
     }
-    return 1;
+    return -1;
 }
 
 int KhetState::move(KhetMove move) {

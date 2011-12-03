@@ -65,17 +65,21 @@ namespace _ABSEARCH {
     NOT threadsafe due to use of globals, running multiple searchs concurrently
     results in undefined behavior
     */
-    int ABSearch(ABState* g, int max_depth, int search_time, 
+	/*
+	int ABSearch(ABState* g, int max_depth, int search_time, 
 				 void(*f)(int best_move,int depth, int score ,int nodes, double time));
 
 	int root_search(ABState *g, int depth);
 
-	int search(ABState *prev, ABMove nextMove, int depth, Abort *parent_abort);
-	
+	int search(ABState *prev, KhetMove nextMove, int depth, Abort *parent_abort);
+	*/
     /*
     aborts currently running alpha beta search
     */
-    static void abortSearch();
+    static void abortSearch()
+	{
+		global_abort->abort();
+	}
 
     //can be called to get the index of the best known move so far
     //using the callback function on ABSearch() may be easier, but this is slightly
@@ -196,7 +200,7 @@ namespace _ABSEARCH {
     */
     int root_search(ABState *g, int depth);
 
-    int search(ABState *prev, ABMove nextMove, int depth, Abort *parent_abort);
+    int search(ABState *prev, KhetMove nextMove, int depth, Abort *parent_abort);
 
 };
 #endif//header

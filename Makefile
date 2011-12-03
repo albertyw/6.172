@@ -22,7 +22,8 @@ HEADERS := \
 OBJS := \
 	eval.o \
 	KhetState.o \
-	khet.o
+	ABSearch.o \
+	khet.o \
 
 # Blank line ends list.
 
