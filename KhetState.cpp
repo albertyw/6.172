@@ -149,8 +149,10 @@ uint64_t KhetState::perft(int depth) {
 void KhetState::debugMoves() {
   gen();
   for(int i = 0; i < moves.size(); i++) {
-    cout << alg(moves[i]) << endl;
+    cout << alg(moves[i]) << "\t";
+	
   }
+  cout << endl;
 }
 int KhetState::init(string strBoard) {
   if(strBoard.compare("classic") == 0){
@@ -204,6 +206,7 @@ string KhetState::alg(KhetMove mv) {
 //attenots to make move in the from of "a8R" or a8a7 in algstr
 //returns empty str if move is invalid, returns algrstr otherwise
 int KhetState::makeMove(string algstr) {
+  //moves_init = false;
   gen();
   for(int i = 0; i < moves.size(); i++) {
     if(alg(moves[i]).compare(algstr) == 0) {
@@ -232,7 +235,7 @@ uint64_t KhetState::hashBoard() {
       hashKey ^= zobVal;
     }
   }
-  return hashKey;
+  return hashKey^=(int)ctm;
 }
 
 //performs move on this state, assumes move is valid

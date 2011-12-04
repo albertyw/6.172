@@ -108,14 +108,15 @@ void uci() {
     if(token_count == 0) {
       continue;
     }
-    
+
+	/*
     ofstream myfile2;
     myfile2.open ("output.out" , ios::out | ios::app);
     for (int k=0; k<token_count; k++)
         myfile2 << tokens[k] << " ";
     myfile2 << "\n";
     myfile2.close();
-
+	*/
 
     if(tokens[0].compare("uki") == 0) {
       cout << "id name Khet "<< version << endl;
@@ -135,7 +136,7 @@ void uci() {
     }
     else if(tokens[0].compare("position")== 0) {
       ply = 0;
-      if(gameHis[ply].ks = KhetState::getKhetState(tokens[1]) != 0) {
+      if(gameHis[ply].ks->init(tokens[1]) != 0) {
         cout << "invalid input position" << endl;
         ofstream myfile;
         myfile.open ("output.out" , ios::out | ios::app);
@@ -153,6 +154,7 @@ void uci() {
         exit(1);
       }
       for(int i = 3; i < token_count; i++) {
+		//gameHis[ply].ks->debugMoves();
         if(uciMakeMove(&gameHis[ply], &gameHis[ply + 1], tokens[i]) != 0 ) {
           cout << s <<" Invalid move:" << tokens[i] << endl;
           ofstream myfile;

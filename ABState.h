@@ -67,7 +67,7 @@ public:
 
   ABState() {
     his = 0;
-    ks = 0;
+    ks = new KhetState();
   }
 };
 
