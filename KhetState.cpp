@@ -5,13 +5,19 @@ map<uint64_t,KhetState*> KhetState::khet_cache;
 // Iterates through all keys of cache and verifies that the hashed board
 // is hashed to the correct key
 void KhetState::checkKhetCache() {
-    uint_64t maxKey = -1;
-    int  = KhetState* KhetState::getKhetState(uint64_t key);
-    for (int i = 0; i < maxKey; i++) {
-        if (khet_cache.count(key)) {
-            assert(key = khet_cache[key]->hashboard());
-	}
+    map<uint64_t,KhetState*>::iterator it;
+
+    int errors = 0;
+    int total = 0;
+
+    for (it=khet_cache.begin(); it!=khet_cache.end(); it++) {
+        total++;
+        if ((*it).second->hashBoard() != (*it).first)
+            errors++;
     }
+
+    assert(errors==0);
+    printf("%u errors in cache out of %u total\n",errors,total);
 }
 
 

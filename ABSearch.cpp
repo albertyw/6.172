@@ -66,7 +66,7 @@ namespace _ABSEARCH {
 
             search_done = 0;
 
-            
+            KhetState::checkKhetCache();
             score = root_search( g, depth );
 
             nc = 0;
