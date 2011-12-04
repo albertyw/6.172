@@ -131,6 +131,7 @@ int KhetState::makeMove(string algstr) {
     if(alg(moves[i]).compare(algstr) == 0) {
       //move is in list, should be valid
       imake(moves[i]);
+      moves_init = false;
       return 1;
     }
   }
@@ -143,6 +144,7 @@ int KhetState::makeMove(KhetMove mv) {
     if(moves[i] == mv) {
       //move is in list, should be valid
       imake(moves[i]);
+      moves_init = false;
       return 1;
     }
   }
