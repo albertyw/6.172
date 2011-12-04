@@ -12,7 +12,7 @@ int KhetState::checkKhetCache() {
         total++;
         if ((*it).second->hashBoard() != (*it).first)
         {
-          printf("key: %lu expected %ul\n",(*it).second->hashBoard(),(*it).first);
+          printf("key: %lu expected %lu\n",(*it).second->hashBoard(),(*it).first);
                 errors++;
         }
     }
