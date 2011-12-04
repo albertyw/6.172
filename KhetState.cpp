@@ -465,15 +465,18 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
         if(targetPiece.type == PYRAMID) {
             assert(laserDir == UP || laserDir == DOWN || laserDir == LEFT || laserDir == RIGHT);
             assert(targetPiece.rot == UP || targetPiece.rot == DOWN || targetPiece.rot == LEFT || targetPiece.rot == RIGHT);
-            if(laserDir == targetPiece.rot || laserDir == (targetPiece.rot+1)%4) break; // Since pyramids can be destroyed
-            /*int incidentAngle = targetPiece.rot*2+1;
-            int reflectionAngle = laserDir*2 + 2*(incidentAngle - laserDir*2);
-            reflectionAngle = (reflectionAngle + 4) % 8;
-            laserDir = (Rotation)(reflectionAngle/2);*/
-            laserDir = (Rotation)(((laserDir*2 + 2*(targetPiece.rot*2 + 1 - laserDir*2) + 4) % 8)/2);
-            assert(laserDir == UP || laserDir == DOWN || laserDir == LEFT || laserDir == RIGHT);
-            lInfo.bounced = true;
-            continue;
+            if(laserDir == ((targetPiece.rot+2)%4) || laserDir == ((targetPiece.rot+3)%4)){
+              // Pyramid is being shot in front
+              /*int incidentAngle = targetPiece.rot*2+1;
+              int reflectionAngle = laserDir*2 + 2*(incidentAngle - laserDir*2);
+              reflectionAngle = (reflectionAngle + 4) % 8;
+              laserDir = (Rotation)(reflectionAngle/2);*/
+              laserDir = (Rotation)(((laserDir*2 + 2*(targetPiece.rot*2 + 1 - laserDir*2) + 4) % 8)/2);
+              assert(laserDir == UP || laserDir == DOWN || laserDir == LEFT || laserDir == RIGHT);
+              lInfo.bounced = true;
+              continue;
+            }
+             // Pyramid is being shot in back
             /*
             switch(laserDir) {
             case UP:
