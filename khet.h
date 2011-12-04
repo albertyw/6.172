@@ -28,7 +28,7 @@ typedef struct
 
 i_buf istr;
 
-KhetState gameHis[1024];
+_ABSEARCH::ABState gameHis[1024];
 int ply;
 
 

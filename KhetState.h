@@ -6,15 +6,17 @@
 #define KHET_STATE_HDR
 
 #include <string>
+#include <string.h>
 #include <vector>
-#include "ABSearch.h"
-#include "ABState.h"
+//#include "ABSearch.h"
+//#include "ABState.h"
 #include "eval.h"
 #include "globals.h"
 #include <locale>
 #include <sstream>
 #include <iostream>
 #include <assert.h>
+#include <stdlib.h>
 #include <map>
 
 
@@ -106,6 +108,7 @@ class KhetState {
     //returns empty str if move is invalid, returns algrstr otherwise
     int makeMove(string algstr);
 	KhetState* makeMove(KhetMove *mv);
+	KhetState* makeMove(int index);
 
     bool isWon();
     //counts the number of possible states up to depth. Useful for 

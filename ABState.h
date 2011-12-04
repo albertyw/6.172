@@ -1,6 +1,8 @@
 #ifndef ABSTATE_H
 #define ABSTATE_H
 
+
+#include "KhetState.h"
 #include <vector>
 namespace _ABSEARCH {
 /*

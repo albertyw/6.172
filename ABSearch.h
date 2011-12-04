@@ -373,7 +373,7 @@ global var bestmove
 */
 int root_search(ABState *g, int depth);
 
-int search(ABState *prev, ABState *next, int depth );
+int search(ABState *prev, KhetMove *next_move, int depth );
 
 
 

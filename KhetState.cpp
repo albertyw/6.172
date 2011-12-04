@@ -54,7 +54,7 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
   gameOver = s->gameOver;
 
   //maintain history pointer for repeition checking
-  his = s;
+  //his = s;
   //move should be valid
   //string result*/
   key = s->key;
@@ -65,7 +65,7 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
 }
 KhetState::KhetState(string strBoard) : moves_init(false) {
   initBoard(strBoard);
-  his = NULL;
+  //his = NULL;
   //first move
   gen();
   key = hashBoard();
@@ -184,16 +184,20 @@ int KhetState::makeMove(string algstr) {
   for(int i = 0; i < moves.size(); i++) {
     if(alg(moves[i]).compare(algstr) == 0) {
       //move is in list, should be valid
-      imake(moves[i]);
-      moves_init = false;
-      return 1;
+      //imake(moves[i]);
+      //moves_init = false;
+      return i;
     }
   }
-  return 0;
+  return -1;
 }
 
 KhetState* KhetState::makeMove(KhetMove *mv) {
   return getKhetState(this,mv);
+}
+
+KhetState* KhetState::makeMove(int index) {
+  return getKhetState(this,&moves[index]);
 }
 
 uint64_t KhetState::hashBoard() {

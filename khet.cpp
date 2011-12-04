@@ -32,7 +32,7 @@ string getInput() {
 }
 
 void notate_helper(int best_move, int depth, int score, int nc, double tt) {
-  best_move_buf = gameHis[ply].getMove(best_move);
+  best_move_buf = gameHis[ply].ks->getMove(best_move);
   INFO(( stdout, 
         "info depth %d time %7.1f score %6d  currmove %s nodes %d nps %7.1f \n", 
         depth, 
@@ -44,15 +44,17 @@ void notate_helper(int best_move, int depth, int score, int nc, double tt) {
 }
 //uses old state and move to generate a new state and save it in newState
 //returns 0 if ok, 1 otherwise
-int uciMakeMove(KhetState* prevState, KhetState* newState, string move) {
+int uciMakeMove(_ABSEARCH::ABState* prevState, _ABSEARCH::ABState* newState, string move) {
 
   *newState = *prevState;
   //maintain history for repetition checking
   newState->his = prevState;
-  if(newState->makeMove(move)) {
-    return 0;
+  int index = newState->ks->makeMove(move);
+  if(index<0) {
+    return 1;
   }
-  return 1;
+  newState->ks = newState->ks->makeMove(index);
+  return 0;
     
 }
 
@@ -121,7 +123,7 @@ void uci() {
     }
     else if(tokens[0].compare("position")== 0) {
       ply = 0;
-      if(gameHis[ply].init(tokens[1]) != 0) {
+      if(gameHis[ply].ks->init(tokens[1]) != 0) {
         cout << "invalid input position" << endl;
         exit(1);
       }
@@ -180,22 +182,22 @@ void uci() {
     }
     //prints out string format of board
     else if(tokens[0].compare("display")== 0) {
-      string bd = gameHis[ply].getBoardPrettyStr();
+      string bd = gameHis[ply].ks->getBoardPrettyStr();
       cout << bd << endl ;
     }
     //forces a move generation of current board
     else if(tokens[0].compare("gen")== 0) {
-      cout << gameHis[ply].gen() << endl;
+      cout << gameHis[ply].ks->gen() << endl;
     }
     else if(tokens[0].compare("quit")== 0) {
       exit(0);
     }
     //Not part of uki, prints out list of all possible moves form current state
     else if(tokens[0].compare("debug")== 0) {
-      gameHis[ply].debugMoves();
+      gameHis[ply].ks->debugMoves();
     }
     else if(tokens[0].compare("eval")== 0) {
-      cout << gameHis[ply].evaluate() <<endl;
+      cout << gameHis[ply].ks->evaluate() <<endl;
     }
     //The perft command is not part of UKI
     //prints out the counts of possible moves at from current position at depth i
@@ -203,7 +205,7 @@ void uci() {
     else if(tokens[0].compare("perft")== 0) {
       int depth = 1;
       for(;depth < atoi(tokens[1].c_str()); depth++) {
-        uint64_t nodec = gameHis[ply].perft(depth);
+        uint64_t nodec = gameHis[ply].ks->perft(depth);
         cout << "Node count for depth " << depth << " is " << nodec << endl;
       }
     }
