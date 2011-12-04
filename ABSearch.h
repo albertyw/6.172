@@ -65,9 +65,9 @@ at the end of each search to depth n from 1..max_depth
 NOT threadsafe due to use of globals, running multiple searchs concurrently
 results in undefined behavior
 */
-template <class ABState>
-int ABSearch(ABState* g, int max_depth, int search_time, 
-    void(*f)(int best_move,int depth, int score ,int nodes, double time));
+// template <class ABState>
+// int ABSearch(ABState* g, int max_depth, int search_time, 
+//     void(*f)(int best_move,int depth, int score ,int nodes, double time));
 
 /*
 aborts currently running alpha beta search
