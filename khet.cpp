@@ -53,7 +53,11 @@ int uciMakeMove(_ABSEARCH::ABState* prevState, _ABSEARCH::ABState* newState, str
   if(index<0) {
     return 1;
   }
-  *newState = _ABSEARCH::ABState(prevState,index);
+  _ABSEARCH::ABState a = _ABSEARCH::ABState(prevState,index);
+  newState->ks = a.ks;
+  newState->key = a.key;
+  newState->his = prevState;
+  newState->ply_of_game = a.ply_of_game;
   return 0;
     
 }
@@ -153,7 +157,7 @@ void uci() {
           cout << s <<" Invalid move:" << tokens[i] << endl;
           ofstream myfile;
           myfile.open ("output.out", ios::out | ios::app);
-          myfile << "invalid move. " << tokens[i] << " from move " << i << " out of " << token_count << "\n";
+          myfile << "invalid move. " << tokens[i] << " from move " << i << " out of " << token_count << "on move " << ply << "\n";
     		  for (int k=0; k<token_count; k++)
     			 myfile << tokens[k] << " ";
 		      myfile << "\n";
