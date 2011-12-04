@@ -79,7 +79,7 @@ bool KhetState::isWon() {
   return gameOver;
 }
     
-void KhetState::getPossibleStates(std::vector<KhetState> &v) {
+void KhetState::getPossibleStates(std::vector<KhetState*> &v) {
   if(gameOver) return;
   gen();
   for(int i = 0; i < moves.size(); i++) {

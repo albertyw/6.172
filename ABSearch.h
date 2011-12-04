@@ -489,15 +489,15 @@ int root_search(ABState *g, int depth) {
 	 g->alpha = -INF;
 	 g->beta = INF;
      
-	 std::vector<ABState> next_moves;
+	 std::vector<ABState*> next_moves;
    g->getPossibleStates(next_moves);
 /* search best move from previous iteration first */
-   ABState* best_state = &next_moves[prev_move];
+   ABState* best_state = next_moves[prev_move];
    root_search_catch( search( g, best_state, depth-1), prev_move);
 	 
    /* cycle through all the moves */
    for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
-     ABState* next_state = &next_moves[stateInd]; 
+     ABState* next_state = next_moves[stateInd]; 
      if( stateInd != prev_move) { 
       if( root_search_catch( search(g, next_state, depth-1),stateInd ) )
         break;
@@ -518,7 +518,7 @@ int search(ABState *prev, ABState *next, int depth ) {
     int sc;
     int old_alpha = prev->alpha;
     int saw_rep = 0;
-    std::vector<ABState> next_moves;
+    std::vector<ABState*> next_moves;
 	
     auto search_catch = [&] (int ret_sc, int ret_mv )->int {
       m.lock(); 
@@ -592,7 +592,7 @@ int search(ABState *prev, ABState *next, int depth ) {
   //paranoia check to make sure hash table isnot  malfunctioning
   if(next_moves.size() > ht_move ) {
     //focus all resources on searching this move first
-    sc = search( next, &next_moves.at(ht_move), depth-1);
+    sc = search( next, next_moves[ht_move], depth-1);
     sc = -sc;
     if (sc > bestscore) { 
       bestscore = sc;
@@ -617,7 +617,7 @@ int search(ABState *prev, ABState *next, int depth ) {
 
 	for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
     if (stateInd != ht_move) {   /* don't try this again */
-      ABState* next_state = &next_moves[stateInd]; 
+      ABState* next_state = next_moves[stateInd]; 
       //search catch returns 1 if pruned
       if( search_catch( search(next, next_state, depth-1), stateInd) ) break;
     }
