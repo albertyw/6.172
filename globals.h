@@ -4,6 +4,7 @@
 #include <iostream>
 #define FILE_COUNT 10
 #define RANK_COUNT 8
+#define SEGFAULT *((int*)0) = 99;
 
 typedef uint64_t u64;
 using namespace std;

@@ -4,7 +4,7 @@ map<uint64_t,KhetState*> KhetState::khet_cache;
 
 // Iterates through all keys of cache and verifies that the hashed board
 // is hashed to the correct key
-void KhetState::checkKhetCache() {
+int KhetState::checkKhetCache() {
     map<uint64_t,KhetState*>::iterator it;
 
     int errors = 0;
@@ -13,11 +13,15 @@ void KhetState::checkKhetCache() {
     for (it=khet_cache.begin(); it!=khet_cache.end(); it++) {
         total++;
         if ((*it).second->hashBoard() != (*it).first)
+		{
+			printf("key: %lu expected %ul\n",(*it).second->hashBoard(),(*it).first);
             errors++;
+		}
     }
 
     assert(errors==0);
     printf("%u errors in cache out of %u total\n",errors,total);
+	return errors;
 }
 
 
@@ -80,6 +84,7 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
     //move should be valid
     //string result*/ 
     key = s->key;
+	assert(key != hashBoard());
     imake(*mv); 
     //assert(result.compare("") != 0);
 }
@@ -242,23 +247,39 @@ void KhetState::imake(KhetMove mv) {
     //move piece
 	KhetPiece origPiece = board[mv.fromFile][mv.fromRank];
     KhetPiece targetPiece = board[mv.toFile][mv.toRank];
-    key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
-    key ^= KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
+    
     if(targetPiece.type != EMPTY &&
             mv.fromRot == mv.toRot) {//if its rotation target wont be empty
         assert(origPiece.type == SCARAB);
         assert(targetPiece.type == ANUBIS || targetPiece.type == PYRAMID);
         //scarab swap
+		key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
+		key ^= KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
         board[mv.fromFile][mv.fromRank] = targetPiece;
         board[mv.toFile][mv.toRank] = origPiece;
+		key ^= KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
+		key ^= KhetState::zob[mv.toFile][mv.toRank][board[mv.toFile][mv.toRank].id()];
     }
     else {
-        board[mv.fromFile][mv.fromRank].type = EMPTY;
-        board[mv.toFile][mv.toRank] = origPiece;  
-        board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
+		if (mv.fromRot != mv.toRot)
+		{
+			key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
+			board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
+			key ^= KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
+		} else
+		{
+			key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
+			key ^= KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
+			board[mv.fromFile][mv.fromRank].type = EMPTY;
+			board[mv.toFile][mv.toRank] = origPiece;  
+			board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
+			key ^= KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
+			key ^= KhetState::zob[mv.toFile][mv.toRank][board[mv.toFile][mv.toRank].id()];
+		}
+        
+	
     }
-    key ^= KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
-    key ^= KhetState::zob[mv.toFile][mv.toRank][board[mv.toFile][mv.toRank].id()];
+	assert(key==hashBoard());
 
    
     //shoot laser
@@ -322,6 +343,7 @@ void KhetState::imake(KhetMove mv) {
     }
     //change player
     ctm = (ctm == RED) ? SILVER : RED;
+	assert(key==hashBoard());
 }
 
 /**

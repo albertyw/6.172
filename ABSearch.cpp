@@ -66,8 +66,9 @@ namespace _ABSEARCH {
 
             search_done = 0;
 
-            KhetState::checkKhetCache();
+            assert(KhetState::checkKhetCache()==0);
             score = root_search( g, depth );
+			assert(KhetState::checkKhetCache()==0);
 
             nc = 0;
             for (int i = 0; i < __cilkrts_get_nworkers(); ++i)
