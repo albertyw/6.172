@@ -80,8 +80,8 @@ typedef struct LaserHitInfo {
 // } KhetMove;
 
 
-
-typedef uint32_t KhetMove;
+#define KhetMove uint32_t
+//typedef uint32_t KhetMove;
 // bits      object
 // 14-17     fFile
 // 11-13     fRank
@@ -95,39 +95,39 @@ KhetMove makeKhetMove(int fFile, int fRank, int fRot, int tFile, int tRank,int t
 }
 
 inline
-unsigned int getFromFile(KhetMove)
+unsigned int getFromFile(KhetMove mv)
 {
-  return (KhetMove>>14);
+  return (mv>>14);
 }
 
 inline
-unsigned int getFromRank(KhetMove)
+unsigned int getFromRank(KhetMove mv)
 {
-  return (KhetMove>>11)&0x7;
+  return (mv>>11)&0x7;
 }
 
 inline
-unsigned int getFromRot(KhetMove)
+unsigned int getFromRot(KhetMove mv)
 {
-  return (KhetMove>>9)&0x3;
+  return (mv>>9)&0x3;
 }
 
 inline
-unsigned int getToFile(KhetMove)
+unsigned int getToFile(KhetMove mv)
 {
-  return (KhetMove>>5)&0xf;
+  return (mv>>5)&0xf;
 }
 
 inline
-unsigned int getToRank(KhetMove)
+unsigned int getToRank(KhetMove mv)
 {
-  return (KhetMove>>2)&0x7;
+  return (mv>>2)&0x7;
 }
 
 inline
-unsigned int getToRot(KhetMove)
+unsigned int getToRot(KhetMove mv)
 {
-  return (KhetMove)&0x3;
+  return (mv)&0x3;
 }
 
 // inline

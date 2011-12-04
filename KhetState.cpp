@@ -198,7 +198,7 @@ string KhetState::alg(KhetMove mv) {
   }
   else {
     mvstream << fileLetters[getToFile(mv)];
-    mvstream << getToFile(mv) + 1;
+    mvstream << getToRank(mv) + 1;
   }
   return mvstream.str();
 }
