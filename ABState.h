@@ -27,15 +27,10 @@ http://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
 */
 
 typedef uint64_t u64;
-template<class GameState>
 class ABState {
 public:
-	void getPossibleStates(std::vector<GameState> &v ) {
-    static_cast<GameState*>(this)->getPossibleStates(v);
-  }
-	int evaluate() {
-    return static_cast<GameState*>(this)->evaluate();
-  }
+  KhetState *ks;
+
 	//These fields are used by the Search gunctions and so must be public
   //use friendship instead?
   int alpha;
@@ -43,8 +38,28 @@ public:
   //this key is used for ABSearches hashtable, should be update appropriately
   //by derived class code
   u64     key;
+
   ABState  *his;         /* pointer to last position for repeat check*/
   int     ply_of_game;
+
+  ABState(KhetState* _ks) {
+    ks = _ks;
+    ply_of_game = 0;
+    key = ks->key^ply_of_game;
+    his = 0;
+  }
+
+  ABState(ABState *prev, KhetMove *mv) {
+    ks = prev->ks->makeMove(mv);
+    ply_of_game = prev->ply_of_game+1;
+    key = ks->key^ply_of_game;
+    his = prev;
+  }
+
+  ABState() {
+    his = 0;
+    ks = new KhetState();
+  }
 };
 
 }

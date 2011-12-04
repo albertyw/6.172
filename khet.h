@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <tbb/mutex.h>
 #include <cilk/cilk.h>
+#include "ABSearch.h"
+#include "ABState.h"
 #include "KhetState.h"
 
 #define TOKEN_SIZE 4096

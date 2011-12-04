@@ -56,16 +56,19 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
   //maintain history pointer for repeition checking
   his = s;
   //move should be valid
-  //string result*/ 
+  //string result*/
+  key = s->key;
   imake(*mv);
   //assert(result.compare("") != 0);
   gen();
+  key = hashBoard();
 }
 KhetState::KhetState(string strBoard) : moves_init(false) {
   initBoard(strBoard);
   his = NULL;
   //first move
   gen();
+  key = hashBoard();
 }
 string KhetState::getMove(int i) {
   return alg(moves[i]);
@@ -84,6 +87,15 @@ void KhetState::getPossibleStates(std::vector<KhetState*> &v) {
   gen();
   for(int i = 0; i < moves.size(); i++) {
     v.push_back(getKhetState(this, &moves[i]));
+  }
+  return;
+}
+
+void KhetState::getPossibleMoves(std::vector<KhetMove*> &v) {
+  if(gameOver) return;
+  gen();
+  for(int i = 0; i < moves.size(); i++) {
+    v.push_back(&moves[i]);
   }
   return;
 }
@@ -180,17 +192,8 @@ int KhetState::makeMove(string algstr) {
   return 0;
 }
 
-int KhetState::makeMove(KhetMove mv) {
-  gen();
-  for(int i = 0; i < moves.size(); i++) {
-    if(moves[i] == mv) {
-      //move is in list, should be valid
-      imake(moves[i]);
-      moves_init = false;
-      return 1;
-    }
-  }
-  return 0;
+KhetState* KhetState::makeMove(KhetMove *mv) {
+  return getKhetState(this,mv);
 }
 
 uint64_t KhetState::hashBoard() {
@@ -221,7 +224,7 @@ void KhetState::imake(KhetMove mv) {
     board[mv.toFile][mv.toRank] = mv.piece;  
     board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
   }
-  key = hashBoard();
+  
   //shoot laser
   KhetPiece sph;
   int tFile;
@@ -277,6 +280,7 @@ void KhetState::imake(KhetMove mv) {
   }
   //change player
   ctm = (ctm == RED) ? SILVER : RED;
+  key = hashBoard();
 }
 
 LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation laserDir,

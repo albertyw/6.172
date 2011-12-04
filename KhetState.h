@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include "ABSearch.h"
+#include "ABState.h"
 #include "eval.h"
 #include "globals.h"
 #include <locale>
@@ -77,7 +78,7 @@ static string imhotepOpen = "hd------adpdadsd----"
                             "----SuAuPuAu------Hu w";
  
 
-class KhetState : public _ABSEARCH::ABState<KhetState> {
+class KhetState {
   public:
 
 	static KhetState* getKhetState(uint64_t key);
@@ -94,6 +95,7 @@ class KhetState : public _ABSEARCH::ABState<KhetState> {
     //functions needed by ABState
     int evaluate();
     void getPossibleStates(std::vector<KhetState*> &v);
+    void getPossibleMoves(std::vector<KhetMove*> &v);
 
     string getMove(int i);
     string getCtmStr();
@@ -103,7 +105,7 @@ class KhetState : public _ABSEARCH::ABState<KhetState> {
     //attempts to make move in the from of "a8a7" or "a8r" in algstr
     //returns empty str if move is invalid, returns algrstr otherwise
     int makeMove(string algstr);
-	int makeMove(KhetMove mv);
+	KhetState* makeMove(KhetMove *mv);
 
     bool isWon();
     //counts the number of possible states up to depth. Useful for 
@@ -121,7 +123,7 @@ class KhetState : public _ABSEARCH::ABState<KhetState> {
                                     int closestToFile, int closestToRank);
     
     static map<uint64_t,KhetState*> khet_cache;
-
+    uint64_t key;
     
   private:
     uint64_t hashBoard();

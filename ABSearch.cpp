@@ -136,17 +136,17 @@ int root_search(ABState *g, int depth) {
 	 g->alpha = -INF;
 	 g->beta = INF;
      
-	 std::vector<ABState*> next_moves;
-   g->getPossibleStates(next_moves);
+	 std::vector<KhetMove*> next_moves;
+   g->ks->getPossibleMoves(next_moves);
 /* search best move from previous iteration first */
-   ABState* best_state = next_moves[prev_move];
-   root_search_catch( search( g, best_state, depth-1), prev_move);
+   // KhetMove* best_state = next_moves[prev_move];
+   root_search_catch( search( g, next_moves[prev_move], depth-1), prev_move);
 	 
    /* cycle through all the moves */
    for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
-     ABState* next_state = next_moves[stateInd]; 
+     // ABState* next_state = next_moves[stateInd]; 
      if( stateInd != prev_move) { 
-      if( root_search_catch( search(g, next_state, depth-1),stateInd ) )
+      if( root_search_catch( search(g, next_moves[stateInd], depth-1),stateInd ) )
         break;
      }
    }
@@ -156,7 +156,7 @@ int root_search(ABState *g, int depth) {
 	 
 }
 
-int search(ABState *prev, ABState *next, int depth ) {
+int search(ABState *prev, KhetMove *next_move, int depth ) {
 
     tbb::mutex m;
     int local_best_move = INF;
@@ -164,7 +164,8 @@ int search(ABState *prev, ABState *next, int depth ) {
     int sc;
     int old_alpha = prev->alpha;
     int saw_rep = 0;
-    std::vector<ABState*> next_moves;
+    std::vector<KhetMove*> next_moves;
+    ABState *next;
 	
     auto search_catch = [&] (int ret_sc, int ret_mv )->int {
       m.lock(); 
@@ -195,6 +196,9 @@ int search(ABState *prev, ABState *next, int depth ) {
   }
 	
 	nodec[__cilkrts_get_worker_number()]++;
+
+	next = new ABState(prev,next_move);
+
   //   repeat mate test 
 #ifdef REP
   //Code for repatition wins would follow, if needed
@@ -203,7 +207,7 @@ int search(ABState *prev, ABState *next, int depth ) {
   // a row
     int count = 0;
     for ( ABState* rep = next->his; rep; rep = rep->his) {
-      if (rep->key == next->key) {
+      if (rep->ks->key == next->ks->key) {
         count++;
       }
     } 
@@ -223,12 +227,12 @@ int search(ABState *prev, ABState *next, int depth ) {
 	
   //too deep
   if (depth <= 0) {
-    return next->evaluate();
+    return next->ks->evaluate();
   }
-  next->getPossibleStates(next_moves);
+  next->ks->getPossibleMoves(next_moves);
 
   if(next_moves.size() == 0) {
-    return next->evaluate(); //won game?
+    return next->ks->evaluate(); //won game?
   }
   //flip AB values and search negamax
   next->alpha = -prev->beta;
@@ -263,9 +267,9 @@ int search(ABState *prev, ABState *next, int depth ) {
 
 	for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
     if (stateInd != ht_move) {   /* don't try this again */
-      ABState* next_state = next_moves[stateInd]; 
+      // ABState* next_state = next_moves[stateInd]; 
       //search catch returns 1 if pruned
-      if( search_catch( search(next, next_state, depth-1), stateInd) ) break;
+      if( search_catch( search(next, next_moves[stateInd], depth-1), stateInd) ) break;
     }
 	}
 #if HASH
