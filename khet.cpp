@@ -125,16 +125,28 @@ void uci() {
       ply = 0;
       if(gameHis[ply].ks->init(tokens[1]) != 0) {
         cout << "invalid input position" << endl;
+        ofstream myfile;
+        myfile.open ("output.out" | ios::out | ios::app);
+        myfile << "invalid position. " << tokens[1] << "\n";
+        myfile.close();
         exit(1);
       }
       //make all moves inlist
       if(token_count > 2 && tokens[2].compare("moves") != 0) {
         cout << "invalid input position" << endl;
+        ofstream myfile;
+        myfile.open ("output.out" | ios::out | ios::app);
+        myfile << "invalid input position. " << tokens[2] << "\n";
+        myfile.close();
         exit(1);
       }
       for(int i = 3; i < token_count; i++) {
         if(uciMakeMove(&gameHis[ply], &gameHis[ply + 1], tokens[i]) != 0 ) {
           cout << s <<" Invalid move:" << tokens[i] << endl;
+          ofstream myfile;
+          myfile.open ("output.out" | ios::out | ios::app);
+          myfile << "invalid move. " << tokens[i] << " from move " << i << "\n";
+          myfile.close();
           exit(1);
         }
         ply++;

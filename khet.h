@@ -8,6 +8,7 @@
 #include "ABSearch.h"
 #include "ABState.h"
 #include "KhetState.h"
+#include <fstream>
 
 #define TOKEN_SIZE 4096
 #define I_BUF_SIZE 512
