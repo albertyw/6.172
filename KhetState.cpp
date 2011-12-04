@@ -41,6 +41,7 @@ KhetState* KhetState::getKhetState(KhetState* s, KhetMove* mv)
     uint64_t key = newstate->key;
   if (KhetState::khet_cache.count(key))
   {
+    assert(newstate->getBoardStr().compare(KhetState::khet_cache[key]->getBoardStr())==0);
     delete newstate;
     return KhetState::khet_cache[key];
   } else
@@ -57,6 +58,7 @@ KhetState* KhetState::getKhetState(string b)
 
   if (KhetState::khet_cache.count(key))
   {
+    assert(newstate->getBoardStr().compare(KhetState::khet_cache[key]->getBoardStr())==0);
     delete newstate;
     return KhetState::khet_cache[key];
   } else
