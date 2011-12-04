@@ -7,10 +7,10 @@ adjudicate = 2000
 # --
 
 player = depth_1
-invoke = ./khetplayer.dailey
-depth = 6
+invoke = ./khetplayer
+depth = 2
 
 player = depth_2
 invoke = ./khetplayer.dailey
-depth = 6
+depth = 2
 
