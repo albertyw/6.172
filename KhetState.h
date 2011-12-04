@@ -104,7 +104,7 @@ class KhetState {
     string getCtmStr();
 
     
-    static uint64_t zob[FILE_COUNT][RANK_COUNT][150];
+    static uint64_t zob[FILE_COUNT][RANK_COUNT][100];
     //attempts to make move in the from of "a8a7" or "a8r" in algstr
     //returns empty str if move is invalid, returns algrstr otherwise
     int makeMove(string algstr);
@@ -130,6 +130,12 @@ class KhetState {
     uint64_t key;
     
   private:
+    inline
+    static bool isOppositeDirections(Rotation dir1, Rotation dir2)
+    {
+      return (((int)dir1)^((int) dir2)) == 2;
+    }
+
     uint64_t hashBoard();
 
     bool moves_init;
@@ -144,7 +150,6 @@ class KhetState {
     string alg(KhetMove mv);
     bool gameOver;
     PlayerColor winner;
-    bool isOppositeDirections(Rotation dir1, Rotation dir2);
 };
 
 #endif //KHET_STATE_HDR
