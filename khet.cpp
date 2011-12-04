@@ -53,7 +53,7 @@ int uciMakeMove(_ABSEARCH::ABState* prevState, _ABSEARCH::ABState* newState, str
   if(index<0) {
     return 1;
   }
-  newState = new ABState(prevState,index);
+  *newState = _ABSEARCH::ABState(prevState,index);
   return 0;
     
 }
