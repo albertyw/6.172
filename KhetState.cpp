@@ -12,7 +12,7 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) {
   his = s;
   //move should be valid
   //string result*/ 
-  makeMove(alg(*mv)); 
+  imake(*mv);
   //assert(result.compare("") != 0);
 }
 KhetState::KhetState(string strBoard) {
@@ -51,7 +51,7 @@ uint64_t KhetState::perft(int depth) {
   for(int i = 0; i < moves.size(); i++) {
     KhetState next = localState;
 
-    next.makeMove(alg(moves[i]));
+    next.imake(moves[i]);
     if(next.isWon()){
       nodec += 1;
     }
