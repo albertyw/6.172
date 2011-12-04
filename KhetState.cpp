@@ -257,8 +257,8 @@ void KhetState::imake(KhetMove mv) {
         board[mv.toFile][mv.toRank] = origPiece;  
         board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
     }
-    key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
-    key ^= KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
+    key ^= KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
+    key ^= KhetState::zob[mv.toFile][mv.toRank][board[mv.toFile][mv.toRank].id()];
 
    
     //shoot laser
