@@ -1,6 +1,48 @@
 #include "KhetState.h"
 
+map<uint64_t,KhetState*> KhetState::khet_cache;
 
+KhetState* KhetState::getKhetState(uint64_t key)
+{
+  if (KhetState::khet_cache.count(key))
+  {
+    return KhetState::khet_cache[key];
+  } else
+  {
+    return (KhetState*)0;
+  }
+}
+
+KhetState* KhetState::getKhetState(KhetState* s, KhetMove* mv)
+{
+    KhetState* newstate = new KhetState(s,mv);
+    uint64_t key = newstate->key;
+  if (KhetState::khet_cache.count(key))
+  {
+    delete newstate;
+    return KhetState::khet_cache[key];
+  } else
+  {
+    KhetState::khet_cache[key] = newstate;
+    return newstate;
+  }
+}
+
+KhetState* KhetState::getKhetState(string b)
+{
+    KhetState* newstate = new KhetState(b);
+    uint64_t key = newstate->key;
+
+  if (KhetState::khet_cache.count(key))
+  {
+    delete newstate;
+    return KhetState::khet_cache[key];
+  } else
+  {
+    KhetState::khet_cache[key] = newstate;
+    return newstate;
+  }
+}
 
 
 KhetState::KhetState() : moves_init(false){
@@ -41,7 +83,7 @@ void KhetState::getPossibleStates(std::vector<KhetState> &v) {
   if(gameOver) return;
   gen();
   for(int i = 0; i < moves.size(); i++) {
-    v.push_back(KhetState(this, &moves[i]));
+    v.push_back(getKhetState(this, &moves[i]));
   }
   return;
 }

@@ -14,6 +14,7 @@
 #include <sstream>
 #include <iostream>
 #include <assert.h>
+#include <map>
 
 
 using namespace std;
@@ -117,6 +118,9 @@ class KhetState : public _ABSEARCH::ABState<KhetState> {
     //returns a LaserHitInfo with information about hit piece if any
     static LaserHitInfo fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
                                     int closestToFile, int closestToRank);
+    
+    static map<uint64_t,KhetState*> khet_cache;
+
     
   private:
     uint64_t hashBoard();
