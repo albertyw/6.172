@@ -138,7 +138,6 @@ int root_search(ABState *g, int depth) {
 	 g->beta = INF;
      
 	 unsigned int num_moves = g->ks->getNumPossibleMoves();
-   g->ks->getPossibleMoves(next_moves);
 /* search best move from previous iteration first */
    // KhetMove* best_state = next_moves[prev_move];
    root_search_catch( search( g, prev_move, depth-1), prev_move);

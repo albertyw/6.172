@@ -157,8 +157,8 @@ void KhetState::getPossibleMoves(std::vector<KhetMove> &v) {
   return;
 }
 
-unsigned int KhetState::getNumMoves() {
-  if(gameOver) return0;
+unsigned int KhetState::getNumPossibleMoves() {
+  if(gameOver) return 0;
   gen();
   return moves.size();
 }
