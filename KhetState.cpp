@@ -68,8 +68,14 @@ KhetState* KhetState::getKhetState(string b)
   }
 }
 
+KhetState::~Khetstate()
+{
+  // might cause segfauls
+  delete moves;
+}
 
 KhetState::KhetState() : moves_init(false){
+  moves = new vector<KhetMove>();
 }
 
 KhetState::KhetState(KhetState* s, KhetMove mv) : moves_init(false) {
@@ -81,6 +87,7 @@ KhetState::KhetState(KhetState* s, KhetMove mv) : moves_init(false) {
   //his = s;
   //move should be valid
   //string result*/
+  moves = new vector<KhetMove>();
   key = s->key;
   imake(mv);
   //assert(result.compare("") != 0);
@@ -88,6 +95,7 @@ KhetState::KhetState(KhetState* s, KhetMove mv) : moves_init(false) {
   // key = hashBoard();
 }
 KhetState::KhetState(string strBoard) : moves_init(false) {
+  moves = new vector<KhetMove>();
   initBoard(strBoard);
   //his = NULL;
   //first move
@@ -95,7 +103,7 @@ KhetState::KhetState(string strBoard) : moves_init(false) {
   key = hashBoard();
 }
 string KhetState::getMove(int i) {
-  return alg(moves[i]);
+  return alg((*moves)[i]);
 }
 
 string KhetState::getCtmStr() {
@@ -109,8 +117,8 @@ bool KhetState::isWon() {
 void KhetState::getPossibleStates(std::vector<KhetState*> &v) {
   if(gameOver) return;
   gen();
-  for(int i = 0; i < moves.size(); i++) {
-    v.push_back(getKhetState(this, moves[i]));
+  for(int i = 0; i < moves->size(); i++) {
+    v.push_back(getKhetState(this, (*moves)[i]));
   }
   return;
 }
@@ -118,10 +126,14 @@ void KhetState::getPossibleStates(std::vector<KhetState*> &v) {
 void KhetState::getPossibleMoves(std::vector<KhetMove> &v) {
   if(gameOver) return;
   gen();
-  for(int i = 0; i < moves.size(); i++) {
-    v.push_back(moves[i]);
+  for(int i = 0; i < moves->size(); i++) {
+    v.push_back((*moves)[i]);
   }
   return;
+}
+
+vector<KhetMove>* KhetState::getPossibleMoves() {
+  return moves;
 }
 
 uint64_t KhetState::perft(int depth) {
@@ -130,11 +142,11 @@ uint64_t KhetState::perft(int depth) {
 
   gen();
   KhetState localState = *this;
-  if(depth == 1) return moves.size();
-  for(int i = 0; i < moves.size(); i++) {
+  if(depth == 1) return moves->size();
+  for(int i = 0; i < moves->size(); i++) {
     KhetState next = localState;
 
-    next.imake(moves[i]);
+    next.imake((*moves)[i]);
     if(next.isWon()){
       nodec += 1;
     }
@@ -148,8 +160,8 @@ uint64_t KhetState::perft(int depth) {
 
 void KhetState::debugMoves() {
   gen();
-  for(int i = 0; i < moves.size(); i++) {
-    cout << alg(moves[i]) << "\t";
+  for(int i = 0; i < moves->size(); i++) {
+    cout << alg((*moves)[i]) << "\t";
 	
   }
   cout << endl;
@@ -208,8 +220,8 @@ string KhetState::alg(KhetMove mv) {
 int KhetState::makeMove(string algstr) {
   //moves_init = false;
   gen();
-  for(int i = 0; i < moves.size(); i++) {
-    if(alg(moves[i]).compare(algstr) == 0) {
+  for(int i = 0; i < moves->size(); i++) {
+    if(alg((*moves)[i]).compare(algstr) == 0) {
       //move is in list, should be valid
       //imake(moves[i]);
       //moves_init = false;
@@ -224,7 +236,7 @@ KhetState* KhetState::makeMove(KhetMove mv) {
 }
 
 KhetState* KhetState::makeMove(int index) {
-  return getKhetState(this,moves[index]);
+  return getKhetState(this,(*moves)[index]);
 }
 
 uint64_t KhetState::hashBoard() {
@@ -540,10 +552,10 @@ void KhetState::initBoard(string strBoard) {
 //generates all moves and returns the number of moves 
 long KhetState::gen() 
 {
-  if (moves_init) return moves.size();
+  if (moves_init) return moves->size();
   moves_init = true;
   PlayerColor fctm = ctm;
-  moves.clear();
+  moves->clear();
 
   for (int rank = 0; rank < 8; rank++) {
     for (int file = 0; file < 10; file++) {
@@ -557,21 +569,21 @@ long KhetState::gen()
           //rotations only
           if(fctm == SILVER) {
             if(rot1 == UP || rot1 == LEFT) {
-               moves.push_back(makeKhetMove( file, rank, piece.rot,
+               moves->push_back(makeKhetMove( file, rank, piece.rot,
                                               file, rank, rot1));
             }
             if(rot2 == UP || rot2 == LEFT) {
-              moves.push_back(makeKhetMove(file, rank, piece.rot,
+              moves->push_back(makeKhetMove(file, rank, piece.rot,
                                               file, rank, rot2));
             }
           }
           else {
             if(rot1 == DOWN || rot1 == RIGHT) {
-              moves.push_back(makeKhetMove(file, rank, piece.rot,
+              moves->push_back(makeKhetMove(file, rank, piece.rot,
                                               file, rank, rot1));
             }
             if(rot2 == DOWN || rot2 == RIGHT) {
-              moves.push_back(makeKhetMove(file, rank, piece.rot,
+              moves->push_back(makeKhetMove(file, rank, piece.rot,
                                               file, rank, rot2));
             }
           }
@@ -617,7 +629,7 @@ long KhetState::gen()
 
                 if(otherPiece.type == PYRAMID || otherPiece.type == ANUBIS) {
                   //valid swap move
-                  moves.push_back(makeKhetMove(file, rank, piece.rot, 
+                  moves->push_back(makeKhetMove(file, rank, piece.rot, 
                                                   toFile, toRank, piece.rot));
                 }
                 else {
@@ -626,15 +638,15 @@ long KhetState::gen()
               }
               else {
                 //valid move
-                moves.push_back(makeKhetMove(file, rank, piece.rot, 
+                moves->push_back(makeKhetMove(file, rank, piece.rot, 
                                                 toFile, toRank, piece.rot));
               }
             }
           }
           //rotations 
-          moves.push_back(makeKhetMove(file, rank, piece.rot, file, rank, rot1));
+          moves->push_back(makeKhetMove(file, rank, piece.rot, file, rank, rot1));
           //if(piece.type != SCARAB) {
-          moves.push_back(makeKhetMove(file, rank, piece.rot, file, rank, rot2));
+          moves->push_back(makeKhetMove(file, rank, piece.rot, file, rank, rot2));
           //}
           break;
         default:
@@ -643,7 +655,7 @@ long KhetState::gen()
 
     }	
   }
-  return moves.size();
+  return moves->size();
 }
 
 string KhetState::getBoardStr() {
