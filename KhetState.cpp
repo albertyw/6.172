@@ -259,8 +259,8 @@ void KhetState::imake(KhetMove mv) {
         board[mv.toFile][mv.toRank] = origPiece;
 		key ^= KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
 		key ^= KhetState::zob[mv.toFile][mv.toRank][board[mv.toFile][mv.toRank].id()];
-    }
-    else {
+    } else {
+        assert(mv.fromRot==mv.toRot||(mv.fromRank==mv.toRank && mv.fromFile==mv.toFile));
 		if (mv.fromRot != mv.toRot)
 		{
 			key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
@@ -272,7 +272,7 @@ void KhetState::imake(KhetMove mv) {
 			key ^= KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
 			board[mv.fromFile][mv.fromRank].type = EMPTY;
 			board[mv.toFile][mv.toRank] = origPiece;  
-			board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
+			//board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
 			key ^= KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
 			key ^= KhetState::zob[mv.toFile][mv.toRank][board[mv.toFile][mv.toRank].id()];
 		}
