@@ -143,6 +143,7 @@ public:
     int closestToFile, int closestToRank);
     //static CacheEntry khet_cache[KHET_CACHE_SIZE];
 	static map<uint64_t,KhetState*> khet_cache;
+    static void checkKhetCache();
 
     u64 key;
 	

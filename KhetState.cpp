@@ -2,6 +2,26 @@
 
 map<uint64_t,KhetState*> KhetState::khet_cache;
 
+// Iterates through all keys of cache and verifies that the hashed board
+// is hashed to the correct key
+void KhetState::checkKhetCache() {
+    map<uint64_t,KhetState*>::iterator it;
+
+    int errors = 0;
+    int total = 0;
+
+    for (it=khet_cache.begin(); it!=khet_cache.end(); it++) {
+        total++;
+        if ((*it).second->hashBoard() != (*it).first)
+            errors++;
+    }
+
+    assert(errors==0);
+    printf("%u errors in cache out of %u total\n",errors,total);
+}
+
+
+
 KhetState* KhetState::getKhetState(uint64_t key)
 {
 	if (KhetState::khet_cache.count(key))
@@ -237,8 +257,8 @@ void KhetState::imake(KhetMove mv) {
         board[mv.toFile][mv.toRank] = origPiece;  
         board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
     }
-    key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
-    key ^= KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
+    key ^= KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
+    key ^= KhetState::zob[mv.toFile][mv.toRank][board[mv.toFile][mv.toRank].id()];
 
    
     //shoot laser
