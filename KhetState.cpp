@@ -71,6 +71,7 @@ KhetState* KhetState::getKhetState(string b)
 
 KhetState::KhetState() : moves_init(false) {
 	 key = hashBoard();
+     gen();
 
 }
 
@@ -85,7 +86,8 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
     //string result*/ 
     key = s->key;
 	assert(key != hashBoard());
-    imake(*mv); 
+    imake(*mv);
+    gen();
     //assert(result.compare("") != 0);
 }
 
@@ -93,7 +95,7 @@ KhetState::KhetState(string strBoard) : moves_init(false) {
     initBoard(strBoard);
     // his = NULL;
     key = hashBoard();
-
+    gen();
     //first move
 }
 
@@ -115,7 +117,7 @@ bool KhetState::isWon() {
 
 void KhetState::getPossibleStates(std::vector<KhetMove> &v) {
     if(gameOver) return;
-    gen();
+    // gen();
     for(int i = 0; i < moves.size(); i++) {
         v.push_back(moves[i]);
     }
@@ -134,7 +136,7 @@ uint64_t KhetState::perft(int depth) {
     uint64_t nodec = 0;
     if (depth == 0) return 1;
 
-    gen();
+    // gen();
     KhetState *localState = this;
     if(depth == 1) return moves.size();
     for(int i = 0; i < moves.size(); i++) {
@@ -152,7 +154,7 @@ uint64_t KhetState::perft(int depth) {
 }
 
 void KhetState::debugMoves() {
-    gen();
+    // gen();
     for(int i = 0; i < moves.size(); i++) {
         cout << alg(moves[i]) << endl;
     }
@@ -209,7 +211,7 @@ string KhetState::alg(KhetMove mv) {
 //attenots to make move in the from of "a8R" or a8a7 in algstr
 //returns empty str if move is invalid, returns algrstr otherwise
 int KhetState::move(string algstr) {
-    gen();
+    // gen();
     for(int i = 0; i < moves.size(); i++) {
         if(alg(moves[i]).compare(algstr) == 0) {
             //move is in list, should be valid
@@ -346,6 +348,9 @@ void KhetState::imake(KhetMove mv) {
 	assert(key==hashBoard());
 }
 
+
+
+#ifdef NEWLASER
 /**
  * board is the current board that the laser is fired on
  * tFile, tRank is where the laser starts
@@ -538,6 +543,154 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
     //piece got hit
     return lInfo;
 }
+
+#else
+
+LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
+                                    int closestToFile, int closestToRank) {
+    KhetPiece targetPiece;
+    targetPiece.type = EMPTY;
+
+    LaserHitInfo lInfo;
+    lInfo.bounced = false;
+    lInfo.hitPiece.type = EMPTY;
+    lInfo.closest = 999;
+
+    while(true) {
+        switch(laserDir) {
+        case LEFT:
+            tFile--;
+            break;
+        case RIGHT:
+            tFile++;
+            break;
+        case UP:
+            tRank++;
+            break;
+        case DOWN:
+            tRank--;
+            break;
+        default:
+            cout << "Unkown laserDirection " << laserDir << endl;
+        }
+        int distanceFromLaser = abs(tFile - closestToFile) + abs(tRank - closestToRank); 
+        if(distanceFromLaser < lInfo.closest) {
+            lInfo.closest = distanceFromLaser;
+        }
+        if(tFile > 9 || tFile < 0) break; //off board, clean miss
+        if(tRank > 7 || tRank < 0) break;
+
+        //what piece is hit by laser?
+        targetPiece = board[tFile][tRank];
+
+        if(targetPiece.type == EMPTY) continue; //laser goes through empty sq
+
+        //a piece was hit
+
+        //check for reflections
+        if(targetPiece.type == SCARAB) {
+            switch(laserDir) {
+            case UP:
+                //scarab has two mirrors
+                if (targetPiece.rot == UP || targetPiece.rot == DOWN) {
+                    laserDir = RIGHT;
+                }
+                else {
+                    laserDir = LEFT;
+                }
+                break;
+            case DOWN:  
+                if (targetPiece.rot == UP || targetPiece.rot == DOWN) {
+                    laserDir = LEFT;
+                }
+                else {
+                    laserDir = RIGHT;
+                }
+                break;
+            case LEFT:
+                if (targetPiece.rot == UP || targetPiece.rot == DOWN) {
+                    laserDir = DOWN;
+                }
+                else {
+                    laserDir = UP;
+                }
+                break;
+            case RIGHT:
+                if (targetPiece.rot == UP || targetPiece.rot == DOWN) {
+                    laserDir = UP;
+                }
+                else {
+                    laserDir = DOWN;
+                }
+                break;
+            default:
+                cout << "bad bounce" << endl;
+            }
+            lInfo.bounced = true;
+            continue;//scarabs always bounec laser, cant be removed
+        }
+        if(targetPiece.type == PYRAMID) {
+            switch(laserDir) {
+            case UP:
+                if(targetPiece.rot == DOWN) {
+                    laserDir = RIGHT;
+                    lInfo.bounced = true;
+                    continue;
+                }
+                else if(targetPiece.rot == LEFT) {
+                    laserDir = LEFT;
+                    lInfo.bounced = true;
+                    continue;
+                }
+                break;
+            case DOWN:
+                if(targetPiece.rot == UP) {
+                    laserDir = LEFT;
+                    lInfo.bounced = true;
+                    continue;
+                }
+                else if(targetPiece.rot == RIGHT) {
+                    laserDir = RIGHT;
+                    lInfo.bounced = true;
+                    continue;
+                }
+                break;
+            case LEFT:
+                if(targetPiece.rot == RIGHT) {
+                    laserDir = UP;
+                    lInfo.bounced = true;
+                    continue;
+                }
+                else if(targetPiece.rot == DOWN) {
+                    laserDir = DOWN;
+                    lInfo.bounced = true;
+                    continue;
+                }
+                break;
+            case RIGHT:
+                if(targetPiece.rot == LEFT) {
+                    laserDir = DOWN;
+                    lInfo.bounced = true;
+                    continue;
+                }
+                else if(targetPiece.rot == UP) {
+                    laserDir = UP;
+                    lInfo.bounced = true;
+                    continue;
+                }
+                break;
+            }
+        }
+        lInfo.hitPiece = targetPiece;
+        lInfo.hitFile = tFile;
+        lInfo.hitRank = tRank;
+        lInfo.laserDir = laserDir;
+        break;
+    }
+    //piece got hit
+    return lInfo;
+}
+#endif
 
 void KhetState::initBoard(string strBoard) {
     gameOver = false;

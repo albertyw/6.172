@@ -141,19 +141,19 @@ namespace _ABSEARCH {
         g->alpha = -INF;
         g->beta = INF;
         
-        std::vector<KhetMove> next_moves;
-        g->ks->getPossibleStates(next_moves);
+        std::vector<KhetMove> *next_moves = &(g->ks->moves);
+        // g->ks->getPossibleStates(next_moves);
         /* search best move from previous iteration first */
         //ABState* best_state = g->makeMove(next_moves[prev_move]);
-        root_search_catch( search( g, next_moves[prev_move], depth-1, global_abort), prev_move);
+        root_search_catch( search( g, (*next_moves)[prev_move], depth-1, global_abort), prev_move);
         
         /* cycle through all the moves */
         // #pragma cilk grainsize = 1
-        for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
+        for(int stateInd = 0; stateInd < next_moves->size(); stateInd++ ) {
 			//ABState* next_state = g->makeMove(next_moves[stateInd]); 
             if( stateInd != prev_move) { 
                 // root_search_catch( search(g, next_state, depth-1, global_abort),stateInd);
-                root_search_catch( search(g, next_moves[stateInd], depth-1, global_abort),stateInd);
+                root_search_catch( search(g, (*next_moves)[stateInd], depth-1, global_abort),stateInd);
 
             }
         }
@@ -172,7 +172,7 @@ namespace _ABSEARCH {
         int sc;
         int old_alpha = prev->alpha;
         int saw_rep = 0;
-        std::vector<KhetMove> next_moves;
+        std::vector<KhetMove> *next_moves;
         Abort *local_abort = new Abort(parent_abort);
 		ABState *next;
 
@@ -243,9 +243,10 @@ namespace _ABSEARCH {
             return next->ks->evaluate();
         }
 
-        next->ks->getPossibleStates(next_moves);
+        next_moves = &(next->ks->moves);
+        // next->ks->getPossibleStates(next_moves);
 
-        if(next_moves.size() == 0) {
+        if(next_moves->size() == 0) {
             return next->ks->evaluate(); //won game?
         }
         //flip AB values and search negamax
@@ -254,9 +255,9 @@ namespace _ABSEARCH {
 
         // try best move  from hash first always 0 if no hashing 
         //paranoia check to make sure hash table isnot  malfunctioning
-        if(next_moves.size() > ht_move ) {
+        if(next_moves->size() > ht_move ) {
             //focus all resources on searching this move first
-		  sc = search( next, next_moves[ht_move], depth-1, local_abort);
+		  sc = search( next, (*next_moves)[ht_move], depth-1, local_abort);
             sc = -sc;
             if (sc > bestscore) { 
                 bestscore = sc;
@@ -271,7 +272,7 @@ namespace _ABSEARCH {
         else {
             //error inhash
             ht_move = 0;
-            sc = search( next, next_moves[ht_move], depth-1, local_abort);
+            sc = search( next, (*next_moves)[ht_move], depth-1, local_abort);
             sc = -sc;
             if (sc > bestscore) { 
                 bestscore = sc;
@@ -292,12 +293,12 @@ namespace _ABSEARCH {
         }
 
         // #pragma cilk grainsize = 1
-        for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
+        for(int stateInd = 0; stateInd < next_moves->size(); stateInd++ ) {
             if (stateInd != ht_move) {   /* don't try this again */
 				//ABState* next_state = next->makeMove(next_moves[stateInd]); 
                 //search catch returns 1 if pruned
                 // search_catch( search(next, next_state, depth-1, local_abort), stateInd);
-                if (search_catch( search(next, next_moves[stateInd], depth-1, local_abort), stateInd)) break;
+                if (search_catch( search(next, (*next_moves)[stateInd], depth-1, local_abort), stateInd)) break;
             }
         }
 #if HASH
