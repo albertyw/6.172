@@ -1,4 +1,4 @@
-cpus = 12
+cpus = 1
 title = Example
 openings = 50
 adjudicate = 200         

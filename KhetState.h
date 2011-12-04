@@ -96,7 +96,8 @@ class KhetState : public _ABSEARCH::ABState<KhetState> {
     static uint64_t zob[FILE_COUNT][RANK_COUNT][150];
     //attempts to make move in the from of "a8a7" or "a8r" in algstr
     //returns empty str if move is invalid, returns algrstr otherwise
-    string makeMove(string algstr);
+    int makeMove(string algstr);
+	int makeMove(KhetMove mv);
     bool isWon();
     //counts the number of possible states up to depth. Useful for 
     //debugging move generator
