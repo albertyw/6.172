@@ -89,7 +89,7 @@ class KhetState {
     static KhetState* getKhetState(string b);
 
     KhetState();
-    KhetState(KhetState* s, KhetMove* mv);
+    KhetState(KhetState* s, KhetMove mv);
     KhetState(string b);
     int init(string b);
     string getBoardStr();
@@ -108,7 +108,7 @@ class KhetState {
     //attempts to make move in the from of "a8a7" or "a8r" in algstr
     //returns empty str if move is invalid, returns algrstr otherwise
     int makeMove(string algstr);
-	KhetState* makeMove(KhetMove *mv);
+	KhetState* makeMove(KhetMove mv);
 	KhetState* makeMove(int index);
 
     bool isWon();

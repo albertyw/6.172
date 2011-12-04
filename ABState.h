@@ -51,7 +51,7 @@ public:
     his = 0;
   }
 
-  ABState(ABState *prev, KhetMove *mv) {
+  ABState(ABState *prev, KhetMove mv) {
     ks = prev->ks->makeMove(mv);
     ply_of_game = prev->ply_of_game+1;
     key = ks->key^ply_of_game;

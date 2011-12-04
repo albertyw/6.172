@@ -82,7 +82,7 @@ KhetState::KhetState(KhetState* s, KhetMove mv) : moves_init(false) {
   //move should be valid
   //string result*/
   key = s->key;
-  imake(*mv);
+  imake(mv);
   //assert(result.compare("") != 0);
   gen();
   // key = hashBoard();
@@ -110,16 +110,16 @@ void KhetState::getPossibleStates(std::vector<KhetState*> &v) {
   if(gameOver) return;
   gen();
   for(int i = 0; i < moves.size(); i++) {
-    v.push_back(getKhetState(this, &moves[i]));
+    v.push_back(getKhetState(this, moves[i]));
   }
   return;
 }
 
-void KhetState::getPossibleMoves(std::vector<KhetMove*> &v) {
+void KhetState::getPossibleMoves(std::vector<KhetMove> &v) {
   if(gameOver) return;
   gen();
   for(int i = 0; i < moves.size(); i++) {
-    v.push_back(&moves[i]);
+    v.push_back(moves[i]);
   }
   return;
 }
@@ -219,12 +219,12 @@ int KhetState::makeMove(string algstr) {
   return -1;
 }
 
-KhetState* KhetState::makeMove(KhetMove *mv) {
+KhetState* KhetState::makeMove(KhetMove mv) {
   return getKhetState(this,mv);
 }
 
 KhetState* KhetState::makeMove(int index) {
-  return getKhetState(this,&moves[index]);
+  return getKhetState(this,moves[index]);
 }
 
 uint64_t KhetState::hashBoard() {

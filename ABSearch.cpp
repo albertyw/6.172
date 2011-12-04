@@ -137,7 +137,7 @@ int root_search(ABState *g, int depth) {
 	 g->alpha = -INF;
 	 g->beta = INF;
      
-	 std::vector<KhetMove*> next_moves;
+	 std::vector<KhetMove> next_moves;
    g->ks->getPossibleMoves(next_moves);
 /* search best move from previous iteration first */
    // KhetMove* best_state = next_moves[prev_move];
@@ -157,7 +157,7 @@ int root_search(ABState *g, int depth) {
 	 
 }
 
-int search(ABState *prev, KhetMove *next_move, int depth ) {
+int search(ABState *prev, KhetMove next_move, int depth ) {
 
     tbb::mutex m;
     int local_best_move = INF;
@@ -165,7 +165,7 @@ int search(ABState *prev, KhetMove *next_move, int depth ) {
     int sc;
     int old_alpha = prev->alpha;
     int saw_rep = 0;
-    std::vector<KhetMove*> next_moves;
+    std::vector<KhetMove> next_moves;
     ABState *next;
 	
     auto search_catch = [&] (int ret_sc, int ret_mv )->int {
