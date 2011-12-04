@@ -146,6 +146,7 @@ public:
     static int checkKhetCache();
 
     u64 key;
+	vector<KhetMove> moves;
 	
 private:
     inline
@@ -159,7 +160,7 @@ private:
     KhetPiece strToPiece(string sq);
     void initBoard(string board); 
     
-    vector<KhetMove> moves;
+    
     bool moves_init;
 
     //performs move on this state, assumes move is valid

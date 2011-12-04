@@ -71,7 +71,7 @@ KhetState* KhetState::getKhetState(string b)
 
 KhetState::KhetState() : moves_init(false) {
 	 key = hashBoard();
-     gen();
+     //gen();
 
 }
 
@@ -85,7 +85,7 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
     //move should be valid
     //string result*/ 
     key = s->key;
-	assert(key != hashBoard());
+	assert(key == hashBoard());
     imake(*mv);
     gen();
     //assert(result.compare("") != 0);
