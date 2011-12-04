@@ -85,7 +85,7 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
   imake(*mv);
   //assert(result.compare("") != 0);
   gen();
-  key = hashBoard();
+  // key = hashBoard();
 }
 KhetState::KhetState(string strBoard) : moves_init(false) {
   initBoard(strBoard);
@@ -240,78 +240,106 @@ uint64_t KhetState::hashBoard() {
 
 //performs move on this state, assumes move is valid
 void KhetState::imake(KhetMove mv) {
-  //move piece
-  KhetPiece targetPiece = board[mv.toFile][mv.toRank];
-  if(targetPiece.type != EMPTY &&
-      mv.fromRot == mv.toRot) {//if its rotation target wont be empty
-    assert(mv.piece.type == SCARAB);
-    assert(targetPiece.type == ANUBIS || targetPiece.type == PYRAMID);
-    //scarab swap
-    board[mv.fromFile][mv.fromRank] = targetPiece;
-    board[mv.toFile][mv.toRank] = mv.piece;
-  }
-  else {
-    board[mv.fromFile][mv.fromRank].type = EMPTY;
-    board[mv.toFile][mv.toRank] = mv.piece;  
-    board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
-  }
+    //move piece
+  KhetPiece origPiece = board[mv.fromFile][mv.fromRank];
+    KhetPiece targetPiece = board[mv.toFile][mv.toRank];
+    
+    if(targetPiece.type != EMPTY &&
+            mv.fromRot == mv.toRot) {//if its rotation target wont be empty
+        assert(origPiece.type == SCARAB);
+        assert(targetPiece.type == ANUBIS || targetPiece.type == PYRAMID);
+        //scarab swap
+    key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
+    key ^= KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
+        board[mv.fromFile][mv.fromRank] = targetPiece;
+        board[mv.toFile][mv.toRank] = origPiece;
+    key ^= KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
+    key ^= KhetState::zob[mv.toFile][mv.toRank][board[mv.toFile][mv.toRank].id()];
+    }
+    else {
+    if (mv.fromRot != mv.toRot)
+    {
+      key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
+      board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
+      key ^= KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
+    } else
+    {
+      key ^= KhetState::zob[mv.fromFile][mv.fromRank][origPiece.id()];
+      key ^= KhetState::zob[mv.toFile][mv.toRank][targetPiece.id()];
+      board[mv.fromFile][mv.fromRank].type = EMPTY;
+      board[mv.toFile][mv.toRank] = origPiece;  
+      board[mv.toFile][mv.toRank].rot = (Rotation)mv.toRot;//mv.piece is original piece
+      key ^= KhetState::zob[mv.fromFile][mv.fromRank][board[mv.fromFile][mv.fromRank].id()];
+      key ^= KhetState::zob[mv.toFile][mv.toRank][board[mv.toFile][mv.toRank].id()];
+    }
+        
   
-  //shoot laser
-  KhetPiece sph;
-  int tFile;
-  int tRank;
-  //set inital laser location
-	if(ctm == SILVER) {
-    sph = board[9][0];
-    tFile = 9;
-    tRank = 0;
-  } else {
-    sph = board[0][7];
-    tFile = 0;
-    tRank = 7;
-  }
+    }
+  assert(key==hashBoard());
 
-  assert(board[tFile][tRank].type == SPHINX && board[tFile][tRank].color == ctm);
+   
+    //shoot laser
+    KhetPiece sph;
+    int tFile;
+    int tRank;
+    //set inital laser location
+    if(ctm == SILVER) {
+        sph = board[9][0];
+        tFile = 9;
+        tRank = 0;
+    } else {
+        sph = board[0][7];
+        tFile = 0;
+        tRank = 7;
+    }
 
-  Rotation laserDir = sph.rot;
+    assert(board[tFile][tRank].type == SPHINX && board[tFile][tRank].color == ctm);
 
-  LaserHitInfo laserHitInfo = fireLaser(board, tFile, tRank, laserDir, 0, 0);
-  
-  
-  //piece is to be removed from board
-  //handle it approrpiately
-  targetPiece = laserHitInfo.hitPiece;
-  tFile = laserHitInfo.hitFile;
-  tRank = laserHitInfo.hitRank;
+    Rotation laserDir = sph.rot;
 
-  switch(targetPiece.type) {
+    LaserHitInfo laserHitInfo = fireLaser(board, tFile, tRank, laserDir, 0, 0);
+
+
+    //piece is to be removed from board
+    //handle it approrpiately
+    targetPiece = laserHitInfo.hitPiece;
+    tFile = laserHitInfo.hitFile;
+    tRank = laserHitInfo.hitRank;
+
+    switch(targetPiece.type) {
     case ANUBIS:
-      //anubis can take hit on front
-      if(!isOppositeDirections(laserHitInfo.laserDir, targetPiece.rot)) {
-        board[tFile][tRank].type = EMPTY;
-      }
-      break;
+        //anubis can take hit on front
+        if(!isOppositeDirections(laserHitInfo.laserDir, targetPiece.rot)) {
+            key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
+            board[tFile][tRank].type = EMPTY;
+            key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
+        }
+        break;
     case PHAROAH:
-      board[tFile][tRank].type = EMPTY;
-      gameOver = true;
-      winner = (targetPiece.color == RED) ? SILVER : RED;
-      break;
+        key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
+        board[tFile][tRank].type = EMPTY;
+        key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
+        gameOver = true;
+        winner = (targetPiece.color == RED) ? SILVER : RED;
+        break;
     case PYRAMID:
-      board[tFile][tRank].type = EMPTY;
-      break;
+        key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
+        board[tFile][tRank].type = EMPTY;
+        key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
+        break;
     case SCARAB:
-      cout << "ERROR: scarab being removed" << endl;
-      break;
+        cout << "ERROR: scarab being removed" << endl;
+        break;
     case SPHINX://sphinx cant be affected
-      break;
+        break;
     case EMPTY:
-      break;
+        break;
     default:
-      cout << "Unknown laser target " << targetPiece.type << endl;
-  }
-  //change player
-  ctm = (ctm == RED) ? SILVER : RED;
-  key = hashBoard();
+        cout << "Unknown laser target " << targetPiece.type << endl;
+    }
+    //change player
+    ctm = (ctm == RED) ? SILVER : RED;
+    assert(key==hashBoard());
 }
 
 LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
