@@ -51,44 +51,95 @@ typedef struct LaserHitInfo {
 } LaserHitInfo;
 
 
-typedef struct KhetMove {
-  KhetPiece piece;
-  int fromFile;
-  int fromRank;
-  int fromRot;
-  int toFile;
-  int toRank;
-  int toRot;
-  KhetMove(KhetPiece p, int fFile, int fRank, int fRot, int tFile, int tRank,
-      int tRot) {
-    piece = p;
-    fromFile = fFile;
-    fromRank = fRank;
-    fromRot = fRot;
-    toFile = tFile;
-    toRank = tRank;
-    toRot = tRot;
-  }
-  void debugMove() {
-    cout << "fromFile" << fromFile;
-    cout << " fromRank" << fromRank;
-    cout << " fromRot" << fromRot;
-    cout << " toFile" << toFile;
-    cout << " toRank" << toRank;
-    cout << " toRot" << toRot << endl;
-  }
-} KhetMove;
+// typedef struct KhetMove {
+//   KhetPiece piece;
+//   int fromFile;
+//   int fromRank;
+//   int fromRot;
+//   int toFile;
+//   int toRank;
+//   int toRot;
+//   KhetMove(KhetPiece p, int fFile, int fRank, int fRot, int tFile, int tRank,
+//       int tRot) {
+//     piece = p;
+//     fromFile = fFile;
+//     fromRank = fRank;
+//     fromRot = fRot;
+//     toFile = tFile;
+//     toRank = tRank;
+//     toRot = tRot;
+//   }
+//   void debugMove() {
+//     cout << "fromFile" << fromFile;
+//     cout << " fromRank" << fromRank;
+//     cout << " fromRot" << fromRot;
+//     cout << " toFile" << toFile;
+//     cout << " toRank" << toRank;
+//     cout << " toRot" << toRot << endl;
+//   }
+// } KhetMove;
+
+
+
+typedef uint32_t KhetMove;
+// bits      object
+// 14-17     fFile
+// 11-13     fRank
+// 9-10      fRot
+// 5-8       tFile
+// 2-4       tRank
+// 0-1       tRot
+inline
+KhetMove makeKhetMove(int fFile, int fRank, int fRot, int tFile, int tRank,int tRot) {
+  return (uint32_t)((fFile<<14)|(fRank<<11)|(fRot<<9)|(tFile<<5)|(tRank<<2)|(tRot));
+}
 
 inline
-bool operator==(const KhetMove lhs, const KhetMove rhs)
+unsigned int getFromFile(KhetMove)
 {
-    return lhs.fromFile == rhs.fromFile &&
-            lhs.fromRank == rhs.fromRank &&
-            lhs.fromRot == rhs.fromRot &&
-            lhs.toFile == rhs.toFile &&
-            lhs.toRank == rhs.toRank &&
-     lhs.toRot == rhs.toRot;
+  return (KhetMove>>14);
 }
+
+inline
+unsigned int getFromRank(KhetMove)
+{
+  return (KhetMove>>11)&0x7;
+}
+
+inline
+unsigned int getFromRot(KhetMove)
+{
+  return (KhetMove>>9)&0x3;
+}
+
+inline
+unsigned int getToFile(KhetMove)
+{
+  return (KhetMove>>5)&0xf;
+}
+
+inline
+unsigned int getToRank(KhetMove)
+{
+  return (KhetMove>>2)&0x7;
+}
+
+inline
+unsigned int getToRot(KhetMove)
+{
+  return (KhetMove)&0x3;
+}
+
+// inline
+// bool operator==(const KhetMove lhs, const KhetMove rhs)
+// {
+//     return lhs.fromFile == rhs.fromFile &&
+//             lhs.fromRank == rhs.fromRank &&
+//             lhs.fromRot == rhs.fromRot &&
+//             lhs.toFile == rhs.toFile &&
+//             lhs.toRank == rhs.toRank &&
+//      lhs.toRot == rhs.toRot;
+// }
 
 
 typedef KhetPiece Board[FILE_COUNT][RANK_COUNT];
