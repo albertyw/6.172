@@ -146,6 +146,9 @@ void uci() {
           ofstream myfile;
           myfile.open ("output.out", ios::out | ios::app);
           myfile << "invalid move. " << tokens[i] << " from move " << i << "\n";
+		  for (int k=0; k<token_count; k++)
+			myfile << tokens[k] << " ";
+		  myfile << "\n";
           myfile.close();
           exit(1);
         }
