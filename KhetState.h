@@ -83,6 +83,7 @@ static string imhotepOpen = "hd------adpdadsd----"
 class KhetState {
   public:
 
+    static int checkKhetCache();
 	static KhetState* getKhetState(uint64_t key);
     static KhetState* getKhetState(KhetState* s, KhetMove* mv);
     static KhetState* getKhetState(string b);

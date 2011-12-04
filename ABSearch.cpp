@@ -63,8 +63,9 @@ int ABSearch(ABState* g, int max_depth, int search_time,
     int nc;
 
 
-    
+    assert(KhetState::checkKhetCache()==0);
     score = root_search( g, depth );
+    assert(KhetState::checkKhetCache()==0);
 
     nc = 0;
     for (int i = 0; i < __cilkrts_get_nworkers(); ++i)
