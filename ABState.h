@@ -58,6 +58,13 @@ public:
     his = prev;
   }
 
+  ABState(ABState *prev, int move) {
+    ks = prev->ks->makeMove(move);
+    ply_of_game = prev->ply_of_game+1;
+    key = ks->key^ply_of_game;
+    his = prev;
+  }
+
   ABState() {
     his = 0;
     ks = new KhetState();

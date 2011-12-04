@@ -46,14 +46,14 @@ void notate_helper(int best_move, int depth, int score, int nc, double tt) {
 //returns 0 if ok, 1 otherwise
 int uciMakeMove(_ABSEARCH::ABState* prevState, _ABSEARCH::ABState* newState, string move) {
 
-  *newState = *prevState;
+  // *newState = *prevState;
   //maintain history for repetition checking
-  newState->his = prevState;
-  int index = newState->ks->makeMove(move);
+  // newState->his = prevState;
+  int index = prevState->ks->makeMove(move);
   if(index<0) {
     return 1;
   }
-  newState->ks = newState->ks->makeMove(index);
+  newState = new ABState(prevState,index);
   return 0;
     
 }
