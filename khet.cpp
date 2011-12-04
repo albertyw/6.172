@@ -135,7 +135,7 @@ void uci() {
     }
     else if(tokens[0].compare("position")== 0) {
       ply = 0;
-      if(gameHis[ply].ks->init(tokens[1]) != 0) {
+      if(gameHis[ply].ks = KhetState::getKhetState(tokens[1]) != 0) {
         cout << "invalid input position" << endl;
         ofstream myfile;
         myfile.open ("output.out" , ios::out | ios::app);
