@@ -120,18 +120,28 @@ string KhetState::alg(KhetMove mv) {
 
 //attenots to make move in the from of "a8R" or a8a7 in algstr
 //returns empty str if move is invalid, returns algrstr otherwise
-string KhetState::makeMove(string algstr) {
-  string s = "";
+int KhetState::makeMove(string algstr) {
   gen();
   for(int i = 0; i < moves.size(); i++) {
     if(alg(moves[i]).compare(algstr) == 0) {
       //move is in list, should be valid
       imake(moves[i]);
-      s = algstr;
-      break;
+      return 1;
     }
   }
-  return s;
+  return 0;
+}
+
+int KhetState::makeMove(KhetMove mv) {
+  gen();
+  for(int i = 0; i < moves.size(); i++) {
+    if(moves[i] == mv) {
+      //move is in list, should be valid
+      imake(moves[i]);
+      return 1;
+    }
+  }
+  return 0;
 }
 
 uint64_t KhetState::hashBoard() {

@@ -110,7 +110,7 @@ class KhetState : public _ABSEARCH::ABState<KhetState> {
     //pt on lasers path to this point. Used by some eval functions
     //returns a LaserHitInfo with information about hit piece if any
     static LaserHitInfo fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
-    int closestToFile, int closestToRank);
+                                    int closestToFile, int closestToRank);
     
   private:
     uint64_t hashBoard();

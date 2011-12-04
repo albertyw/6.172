@@ -9,23 +9,23 @@ typedef uint64_t u64;
 using namespace std;
 enum PieceType {
   ANUBIS = 1,
-  SCARAB,
-  PYRAMID,
-  PHAROAH,
-  SPHINX,
-  EMPTY
+  SCARAB = 2,
+  PYRAMID = 3,
+  PHAROAH = 4,
+  SPHINX = 5,
+  EMPTY = 6
 };
 
 enum PlayerColor {
   SILVER = 0,
-  RED
+  RED = 1
 };
 
 enum Rotation {
   RIGHT = 0,
-  UP,
-  LEFT,
-  DOWN
+  UP = 1,
+  LEFT = 2,
+  DOWN = 3,
 };
 
 typedef struct KhetPiece {
@@ -33,7 +33,7 @@ typedef struct KhetPiece {
   Rotation rot;
   PlayerColor color;
   int id() {
-    return 100*(int)color + 10*(int)rot + (int)type;
+    return (((int)color))|(((int)rot)<<1)|(((int)type))<<3;
   }
 } KhetPiece;
 
@@ -78,6 +78,19 @@ typedef struct KhetMove {
     cout << " toRot" << toRot << endl;
   }
 } KhetMove;
+
+inline
+bool operator==(const KhetMove lhs, const KhetMove rhs)
+{
+    return lhs.fromFile == rhs.fromFile &&
+            lhs.fromRank == rhs.fromRank &&
+            lhs.fromRot == rhs.fromRot &&
+            lhs.toFile == rhs.toFile &&
+            lhs.toRank == rhs.toRank &&
+     lhs.toRot == rhs.toRot;
+}
+
+
 typedef KhetPiece Board[FILE_COUNT][RANK_COUNT];
 
 
