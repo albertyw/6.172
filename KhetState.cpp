@@ -35,7 +35,7 @@ KhetState* KhetState::getKhetState(uint64_t key)
   }
 }
 
-KhetState* KhetState::getKhetState(KhetState* s, KhetMove* mv)
+KhetState* KhetState::getKhetState(KhetState* s, KhetMove mv)
 {
     KhetState* newstate = new KhetState(s,mv);
     uint64_t key = newstate->key;
@@ -72,7 +72,7 @@ KhetState* KhetState::getKhetState(string b)
 KhetState::KhetState() : moves_init(false){
 }
 
-KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
+KhetState::KhetState(KhetState* s, KhetMove mv) : moves_init(false) {
   ctm = s->ctm;
   memcpy(board, s->board, sizeof(board));
   gameOver = s->gameOver;

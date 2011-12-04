@@ -85,7 +85,7 @@ class KhetState {
 
     static int checkKhetCache();
 	static KhetState* getKhetState(uint64_t key);
-    static KhetState* getKhetState(KhetState* s, KhetMove* mv);
+    static KhetState* getKhetState(KhetState* s, KhetMove mv);
     static KhetState* getKhetState(string b);
 
     KhetState();
@@ -98,7 +98,7 @@ class KhetState {
     //functions needed by ABState
     int evaluate();
     void getPossibleStates(std::vector<KhetState*> &v);
-    void getPossibleMoves(std::vector<KhetMove*> &v);
+    void getPossibleMoves(std::vector<KhetMove> &v);
 
     string getMove(int i);
     string getCtmStr();
