@@ -104,6 +104,14 @@ void uci() {
     if(token_count == 0) {
       continue;
     }
+    
+    ofstream myfile2;
+    myfile2.open ("output.out" , ios::out | ios::app);
+    for (int k=0; k<token_count; k++)
+        myfile2 << tokens[k] << " ";
+    myfile2 << "\n";
+    myfile2.close();
+
 
     if(tokens[0].compare("uki") == 0) {
       cout << "id name Khet "<< version << endl;
@@ -146,9 +154,9 @@ void uci() {
           ofstream myfile;
           myfile.open ("output.out", ios::out | ios::app);
           myfile << "invalid move. " << tokens[i] << " from move " << i << " out of " << token_count << "\n";
-		  for (int k=0; k<token_count; k++)
-			myfile << tokens[k] << " ";
-		  myfile << "\n";
+    		  for (int k=0; k<token_count; k++)
+    			 myfile << tokens[k] << " ";
+		      myfile << "\n";
           myfile.close();
           exit(1);
         }
