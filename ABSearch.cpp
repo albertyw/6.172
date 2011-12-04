@@ -137,16 +137,17 @@ int root_search(ABState *g, int depth) {
 	 g->alpha = -INF;
 	 g->beta = INF;
      
-	 std::vector<KhetMove> *next_moves = g->ks->getPossibleMoves();
+	 std::vector<KhetMove> next_moves;
+   g->ks->getPossibleMoves(next_moves);
 /* search best move from previous iteration first */
    // KhetMove* best_state = next_moves[prev_move];
-   root_search_catch( search( g, (*next_moves)[prev_move], depth-1), prev_move);
+   root_search_catch( search( g, next_moves[prev_move], depth-1), prev_move);
 	 
    /* cycle through all the moves */
-   for(int stateInd = 0; stateInd < next_moves->size(); stateInd++ ) {
+   for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
      // ABState* next_state = next_moves[stateInd]; 
      if( stateInd != prev_move) { 
-      if( root_search_catch( search(g, (*next_moves)[stateInd], depth-1),stateInd ) )
+      if( root_search_catch( search(g, next_moves[stateInd], depth-1),stateInd ) )
         break;
      }
    }
@@ -164,7 +165,7 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
     int sc;
     int old_alpha = prev->alpha;
     int saw_rep = 0;
-    std::vector<KhetMove> *next_moves;
+    std::vector<KhetMove> next_moves;
     ABState *next;
 	
     auto search_catch = [&] (int ret_sc, int ret_mv )->int {
@@ -229,9 +230,9 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
   if (depth <= 0) {
     return next->ks->evaluate();
   }
-  next_moves = next->ks->getPossibleMoves();
+  next->ks->getPossibleMoves(next_moves);
 
-  if(next_moves->size() == 0) {
+  if(next_moves.size() == 0) {
     return next->ks->evaluate(); //won game?
   }
   //flip AB values and search negamax
@@ -240,9 +241,9 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
   
   // try best move  from hash first always 0 if no hashing 
   //paranoia check to make sure hash table isnot  malfunctioning
-  if(next_moves->size() > ht_move ) {
+  if(next_moves.size() > ht_move ) {
     //focus all resources on searching this move first
-    sc = search( next, (*next_moves)[ht_move], depth-1);
+    sc = search( next, next_moves[ht_move], depth-1);
     sc = -sc;
     if (sc > bestscore) { 
       bestscore = sc;
@@ -265,11 +266,11 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
     return 0;
   }
 
-	for(int stateInd = 0; stateInd < next_moves->size(); stateInd++ ) {
+	for(int stateInd = 0; stateInd < next_moves.size(); stateInd++ ) {
     if (stateInd != ht_move) {   /* don't try this again */
       // ABState* next_state = next_moves[stateInd]; 
       //search catch returns 1 if pruned
-      if( search_catch( search(next, (*next_moves)[stateInd], depth-1), stateInd) ) break;
+      if( search_catch( search(next, next_moves[stateInd], depth-1), stateInd) ) break;
     }
 	}
 #if HASH

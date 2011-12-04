@@ -91,16 +91,14 @@ class KhetState {
     KhetState();
     KhetState(KhetState* s, KhetMove mv);
     KhetState(string b);
-    ~Khetstate();
     int init(string b);
     string getBoardStr();
     string getBoardPrettyStr();
 
     //functions needed by ABState
     int evaluate();
-    void getPossibleStates(vector<KhetState*> &v);
-    void getPossibleMoves(vector<KhetMove> &v);
-    vector<KhetMove>* getPossibleMoves();
+    void getPossibleStates(std::vector<KhetState*> &v);
+    void getPossibleMoves(std::vector<KhetMove> &v);
 
     string getMove(int i);
     string getCtmStr();
@@ -145,7 +143,7 @@ class KhetState {
     PlayerColor ctm; //color to move
     KhetPiece strToPiece(string sq);
     void initBoard(string board); 
-    vector<KhetMove> *moves;
+    vector<KhetMove> moves;
     //performs move on this state, assumes move is valid
     void imake(KhetMove mv);
     //converts a move into str notation
