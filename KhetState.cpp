@@ -304,49 +304,79 @@ void KhetState::imake(KhetMove mv) {
     ctm = (ctm == RED) ? SILVER : RED;
 }
 
+/**
+ * board is the current board that the laser is fired on
+ * tFile, tRank is where the laser starts
+ * laserDir is the direction the laser is fired
+ * closestToFile, closestToRank is the point that fireLaser will measure the closest the laser will get to
+ * returns a LaserHitInfo with information about hit piece if any
+ **/
 LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
                                     int closestToFile, int closestToRank) {
-    KhetPiece targetPiece;
-    targetPiece.type = EMPTY;
-
+    // Create a default Return value
     LaserHitInfo lInfo;
     lInfo.bounced = false;
     lInfo.hitPiece.type = EMPTY;
     lInfo.closest = 999;
-
+    
+    // Create variables for the while loop
+    KhetPiece targetPiece;
+    //targetPiece.type = EMPTY;
+    int distanceFromLaser;
+    int incidentAngle;
+    int reflectionAngle;
+    // Move through each block that the laser passes through
     while(true) {
+        // Move the laser to the next block it is going to
+        assert(laserDir == UP || laserDir == DOWN || laserDir == LEFT || laserDir == RIGHT);
+        assert((laserDir%2) - (((laserDir+1) & 4) >> 1) >=-1 && (laserDir%2) - (((laserDir+1) & 4) >> 1) <=  1);
+        assert(((laserDir+1)%2) - (((((laserDir+1)&3)+1)&4)>>1) >= -1 && ((laserDir+1)%2) - (((((laserDir+1)&3)+1)&4)>>1) <= 1);
+        tRank += (laserDir%2) - (((laserDir+1) & 4) >> 1);
+        tFile += ((laserDir+1)%2) - (((((laserDir+1)&3)+1)&4)>>1);
+        assert(tFile <= 10 && tFile >= -1);
+        assert(tRank <= 8 && tRank >= -1);
+        /*
         switch(laserDir) {
-        case LEFT:
-            tFile--;
-            break;
-        case RIGHT:
-            tFile++;
-            break;
-        case UP:
-            tRank++;
-            break;
-        case DOWN:
-            tRank--;
-            break;
-        default:
-            cout << "Unkown laserDirection " << laserDir << endl;
-        }
-        int distanceFromLaser = abs(tFile - closestToFile) + abs(tRank - closestToRank); 
-        if(distanceFromLaser < lInfo.closest) {
-            lInfo.closest = distanceFromLaser;
-        }
-        if(tFile > 9 || tFile < 0) break; //off board, clean miss
+          case UP:
+              tRank++;
+              break;
+          case DOWN:
+              tRank--;
+              break;
+          case LEFT:
+              tFile--;
+              break;
+          case RIGHT:
+              tFile++;
+              break;
+          //default:
+          //    cout << "Unknown laserDirection " << laserDir << endl;
+        }*/
+        
+        // Check whether the laser is off the board
+        if(tFile > 9 || tFile < 0) break;
         if(tRank > 7 || tRank < 0) break;
-
-        //what piece is hit by laser?
+        
+        // Update the least distance that the laser gets to the target piece (closestToFile, closestToRank)
+        distanceFromLaser = abs(tFile - closestToFile) + abs(tRank - closestToRank);
+        lInfo.closest = distanceFromLaser ^ ((lInfo.closest ^ distanceFromLaser) & -(lInfo.closest < distanceFromLaser)); // min of distanceFromLaser and lInfo.closest
+        
+        // what piece is hit by laser?
         targetPiece = board[tFile][tRank];
-
+        
         if(targetPiece.type == EMPTY) continue; //laser goes through empty sq
-
         //a piece was hit
-
         //check for reflections
         if(targetPiece.type == SCARAB) {
+            assert(laserDir == UP || laserDir == DOWN || laserDir == LEFT || laserDir == RIGHT);
+            assert(targetPiece.rot == UP || targetPiece.rot == DOWN || targetPiece.rot == LEFT || targetPiece.rot == RIGHT);
+            /*int incidentAngle = targetPiece.rot*2+1;
+            int reflectionAngle = laserDir*2 + 2*(incidentAngle - laserDir*2);
+            reflectionAngle = (reflectionAngle + 4) % 8;
+            laserDir = (Rotation)(reflectionAngle/2);*/
+            laserDir = (Rotation)(((laserDir*2 + 2*(targetPiece.rot*2 + 1 - laserDir*2) + 4) % 8)/2);
+            assert(laserDir == UP || laserDir == DOWN || laserDir == LEFT || laserDir == RIGHT);
+            /*
             switch(laserDir) {
             case UP:
                 //scarab has two mirrors
@@ -358,7 +388,7 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
                 }
                 break;
             case DOWN:  
-				if (targetPiece.rot == UP || targetPiece.rot == DOWN) {
+              if (targetPiece.rot == UP || targetPiece.rot == DOWN) {
                     laserDir = LEFT;
                 }
                 else {
@@ -382,12 +412,27 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
                 }
                 break;
             default:
+                // laserDir should always be UP, DOWN, LEFT, or RIGHT
                 cout << "bad bounce" << endl;
+                assert(false);
             }
+            */
             lInfo.bounced = true;
-            continue;//scarabs always bounec laser, cant be removed
+            continue;//scarabs always bounce laser, cant be removed
         }
         if(targetPiece.type == PYRAMID) {
+            assert(laserDir == UP || laserDir == DOWN || laserDir == LEFT || laserDir == RIGHT);
+            assert(targetPiece.rot == UP || targetPiece.rot == DOWN || targetPiece.rot == LEFT || targetPiece.rot == RIGHT);
+            if(laserDir == targetPiece.rot || laserDir == (targetPiece.rot+1)%4) break; // Since pyramids can be destroyed
+            /*int incidentAngle = targetPiece.rot*2+1;
+            int reflectionAngle = laserDir*2 + 2*(incidentAngle - laserDir*2);
+            reflectionAngle = (reflectionAngle + 4) % 8;
+            laserDir = (Rotation)(reflectionAngle/2);*/
+            laserDir = (Rotation)(((laserDir*2 + 2*(targetPiece.rot*2 + 1 - laserDir*2) + 4) % 8)/2);
+            assert(laserDir == UP || laserDir == DOWN || laserDir == LEFT || laserDir == RIGHT);
+            lInfo.bounced = true;
+            continue;
+            /*
             switch(laserDir) {
             case UP:
                 if(targetPiece.rot == DOWN) {
@@ -437,7 +482,7 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
                     continue;
                 }
                 break;
-            }
+            }*/
         }
         lInfo.hitPiece = targetPiece;
         lInfo.hitFile = tFile;

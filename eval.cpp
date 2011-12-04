@@ -113,9 +113,11 @@ int eval(Board b, PlayerColor ctm) {
 
     //weight for right side
     if(ctm == RED) {
+        //assert(redScore - silverScore >= 0);
         return redScore - silverScore;
     }
     else  {
+        //assert(silverScore - redScore >= 0);
         return silverScore - redScore;
     }
 }

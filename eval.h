@@ -12,6 +12,7 @@ by Don Dailey.
 
 #include "globals.h"
 #include "KhetState.h"
+#include "assert.h"
 //distance to closest corner, normalized by subtracting 3
 static int center[FILE_COUNT][RANK_COUNT] = {{-3, -2, -1, 0, 0, -1, -2, -3},
     {-2, -1, 0, 1, 1, 0, -1, -2},
