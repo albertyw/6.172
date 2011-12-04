@@ -145,7 +145,7 @@ void uci() {
           cout << s <<" Invalid move:" << tokens[i] << endl;
           ofstream myfile;
           myfile.open ("output.out", ios::out | ios::app);
-          myfile << "invalid move. " << tokens[i] << " from move " << i << "\n";
+          myfile << "invalid move. " << tokens[i] << " from move " << i << " out of " << token_count << "\n";
 		  for (int k=0; k<token_count; k++)
 			myfile << tokens[k] << " ";
 		  myfile << "\n";
