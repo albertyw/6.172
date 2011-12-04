@@ -241,6 +241,7 @@ uint64_t KhetState::hashBoard() {
 //performs move on this state, assumes move is valid
 void KhetState::imake(KhetMove mv) {
     //move piece
+  assert(key==hashBoard());
     const unsigned int fromFile = getFromFile(mv);
     const unsigned int fromRank = getFromRank(mv); 
     const unsigned int fromRot = getFromRot(mv); 
@@ -345,6 +346,7 @@ void KhetState::imake(KhetMove mv) {
     }
     //change player
     ctm = (ctm == RED) ? SILVER : RED;
+	key ^= 1;
     assert(key==hashBoard());
 }
 
@@ -512,6 +514,7 @@ void KhetState::initBoard(string strBoard) {
       ctm = RED;
     }
     gen();
+	key = hashBoard();
 }
 
 // bool KhetState::isOppositeDirections(Rotation dir1, Rotation dir2) {
