@@ -287,6 +287,12 @@ int main(int argc, char *argv[])
       }
     }
   }
+
+  //12 32 36 960 1008 40
+  //cout << sizeof(KhetPiece) << " " << sizeof(LaserHitInfo) << " ";
+  //cout << sizeof(KhetMove) << " " << sizeof(Board) << " ";
+  //cout << sizeof(KhetState) << " " << sizeof(_ABSEARCH::ABState);
+  
   //this will be reading input in the background
   cilk_spawn inputThread();
   ply = 0;
