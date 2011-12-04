@@ -1,5 +1,8 @@
 #include "KhetState.h"
 
+
+
+
 KhetState::KhetState() : moves_init(false){
 }
 
@@ -128,10 +131,10 @@ int KhetState::makeMove(string algstr) {
     if(alg(moves[i]).compare(algstr) == 0) {
       //move is in list, should be valid
       imake(moves[i]);
-      return 1;
+      return 0;
     }
   }
-  return 0;
+  return 1;
 }
 
 int KhetState::makeMove(KhetMove mv) {
@@ -140,10 +143,10 @@ int KhetState::makeMove(KhetMove mv) {
     if(moves[i] == mv) {
       //move is in list, should be valid
       imake(moves[i]);
-      return 1;
+      return 0;
     }
   }
-  return 0;
+  return 1;
 }
 
 uint64_t KhetState::hashBoard() {
