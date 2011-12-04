@@ -1,16 +1,16 @@
-cpus = 12
+cpus = 1
 title = Example
 openings = 50
-adjudicate = 2000         
+adjudicate = 200         
 
 # now we have the player definitions
 # --
 
 player = depth_1
 invoke = ./khetplayer
-depth = 2
+depth = 1
 
 player = depth_2
-invoke = ./khetplayer.dailey
-depth = 2
+invoke = ./khetplayer
+depth = 1
 

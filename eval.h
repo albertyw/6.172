@@ -6,28 +6,27 @@ near your pharaoh. Also some pieces benefit from being on the edges
 
 While there probably are better evaluators, this was the best found
 by Don Dailey. 
-*/
+ */
 #ifndef EVAL_HDR
 #define EVAL_HDR
 
 #include "globals.h"
 #include "KhetState.h"
-#include "assert.h"
 //distance to closest corner, normalized by subtracting 3
 static int center[FILE_COUNT][RANK_COUNT] = {{-3, -2, -1, 0, 0, -1, -2, -3},
-    {-2, -1, 0, 1, 1, 0, -1, -2},
-    {-1, 0, 1, 2, 2, 1, 0, -1},
-    {0, 1, 2, 3, 3, 2, 1, 0},
-    {1, 2, 3, 4, 4, 3, 2, 1},
-    {1, 2,3 ,4, 4, 3, 2, 1},
-    {0, 1,2 , 3, 3, 2, 1, 0},
-    {-1, 0, 1, 2, 2, 1, 0, -1},
-    {-2, -1, 0, 1, 1, 0, -1, -2},
-    {-3, -2, -1, 0, 0, -1, -2, -3}};
+  {-2, -1, 0, 1, 1, 0, -1, -2},
+  {-1, 0, 1, 2, 2, 1, 0, -1},
+  {0, 1, 2, 3, 3, 2, 1, 0},
+  {1, 2, 3, 4, 4, 3, 2, 1},
+  {1, 2,3 ,4, 4, 3, 2, 1},
+  {0, 1,2 , 3, 3, 2, 1, 0},
+  {-1, 0, 1, 2, 2, 1, 0, -1},
+  {-2, -1, 0, 1, 1, 0, -1, -2},
+  {-3, -2, -1, 0, 0, -1, -2, -3}};
 #define pyVal 100               //pyramid value
 
 #define enemyLaserDistance -65 //shoot laser and find closest distance to enemy 
-//pharaoh, use manhattan dist(x + y).
+                              //pharaoh, use manhattan dist(x + y).
 
 #define friendlyLaserDistance 5 //as above, but for friendly pharaoh
 
