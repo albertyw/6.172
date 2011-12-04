@@ -86,10 +86,12 @@ class KhetState {
     static int checkKhetCache();
 	static KhetState* getKhetState(uint64_t key);
     static KhetState* getKhetState(KhetState* s, KhetMove mv);
+    static KhetState* getKhetState(KhetState* s, int mvi);
     static KhetState* getKhetState(string b);
 
     KhetState();
     KhetState(KhetState* s, KhetMove mv);
+    KhetState(KhetState* s, int mvi);
     KhetState(string b);
     int init(string b);
     string getBoardStr();
@@ -99,6 +101,7 @@ class KhetState {
     int evaluate();
     void getPossibleStates(std::vector<KhetState*> &v);
     void getPossibleMoves(std::vector<KhetMove> &v);
+    unsigned int getNumPossibleMoves();
 
     string getMove(int i);
     string getCtmStr();

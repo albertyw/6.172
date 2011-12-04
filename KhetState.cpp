@@ -51,6 +51,22 @@ KhetState* KhetState::getKhetState(KhetState* s, KhetMove mv)
   }
 }
 
+KhetState* KhetState::getKhetState(KhetState* s, int mvi)
+{
+    KhetState* newstate = new KhetState(s,mvi);
+    uint64_t key = newstate->key;
+  if (KhetState::khet_cache.count(key))
+  {
+    assert(newstate->getBoardStr().compare(KhetState::khet_cache[key]->getBoardStr())==0);
+    delete newstate;
+    return KhetState::khet_cache[key];
+  } else
+  {
+    KhetState::khet_cache[key] = newstate;
+    return newstate;
+  }
+}
+
 KhetState* KhetState::getKhetState(string b)
 {
     KhetState* newstate = new KhetState(b);
@@ -87,6 +103,23 @@ KhetState::KhetState(KhetState* s, KhetMove mv) : moves_init(false) {
   gen();
   // key = hashBoard();
 }
+
+KhetState::KhetState(KhetState* s, int mvi) : moves_init(false) {
+  ctm = s->ctm;
+  memcpy(board, s->board, sizeof(board));
+  gameOver = s->gameOver;
+
+  //maintain history pointer for repeition checking
+  //his = s;
+  //move should be valid
+  //string result*/
+  key = s->key;
+  imake(s->moves[mvi]);
+  //assert(result.compare("") != 0);
+  gen();
+  // key = hashBoard();
+}
+
 KhetState::KhetState(string strBoard) : moves_init(false) {
   initBoard(strBoard);
   //his = NULL;
@@ -122,6 +155,12 @@ void KhetState::getPossibleMoves(std::vector<KhetMove> &v) {
     v.push_back(moves[i]);
   }
   return;
+}
+
+unsigned int KhetState::getNumMoves() {
+  if(gameOver) return0;
+  gen();
+  return moves.size();
 }
 
 uint64_t KhetState::perft(int depth) {
