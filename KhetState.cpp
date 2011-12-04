@@ -508,25 +508,25 @@ void KhetState::initBoard(string strBoard) {
     gen();
 }
 
-bool KhetState::isOppositeDirections(Rotation dir1, Rotation dir2) {
-  switch (dir1) {
-    case LEFT:
-      return dir2 == RIGHT;
-      break;
-    case RIGHT:
-      return dir2 == LEFT;
-      break;
-    case UP:
-      return dir2 == DOWN;
-      break;
-    case DOWN:
-      return dir2 == UP;
-      break;
-    default:
-      cout << "Err in opp dir" << endl;
-  }
-  return true;
-}
+// bool KhetState::isOppositeDirections(Rotation dir1, Rotation dir2) {
+//   switch (dir1) {
+//     case LEFT:
+//       return dir2 == RIGHT;
+//       break;
+//     case RIGHT:
+//       return dir2 == LEFT;
+//       break;
+//     case UP:
+//       return dir2 == DOWN;
+//       break;
+//     case DOWN:
+//       return dir2 == UP;
+//       break;
+//     default:
+//       cout << "Err in opp dir" << endl;
+//   }
+//   return true;
+// }
 
 //generates all moves and returns the number of moves 
 long KhetState::gen() 
