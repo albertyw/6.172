@@ -1,9 +1,9 @@
 #include "KhetState.h"
 
-KhetState::KhetState() {
+KhetState::KhetState() : moves_init(false){
 }
 
-KhetState::KhetState(KhetState* s, KhetMove* mv) {
+KhetState::KhetState(KhetState* s, KhetMove* mv) : moves_init(false) {
   ctm = s->ctm;
   memcpy(board, s->board, sizeof(board));
   gameOver = s->gameOver;
@@ -14,11 +14,13 @@ KhetState::KhetState(KhetState* s, KhetMove* mv) {
   //string result*/ 
   imake(*mv);
   //assert(result.compare("") != 0);
+  gen();
 }
-KhetState::KhetState(string strBoard) {
+KhetState::KhetState(string strBoard) : moves_init(false) {
   initBoard(strBoard);
   his = NULL;
   //first move
+  gen();
 }
 string KhetState::getMove(int i) {
   return alg(moves[i]);
@@ -393,6 +395,7 @@ void KhetState::initBoard(string strBoard) {
     else {
       ctm = RED;
     }
+    gen();
 }
 
 bool KhetState::isOppositeDirections(Rotation dir1, Rotation dir2) {
@@ -418,6 +421,8 @@ bool KhetState::isOppositeDirections(Rotation dir1, Rotation dir2) {
 //generates all moves and returns the number of moves 
 long KhetState::gen() 
 {
+  if (moves_init) return moves.size();
+  moves_init = true;
   PlayerColor fctm = ctm;
   moves.clear();
 

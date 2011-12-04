@@ -115,6 +115,8 @@ class KhetState : public _ABSEARCH::ABState<KhetState> {
     
   private:
     uint64_t hashBoard();
+
+    bool moves_init;
     Board board;
     PlayerColor ctm; //color to move
     KhetPiece strToPiece(string sq);
