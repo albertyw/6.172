@@ -613,7 +613,10 @@ long KhetState::gen()
     {
       kp = board[x];
       if (kp==0) continue;
+      file = getFile(kp);
+      rank = getRank(kp);
       rot = getRot(kp);
+      type = getType(kp);
 
       int rot1 = (rot + 1) % 4;
       int rot2 = (rot + 3) % 4;
@@ -700,7 +703,10 @@ long KhetState::gen()
     {
       if (kp==0) continue;
       kp = board[x];
+      file = getFile(kp);
+      rank = getRank(kp);
       rot = getRot(kp);
+      type = getType(kp);
 
       int rot1 = (rot + 1) % 4;
       int rot2 = (rot + 3) % 4;
