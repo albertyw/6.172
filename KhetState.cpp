@@ -100,7 +100,7 @@ KhetState::KhetState(KhetState* s, KhetMove mv) : moves_init(false) {
   key = s->key;
   imake(mv);
   //assert(result.compare("") != 0);
-  gen();
+  // gen();
   // key = hashBoard();
 }
 
@@ -116,7 +116,7 @@ KhetState::KhetState(KhetState* s, int mvi) : moves_init(false) {
   key = s->key;
   imake(s->moves[mvi]);
   //assert(result.compare("") != 0);
-  gen();
+  // gen();
   // key = hashBoard();
 }
 
@@ -124,7 +124,7 @@ KhetState::KhetState(string strBoard) : moves_init(false) {
   initBoard(strBoard);
   //his = NULL;
   //first move
-  gen();
+  // gen();
   key = hashBoard();
 }
 string KhetState::getMove(int i) {
@@ -606,7 +606,7 @@ void KhetState::initBoard(string strBoard) {
   else {
     ctm = RED;
   }
-  gen();
+  // gen();
    key = hashBoard();
 }
 
