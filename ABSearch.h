@@ -365,7 +365,6 @@ behavior
 */
 int ABSearch(ABState* g, int max_depth, int search_time, 
     void(*f)(int best_move,int depth, int score ,int nodes, double time));
-
 /*
 starts ABSearch assuming g is the root
 need this special case because this inlet should update

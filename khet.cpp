@@ -202,7 +202,7 @@ void uci() {
       }
       //try to use only a bit of your remaining time per move
       if(search_time != -1)
-        search_time = search_time * .02 + (increment/1000) * 0.8;
+        search_time = search_time * .02 + increment * 0.8;
       cilk_spawn start_search(search_time, depth);
       continue;
     }
