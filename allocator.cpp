@@ -55,17 +55,16 @@
 
 /*
 TODO: __FILE__ __LINE__ __FUNC__
-Use scoped lock
-Check Deadlock detection (add a timeout, only for testing) 
-Use a large lock for making program run in serial for testing
-jemalloc, tcmalloc, 
-Check cache line/boundary
+TODO: Use scoped lock
+TODO: Check Deadlock detection (add a timeout, only for testing) 
+TODO: Use a large lock for making program run in serial for testing
+TODO: jemalloc, tcmalloc, 
+TODO: Check cache line/boundary
 
 */
 namespace my
 {
   pthread_mutex_t allocator::qwer;
-  //pthread_mutex_init(&qwer);
   //******************** MATH STUFF *********************//
   /**
    * Round up to the next highest power
