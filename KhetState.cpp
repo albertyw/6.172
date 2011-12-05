@@ -186,11 +186,15 @@ uint64_t KhetState::perft(int depth) {
 }
 
 void KhetState::debugMoves() {
+  moves_init = false;
   gen();
   for(int i = 0; i < moves.size(); i++) {
     cout << alg(moves[i]) << "\t";
 	
   }
+  cout << endl;
+  for (int i=0; i<26; i++)
+	cout << board[i] << "\t";
   cout << endl;
 }
 int KhetState::init(string strBoard) {
@@ -633,7 +637,7 @@ long KhetState::gen()
 
   if (ctm == SILVER)
   {
-    for (int x=0; x<13; x++)
+    for (int x=12; x>=0; x--)
     {
       kp = board[x];
       if (kp==0) continue;
@@ -723,10 +727,10 @@ long KhetState::gen()
     }
   } else
   {
-    for (int x=13; x<26; x++)
+    for (int x=25; x>=13; x--)
     {
-      if (kp==0) continue;
       kp = board[x];
+	  if (kp==0) continue;
       file = getFile(kp);
       rank = getRank(kp);
       rot = getRot(kp);
