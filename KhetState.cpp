@@ -359,43 +359,46 @@ void KhetState::imake(KhetMove mv) {
     KhetPiece tPiece = laserHitInfo.hitPiece;
     tFile = laserHitInfo.hitFile;
     tRank = laserHitInfo.hitRank;
+    if (tFile>=0)
+    {
+      unsigned int hittype = getType(tPiece);
 
-    unsigned int hittype = getType(tPiece);
-
-    switch(hittype) {
-    case SANUBIS1: case SANUBIS2: case RANUBIS1: case RANUBIS2:
-        //anubis can take hit on front
-        Rotation rot = getRot(tPiece);
-        if(!isOppositeDirections(laserHitInfo.laserDir, rot)) {
-            key ^= KhetState::zob[tFile][tRank][getID(tPiece)];
-            board[hittype] = 0;
-            // key ^= KhetState::zob[tFile][tRank][104];
-        }
-        break;
-    case SPHAROH: case RPHAROH:
-        key ^= KhetState::zob[tFile][tRank][getID(tPiece)];
-        board[hittype] = 0;
-        // key ^= KhetState::zob[tFile][tRank][104];
-        gameOver = true;
-        winner = (hittype/13) ? SILVER : RED;
-        break;
-    case SPYRAMID1: case SPYRAMID4: case SPYRAMID7: case RPYRAMID3: case RPYRAMID6:
-    case SPYRAMID2: case SPYRAMID5: case RPYRAMID1: case RPYRAMID4: case RPYRAMID7:
-    case SPYRAMID3: case SPYRAMID6: case RPYRAMID2: case RPYRAMID5:
-        key ^= KhetState::zob[tFile][tRank][getID(tPiece)];
-        board[hittype] = 0;
-        // key ^= KhetState::zob[tFile][tRank][104];
-        break;
-    case SSCARAB1: case SSCARAB2: case RSCARAB1: case RSCARAB2: 
-        cout << "ERROR: scarab being removed" << endl;
-        break;
-    case SSPHINX: case RSPHINX://sphinx cant be affected
-        break;
-    case EMPTY:
-        break;
-    default:
-        cout << "Unknown laser target " << (tPiece>>7) << endl;
+      switch(hittype) {
+      case SANUBIS1: case SANUBIS2: case RANUBIS1: case RANUBIS2:
+          //anubis can take hit on front
+          Rotation rot = getRot(tPiece);
+          if(!isOppositeDirections(laserHitInfo.laserDir, rot)) {
+              key ^= KhetState::zob[tFile][tRank][getID(tPiece)];
+              board[hittype] = 0;
+              // key ^= KhetState::zob[tFile][tRank][104];
+          }
+          break;
+      case SPHAROH: case RPHAROH:
+          key ^= KhetState::zob[tFile][tRank][getID(tPiece)];
+          board[hittype] = 0;
+          // key ^= KhetState::zob[tFile][tRank][104];
+          gameOver = true;
+          winner = (hittype/13) ? SILVER : RED;
+          break;
+      case SPYRAMID1: case SPYRAMID4: case SPYRAMID7: case RPYRAMID3: case RPYRAMID6:
+      case SPYRAMID2: case SPYRAMID5: case RPYRAMID1: case RPYRAMID4: case RPYRAMID7:
+      case SPYRAMID3: case SPYRAMID6: case RPYRAMID2: case RPYRAMID5:
+          key ^= KhetState::zob[tFile][tRank][getID(tPiece)];
+          board[hittype] = 0;
+          // key ^= KhetState::zob[tFile][tRank][104];
+          break;
+      case SSCARAB1: case SSCARAB2: case RSCARAB1: case RSCARAB2: 
+          cout << "ERROR: scarab being removed" << endl;
+          break;
+      case SSPHINX: case RSPHINX://sphinx cant be affected
+          break;
+      case EMPTY:
+          break;
+      default:
+          cout << "Unknown laser target " << (tPiece>>7) << endl;
+      }
     }
+    
     //change player
     ctm = (PlayerColor)(((int)ctm)^1);
 	  key ^= 1;
@@ -409,6 +412,10 @@ LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
   lInfo.bounced = false;
   lInfo.hitPiece = 0;
   lInfo.closest = 999;
+  lInfo.hitPiece = 0;
+  lInfo.hitFile = -1;
+  lInfo.hitRank = -1;
+  lInfo.laserDir = 0;
 
   unsigned int type;
   Rotation rot;
