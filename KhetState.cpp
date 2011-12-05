@@ -278,11 +278,25 @@ uint64_t KhetState::hashBoard() {
   return hashKey^=(int)ctm;
 }
 
+int KhetState::checkKhetBoard()
+{
+  KhetPiece kp;
+  int errors = 0;
+  for (int x=0; x<26; x++)
+  {
+    kp = board[x];
+    if (kp==0) continue;
+    if (getType(kp) != x) errors++;
+  }
+  return errors;
+}
+
 //performs move on this state, assumes move is valid
 void KhetState::imake(KhetMove mv) {
     //move piece
 	//cout << alg(mv) << endl;
     assert(key==hashBoard());
+    assert(checkKhetBoard()==0);
     const unsigned int fromFile = getFromFile(mv);
     const unsigned int fromRank = getFromRank(mv); 
     const unsigned int fromRot = getFromRot(mv); 
@@ -321,6 +335,7 @@ void KhetState::imake(KhetMove mv) {
       }
     }
     assert(key==hashBoard());
+    assert(checkKhetBoard()==0);
 
    
     //shoot laser
@@ -405,6 +420,7 @@ void KhetState::imake(KhetMove mv) {
     ctm = (PlayerColor)(((int)ctm)^1);
 	  key ^= 1;
     assert(key==hashBoard());
+    assert(checkKhetBoard()==0);
 }
 
 LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
