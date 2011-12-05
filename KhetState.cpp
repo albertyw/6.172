@@ -281,6 +281,7 @@ uint64_t KhetState::hashBoard() {
 //performs move on this state, assumes move is valid
 void KhetState::imake(KhetMove mv) {
     //move piece
+	cout << alg(mv) << endl;
     assert(key==hashBoard());
     const unsigned int fromFile = getFromFile(mv);
     const unsigned int fromRank = getFromRank(mv); 
