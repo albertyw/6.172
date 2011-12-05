@@ -268,12 +268,18 @@ KhetState* KhetState::makeMove(int index) {
 
 uint64_t KhetState::hashBoard() {
   uint64_t hashKey = 0;
-  for(int file = 0; file < FILE_COUNT; file++) {
-    for (int rank = 0; rank < RANK_COUNT; rank++) {
-      uint64_t zobVal = KhetState::zob[file][rank][board[file][rank].id()];
-      hashKey ^= zobVal;
-    }
+  KhetPiece kp;
+  for (int x=0; x<26; x++)
+  {
+    kp = board[x];
+    hashKey ^= KhetState::zob[getFile(kp)][getRank(kp)][getID(kp)];
   }
+  // for(int file = 0; file < FILE_COUNT; file++) {
+  //   for (int rank = 0; rank < RANK_COUNT; rank++) {
+  //     uint64_t zobVal = KhetState::zob[file][rank][board[file][rank].id()];
+  //     hashKey ^= zobVal;
+  //   }
+  // }
   return hashKey^=(int)ctm;
 }
 
@@ -312,9 +318,9 @@ void KhetState::imake(KhetMove mv) {
       } else
       {
         key ^= KhetState::zob[fromFile][fromRank][getID(board[origPiece])];
-        key ^= KhetState::zob[toFile][toRank][104];
+        // key ^= KhetState::zob[toFile][toRank][104];
         board[origPiece] = moveKhetPiece(board[origPiece],toFile,toRank);
-        key ^= KhetState::zob[fromFile][fromRank][104];
+        // key ^= KhetState::zob[fromFile][fromRank][104];
         key ^= KhetState::zob[toFile][toRank][getID(board[origPiece])];
       }
     }
@@ -344,7 +350,7 @@ void KhetState::imake(KhetMove mv) {
 
     for (int x=0; x<26; x++)
     {
-      KhetPiece kp = b[x];
+      KhetPiece kp = board[x];
       if (kp==0) continue;
       unsigned int file = getFile(kp);
       unsigned int rank = getRank(kp);
@@ -356,24 +362,24 @@ void KhetState::imake(KhetMove mv) {
 
     //piece is to be removed from board
     //handle it approrpiately
-    targetPiece = laserHitInfo.hitPiece;
+    KhetPiece tPiece = laserHitInfo.hitPiece;
     tFile = laserHitInfo.hitFile;
     tRank = laserHitInfo.hitRank;
 
-    unsigned int hittype = getType(targetPiece);
+    unsigned int hittype = getType(tPiece);
 
     switch(hittype) {
     case SANUBIS1: case SANUBIS2: case RANUBIS1: case RANUBIS2:
         //anubis can take hit on front
-        Rotation rot = getRot(targetPiece);
+        Rotation rot = getRot(tPiece);
         if(!isOppositeDirections(laserHitInfo.laserDir, rot)) {
-            key ^= KhetState::zob[tFile][tRank][getID(targetPiece)];
+            key ^= KhetState::zob[tFile][tRank][getID(tPiece)];
             board[hittype] = 0;
-            key ^= KhetState::zob[tFile][tRank][104];
+            // key ^= KhetState::zob[tFile][tRank][104];
         }
         break;
     case SPHAROH: case RPHAROH:
-        key ^= KhetState::zob[tFile][tRank][getID(targetPiece)];
+        key ^= KhetState::zob[tFile][tRank][getID(tPiece)];
         board[hittype] = 0;
         key ^= KhetState::zob[tFile][tRank][104];
         gameOver = true;
@@ -382,9 +388,9 @@ void KhetState::imake(KhetMove mv) {
     case SPYRAMID1: case SPYRAMID4: case SPYRAMID7: case RPYRAMID3: case RPYRAMID6:
     case SPYRAMID2: case SPYRAMID5: case RPYRAMID1: case RPYRAMID4: case RPYRAMID7:
     case SPYRAMID3: case SPYRAMID6: case RPYRAMID2: case RPYRAMID5:
-        key ^= KhetState::zob[tFile][tRank][getID(targetPiece)];
+        key ^= KhetState::zob[tFile][tRank][getID(tPiece)];
         board[hittype] = 0;
-        key ^= KhetState::zob[tFile][tRank][104];
+        // key ^= KhetState::zob[tFile][tRank][104];
         break;
     case SSCARAB1: case SSCARAB2: case RSCARAB1: case RSCARAB2: 
         cout << "ERROR: scarab being removed" << endl;
@@ -394,7 +400,7 @@ void KhetState::imake(KhetMove mv) {
     case EMPTY:
         break;
     default:
-        cout << "Unknown laser target " << (targetPiece>>7) << endl;
+        cout << "Unknown laser target " << (tPiece>>7) << endl;
     }
     //change player
     ctm = (ctm == RED) ? SILVER : RED;
