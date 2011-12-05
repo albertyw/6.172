@@ -813,12 +813,9 @@ string KhetState::getBoardStr() {
         continue;
       }
       type = getType(kp);
-      if(type/13) {
-        bd << redLetters[type];
-      } else {
-        bd << silverLetters[type];
-      }
-      bd << rotationLetters[getRot(type)]; 
+
+      bd << pieceLetters[type];
+      bd << rotationLetters[getRot(kp)];  
     }
   }
   return bd.str();
@@ -852,12 +849,9 @@ string KhetState::getBoardPrettyStr() {
         continue;
       }
       type = getType(kp);
-      if(type/13) {
-        bd << redLetters[type];
-      } else {
-        bd << silverLetters[type];
-      }
-      bd << rotationLetters[getRot(type)]; 
+
+      bd << pieceLetters[type];
+      bd << rotationLetters[getRot(kp)]; 
     }
     if(rank != 0){
       bd << "\n";

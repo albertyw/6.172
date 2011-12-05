@@ -25,6 +25,7 @@ using namespace std;
 static locale loc;
 static string silverLetters = "-ASYPH-";
 static string redLetters = "-asyph-";
+static string pieceLetters = "PHSSAAYYYYYYYphssaayyyyyyy--";
 static string rotationLetters = "ruld";
 
 static string fileLetters = "abcdefghij";
