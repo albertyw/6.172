@@ -274,12 +274,6 @@ uint64_t KhetState::hashBoard() {
     kp = board[x];
     hashKey ^= KhetState::zob[getFile(kp)][getRank(kp)][getID(kp)];
   }
-  // for(int file = 0; file < FILE_COUNT; file++) {
-  //   for (int rank = 0; rank < RANK_COUNT; rank++) {
-  //     uint64_t zobVal = KhetState::zob[file][rank][board[file][rank].id()];
-  //     hashKey ^= zobVal;
-  //   }
-  // }
   return hashKey^=(int)ctm;
 }
 
@@ -381,7 +375,7 @@ void KhetState::imake(KhetMove mv) {
     case SPHAROH: case RPHAROH:
         key ^= KhetState::zob[tFile][tRank][getID(tPiece)];
         board[hittype] = 0;
-        key ^= KhetState::zob[tFile][tRank][104];
+        // key ^= KhetState::zob[tFile][tRank][104];
         gameOver = true;
         winner = (hittype/13) ? SILVER : RED;
         break;
@@ -403,7 +397,7 @@ void KhetState::imake(KhetMove mv) {
         cout << "Unknown laser target " << (tPiece>>7) << endl;
     }
     //change player
-    ctm = (ctm == RED) ? SILVER : RED;
+    ctm = (PlayerColor)(((int)ctm)^1);
 	  key ^= 1;
     assert(key==hashBoard());
 }
@@ -631,12 +625,12 @@ long KhetState::gen()
           if(rot1 == UP || rot1 == LEFT) {
              moves.push_back(makeKhetMove( file, rank, rot,
                                             file, rank, rot1,
-                                            kp, kp));
+                                            x, x));
           } else
           {
             moves.push_back(makeKhetMove(file, rank, rot,
                                             file, rank, rot2,
-                                            kp, kp));
+                                            x, x));
           }
           break;
         case SANUBIS1: case SANUBIS2: 
@@ -659,13 +653,13 @@ long KhetState::gen()
               if(toFile == 0) continue;
               if(toFile == 8 && (toRank == 0 || toRank == 7)) continue;
               
-              KhetPiece otherPiece = evalboard[toFile][toRank];
+              PieceType otherPiece = getType(evalboard[toFile][toRank]);
               //is the target location already occuppied
               if(evalboard[toFile][toRank] != 0) {
                 if(!(type==SSCARAB1||type==SSCARAB2)) continue;//scarabs can swap
                 
                 //dont swap the other piece into an illegal square
-                if(getType(otherPiece)/13) {
+                if(otherPiece/13) {
                   if(file == 9) continue;
                   if(file == 1 && (rank == 0 || rank == 7)) continue;
                 } else {
@@ -674,11 +668,11 @@ long KhetState::gen()
                 }
 
 
-                if((getType(otherPiece)%13)>3) {
+                if((otherPiece%13)>3) {
                   //valid swap move
                   moves.push_back(makeKhetMove(file, rank, rot, 
                                                   toFile, toRank, rot,
-                                                  kp, otherPiece));
+                                                  x, otherPiece));
                 } else {
                   continue;
                 }
@@ -686,18 +680,18 @@ long KhetState::gen()
                 //valid move
                 moves.push_back(makeKhetMove(file, rank, rot, 
                                                 toFile, toRank, rot,
-                                                kp, otherPiece));
+                                                x, EMPTY));
               }
             }
           }
           //rotations 
-          moves.push_back(makeKhetMove(file, rank, rot, file, rank, rot1, kp, kp));
+          moves.push_back(makeKhetMove(file, rank, rot, file, rank, rot1, x, x));
           //if(piece.type != SCARAB) {
-          moves.push_back(makeKhetMove(file, rank, rot, file, rank, rot2, kp, kp));
+          moves.push_back(makeKhetMove(file, rank, rot, file, rank, rot2, x, x));
           //}
           break;
         default:
-          cout << "unknown piece in gen: " << kp  << endl;
+          cout << "unknown piece in gen: " << x << " " << kp  << endl;
       }
     }
   } else
@@ -718,12 +712,12 @@ long KhetState::gen()
           if(rot1 == DOWN || rot1 == RIGHT) {
              moves.push_back(makeKhetMove( file, rank, rot,
                                             file, rank, rot1,
-                                            kp, kp));
+                                            x, x));
           } else
           {
             moves.push_back(makeKhetMove(file, rank, rot,
                                             file, rank, rot2,
-                                            kp, kp));
+                                            x, x));
           }
           break;
         case RANUBIS1: case RANUBIS2: 
@@ -746,13 +740,13 @@ long KhetState::gen()
               if(toFile == 1 && (toRank == 0 || toRank == 7)) continue;
               
 
-              KhetPiece otherPiece = evalboard[toFile][toRank];
+              PieceType otherPiece = getType(evalboard[toFile][toRank]);
               //is the target location already occuppied
               if(evalboard[toFile][toRank] != 0) {
                 if(!(type==RSCARAB1||type==RSCARAB2)) continue;//scarabs can swap
                 
                 //dont swap the other piece into an illegal square
-                if(getType(otherPiece)/13) {
+                if(otherPiece/13) {
                   if(file == 9) continue;
                   if(file == 1 && (rank == 0 || rank == 7)) continue;
                 } else {
@@ -760,11 +754,11 @@ long KhetState::gen()
                   if(file == 8 && (rank == 0 || rank == 7)) continue;
                 }
 
-                if((getType(otherPiece)%13)>3) {
+                if((otherPiece%13)>3) {
                   //valid swap move
                   moves.push_back(makeKhetMove(file, rank, rot, 
                                                   toFile, toRank, rot,
-                                                  kp, otherPiece));
+                                                  x, otherPiece));
                 } else {
                   continue;
                 }
@@ -773,18 +767,18 @@ long KhetState::gen()
                 //valid move
                 moves.push_back(makeKhetMove(file, rank, rot, 
                                                 toFile, toRank, rot,
-                                                  kp, otherPiece));
+                                                  x, EMPTY));
               }
             }
           }
           //rotations 
-          moves.push_back(makeKhetMove(file, rank, rot, file, rank, rot1, kp, kp));
+          moves.push_back(makeKhetMove(file, rank, rot, file, rank, rot1, x, x));
           //if(piece.type != SCARAB) {
-          moves.push_back(makeKhetMove(file, rank, rot, file, rank, rot2, kp, kp));
+          moves.push_back(makeKhetMove(file, rank, rot, file, rank, rot2, x, x));
           //}
           break;
         default:
-          cout << "unknown piece in gen: " << kp  << endl;
+          cout << "unknown piece in gen: " << x << " " << kp  << endl;
       }
     }
   }
@@ -792,56 +786,87 @@ long KhetState::gen()
 }
 
 string KhetState::getBoardStr() {
-  return "";
-  // stringstream bd;
-  // for(int rank = 7; rank >= 0; rank--) {
-  //   for(int file = 0; file < 10; file++) {
-  //     KhetPiece piece = board[file][rank];
-  //     if(piece.type == EMPTY) {
-  //       bd << "--";
-  //       continue;
-  //     }
+  // return "";
 
-  //     if(piece.color == RED) {
-  //       bd << redLetters[piece.type];
-  //     }
-  //     else {
-  //       bd << silverLetters[piece.type];
-  //     }
-  //     bd << rotationLetters[piece.rot]; 
-  //   }
+  KhetPiece kp;
+  unsigned int file;
+  unsigned int rank;
+  unsigned int type;
 
-  // }
-  // return bd.str();
+  memset(KhetState::evalboard,sizeof(KhetPiece)*80,0);
+
+  for (int x=0; x<26; x++)
+  {
+    kp = board[x];
+    if (kp==0) continue;
+    file = getFile(kp);
+    rank = getRank(kp);
+    evalboard[file][rank] = kp;
+  }
+
+  stringstream bd;
+  for(int rank = 7; rank >= 0; rank--) {
+    for(int file = 0; file < 10; file++) {
+      kp = evalboard[file][rank];
+      if(kp == 0) {
+        bd << "--";
+        continue;
+      }
+      type = getType(kp);
+      if(type/13) {
+        bd << redLetters[type];
+      } else {
+        bd << silverLetters[type];
+      }
+      bd << rotationLetters[getRot(type)]; 
+    }
+  }
+  return bd.str();
 }
 
 string KhetState::getBoardPrettyStr() {
-  return "";
+  // return "";
+
+  KhetPiece kp;
+  unsigned int file;
+  unsigned int rank;
+  unsigned int type;
+
+  memset(KhetState::evalboard,sizeof(KhetPiece)*80,0);
+
+  for (int x=0; x<26; x++)
+  {
+    kp = board[x];
+    if (kp==0) continue;
+    file = getFile(kp);
+    rank = getRank(kp);
+    evalboard[file][rank] = kp;
+  }
+
   stringstream bd;
-  // for(int rank = 7; rank >= 0; rank--) {
-  //   for(int file = 0; file < 10; file++) {
-  //     KhetPiece piece = board[file][rank];
-  //     if(piece.type == EMPTY) {
-  //       bd << "--";
-  //       continue;
-  //     }
+  for(int rank = 7; rank >= 0; rank--) {
+    for(int file = 0; file < 10; file++) {
+      kp = evalboard[file][rank];
+      if(kp == 0) {
+        bd << "--";
+        continue;
+      }
+      type = getType(kp);
+      if(type/13) {
+        bd << redLetters[type];
+      } else {
+        bd << silverLetters[type];
+      }
+      bd << rotationLetters[getRot(type)]; 
+    }
+    if(rank != 0){
+      bd << "\n";
+    }
+  }
 
-  //     if(piece.color == RED) {
-  //       bd << redLetters[piece.type];
-  //     }
-  //     else {
-  //       bd << silverLetters[piece.type];
-  //     }
-  //     bd << rotationLetters[piece.rot]; 
-  //   }
-  //   if(rank != 0){
-  //     bd << "\n";
-  //   }
-  // }
-  // bd << ((ctm == SILVER) ? " w" : " b");
-  // bd << "\n";
-  // return bd.str();
-
+  bd << ((ctm == SILVER) ? " w" : " b");
+  bd << "\n";
+  return bd.str();
 }
 
 // KhetPiece KhetState::strToPiece(string sq) {
