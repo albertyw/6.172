@@ -272,6 +272,7 @@ uint64_t KhetState::hashBoard() {
   for (int x=0; x<26; x++)
   {
     kp = board[x];
+    if (kp==0) continue;
     hashKey ^= KhetState::zob[getFile(kp)][getRank(kp)][getID(kp)];
   }
   return hashKey^=(int)ctm;
@@ -412,7 +413,6 @@ LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
   lInfo.bounced = false;
   lInfo.hitPiece = 0;
   lInfo.closest = 999;
-  lInfo.hitPiece = 0;
   lInfo.hitFile = -1;
   lInfo.hitRank = -1;
   lInfo.laserDir = (Rotation)0;
