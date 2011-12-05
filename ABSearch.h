@@ -405,8 +405,8 @@ int ABSearch(ABState* g, int max_depth, int search_time,
   prev_move = 0;
 
   global_abort = false;
-  cilk_spawn timer_thread();
   search_done = 0;
+  cilk_spawn timer_thread();
   //iterative deepening loop
   for (int depth=1; depth <= max_depth; depth++)
   {
