@@ -168,18 +168,21 @@ typedef struct LaserHitInfo {
 // 5-8       tFile
 // 2-4       tRank
 // 0-1       tRot
+
+
 inline
 KhetMove makeKhetMove(int fFile, int fRank, int fRot, int tFile, int tRank,int tRot, int fPiece, int tPiece) {
-  cout << "fromPiece " << fPiece;
-  cout << " toPiece " << tPiece;
-  cout << " fromFile " << fFile;
-  cout << " fromRank " << fRank;
-  cout << " fromRot " << fRot;
-  cout << " toFile " << tFile;
-  cout << " toRank " << tRank;
-  cout << " toRot " << tRot << endl;
+  //cout << "fromPiece " << fPiece;
+  //cout << " toPiece " << tPiece;
+  //cout << " fromFile " << fFile;
+  //cout << " fromRank " << fRank;
+  //cout << " fromRot " << fRot;
+  //cout << " toFile " << tFile;
+  //cout << " toRank " << tRank;
+  //cout << " toRot " << tRot << endl;
   return (uint32_t)((fPiece<<23)|(tPiece<<18)|(fFile<<14)|(fRank<<11)|(fRot<<9)|(tFile<<5)|(tRank<<2)|(tRot));
 }
+
 
 inline
 unsigned int getFromPiece(KhetMove mv)
@@ -227,6 +230,20 @@ inline
 unsigned int getToRot(KhetMove mv)
 {
   return (mv)&0x3;
+}
+
+inline
+int printKhetMove(KhetMove mv)
+{
+  cout << "fromPiece " << getFromPiece(mv);
+  cout << " toPiece " << getToPiece(mv);
+  cout << " fromFile " << getFromFile(mv);
+  cout << " fromRank " << getFromRank(mv);
+  cout << " fromRot " << getFromRot(mv);
+  cout << " toFile " << getToFile(mv);
+  cout << " toRank " << getToRank(mv);
+  cout << " toRot " << getToRot(mv) << endl;
+  return 0;
 }
 
 // inline
