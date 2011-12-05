@@ -2,6 +2,9 @@
 #define _ALLOCATOR_INTERFACE_H
 
 #include<iostream>
+#include <tbb/mutex.h>
+#include <pthread.h>
+
 namespace my
 {
   class allocator_interface
@@ -28,6 +31,7 @@ namespace my
   class allocator : public virtual allocator_interface
   {
   public:
+    static pthread_mutex_t qwer;
     static int init ();
     static size_t ** getBinPointer (uint8_t binNum);
     static void setBinPointer (uint8_t binNum, size_t *setPointer);
