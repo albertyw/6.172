@@ -134,7 +134,7 @@ class KhetState {
     string getCtmStr();
 
     
-    static uint64_t zob[FILE_COUNT][RANK_COUNT][100];
+    static uint64_t zob[FILE_COUNT][RANK_COUNT][150];
     static KhetPiece evalboard[FILE_COUNT][RANK_COUNT];
     //attempts to make move in the from of "a8a7" or "a8r" in algstr
     //returns empty str if move is invalid, returns algrstr otherwise

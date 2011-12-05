@@ -287,12 +287,12 @@ void KhetState::imake(KhetMove mv) {
     const unsigned int toFile = getToFile(mv); 
     const unsigned int toRank = getToRank(mv); 
     const unsigned int toRot = getToRot(mv); 
-    PieceType origPiece = getFromPiece(mv);
-    PieceType targetPiece = getToPiece(mv);
+    PieceType origPiece = (PieceType)getFromPiece(mv);
+    PieceType targetPiece = (PieceType)getToPiece(mv);
     
     if(targetPiece != EMPTY && fromRot == toRot) {//if its rotation target wont be empty
-      assert((origPiece)%13)/2 == 1);
-      assert((targetPiece)%13)>3);
+      assert(((origPiece)%13)/2 == 1);
+      assert(((targetPiece)%13)>3);
       //scarab swap
       key ^= KhetState::zob[fromFile][fromRank][getID(board[origPiece])];
       key ^= KhetState::zob[toFile][toRank][getID(board[targetPiece])];
@@ -372,7 +372,7 @@ void KhetState::imake(KhetMove mv) {
             key ^= KhetState::zob[tFile][tRank][104];
         }
         break;
-    case SPHAROAH: case RPHAROAH:
+    case SPHAROH: case RPHAROH:
         key ^= KhetState::zob[tFile][tRank][getID(targetPiece)];
         board[hittype] = 0;
         key ^= KhetState::zob[tFile][tRank][104];
@@ -443,7 +443,7 @@ LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
     if(targetPiece==0) continue; //laser goes through empty sq
 
     type = getType(targetPiece);
-    rot = getRotation(targetPiece);
+    rot = getRot(targetPiece);
 
     //a piece was hit
 
@@ -566,7 +566,7 @@ void KhetState::initBoard(string strBoard) {
       int rank = 7 - (i / 10);//rank goes from 1 to 8 yes 0 indexed
       if (strBoard[i*2]=='-') continue;
       
-			board[file][rank].type = EMPTY;
+			// board[file][rank].type = EMPTY;
       int type = (int)(strBoard[i*2]-'a');
       int rot = (int)(strBoard[i*2+1]-'0');
       
@@ -594,6 +594,7 @@ long KhetState::gen()
   unsigned int file;
   unsigned int rank;
   unsigned int type;
+  Rotation rot;
 
   memset(KhetState::evalboard,sizeof(KhetPiece)*80,0);
 
@@ -634,7 +635,7 @@ long KhetState::gen()
           break;
         case SANUBIS1: case SANUBIS2: 
         case SSCARAB1: case SSCARAB2:
-        case SPHAROAH: 
+        case SPHAROH: 
         case SPYRAMID1: case SPYRAMID2: case SPYRAMID3: case SPYRAMID4: 
         case SPYRAMID5: case SPYRAMID6: case SPYRAMID7: 
           //moveso
@@ -655,7 +656,7 @@ long KhetState::gen()
               KhetPiece otherPiece = evalboard[toFile][toRank];
               //is the target location already occuppied
               if(evalboard[toFile][toRank] != 0) {
-                if(!(type==SSCARAB1||type==SSCARAB2) continue;//scarabs can swap
+                if(!(type==SSCARAB1||type==SSCARAB2)) continue;//scarabs can swap
                 
                 //dont swap the other piece into an illegal square
                 if(getType(otherPiece)/13) {
@@ -690,7 +691,7 @@ long KhetState::gen()
           //}
           break;
         default:
-          cout << "unknown piece in gen: " << piece.type  << endl;
+          cout << "unknown piece in gen: " << kp  << endl;
       }
     }
   } else
@@ -721,8 +722,8 @@ long KhetState::gen()
           break;
         case RANUBIS1: case RANUBIS2: 
         case RSCARAB1: case RSCARAB2:
-        case RPHAROAH: 
-        case RPYRAMID1: case RPYRAMID2: case RPYRAMID3: case SRYRAMID4: 
+        case RPHAROH: 
+        case RPYRAMID1: case RPYRAMID2: case RPYRAMID3: case RPYRAMID4: 
         case RPYRAMID5: case RPYRAMID6: case RPYRAMID7: 
           //moveso
           for (int toFileOffset = -1; toFileOffset < 2; toFileOffset++ ) {
@@ -742,7 +743,7 @@ long KhetState::gen()
               KhetPiece otherPiece = evalboard[toFile][toRank];
               //is the target location already occuppied
               if(evalboard[toFile][toRank] != 0) {
-                if(!(type==RSCARAB1||type==RSCARAB2) continue;//scarabs can swap
+                if(!(type==RSCARAB1||type==RSCARAB2)) continue;//scarabs can swap
                 
                 //dont swap the other piece into an illegal square
                 if(getType(otherPiece)/13) {
@@ -777,7 +778,7 @@ long KhetState::gen()
           //}
           break;
         default:
-          cout << "unknown piece in gen: " << piece.type  << endl;
+          cout << "unknown piece in gen: " << kp  << endl;
       }
     }
   }

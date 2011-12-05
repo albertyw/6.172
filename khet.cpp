@@ -272,7 +272,7 @@ unsigned long long myrand()
   return x + y + z1 + ((unsigned long long)z2 << 32); /* Return 64-bit result */
 }
 
-uint64_t KhetState::zob[FILE_COUNT][RANK_COUNT][100];
+uint64_t KhetState::zob[FILE_COUNT][RANK_COUNT][150];
 
 //initalizes input thread and then starts UCI loop
 int main(int argc, char *argv[])
@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
     for (int j = 0; j < RANK_COUNT; j++) {
       //k represents the enumeration of all possible khetpieces as an int
       //see khetpiece::id()
-      for (int k = 0; k < 100; k++) {
+      for (int k = 0; k < 150; k++) {
         KhetState::zob[i][j][k] = myrand();
       }
     }
