@@ -172,7 +172,7 @@ class KhetState {
     bool moves_init;
     Board board;
     PlayerColor ctm; //color to move
-    KhetPiece strToPiece(string sq);
+    // KhetPiece strToPiece(string sq);
     void initBoard(string board); 
     vector<KhetMove> moves;
     //performs move on this state, assumes move is valid

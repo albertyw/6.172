@@ -786,103 +786,100 @@ long KhetState::gen()
 
 string KhetState::getBoardStr() {
   return "";
-  stringstream bd;
-  for(int rank = 7; rank >= 0; rank--) {
-    for(int file = 0; file < 10; file++) {
-      KhetPiece piece = board[file][rank];
-      if(piece.type == EMPTY) {
-        bd << "--";
-        continue;
-      }
+  // stringstream bd;
+  // for(int rank = 7; rank >= 0; rank--) {
+  //   for(int file = 0; file < 10; file++) {
+  //     KhetPiece piece = board[file][rank];
+  //     if(piece.type == EMPTY) {
+  //       bd << "--";
+  //       continue;
+  //     }
 
-      if(piece.color == RED) {
-        bd << redLetters[piece.type];
-      }
-      else {
-        bd << silverLetters[piece.type];
-      }
-      bd << rotationLetters[piece.rot]; 
-    }
+  //     if(piece.color == RED) {
+  //       bd << redLetters[piece.type];
+  //     }
+  //     else {
+  //       bd << silverLetters[piece.type];
+  //     }
+  //     bd << rotationLetters[piece.rot]; 
+  //   }
 
-  }
-  return bd.str();
+  // }
+  // return bd.str();
 }
 
 string KhetState::getBoardPrettyStr() {
   return "";
   stringstream bd;
-  for(int rank = 7; rank >= 0; rank--) {
-    for(int file = 0; file < 10; file++) {
-      KhetPiece piece = board[file][rank];
-      if(piece.type == EMPTY) {
-        bd << "--";
-        continue;
-      }
+  // for(int rank = 7; rank >= 0; rank--) {
+  //   for(int file = 0; file < 10; file++) {
+  //     KhetPiece piece = board[file][rank];
+  //     if(piece.type == EMPTY) {
+  //       bd << "--";
+  //       continue;
+  //     }
 
-      if(piece.color == RED) {
-        bd << redLetters[piece.type];
-      }
-      else {
-        bd << silverLetters[piece.type];
-      }
-      bd << rotationLetters[piece.rot]; 
-    }
-    if(rank != 0){
-      bd << "\n";
-    }
-  }
-  bd << ((ctm == SILVER) ? " w" : " b");
-  bd << "\n";
-  return bd.str();
-
-}
-
-KhetPiece KhetState::strToPiece(string sq) {
-  KhetPiece pc;
-  //determine type
-  if(sq[0] == 'a' || sq[0] == 'A') {
-    pc.type = ANUBIS;
-  }
-  else if (sq[0] == 'h' || sq[0] == 'H') {
-    pc.type = SPHINX;
-  }
-  else if (sq[0] == 'p' || sq[0] == 'P') {
-    pc.type = PHAROAH;
-  }
-  else if (sq[0] == 'y' || sq[0] == 'Y') {
-    pc.type = PYRAMID;
-  }
-  else if (sq[0] == 's' || sq[0] == 'S') {
-    pc.type = SCARAB;
-  }
-  else {
-    pc.type = EMPTY;
-  }
-  //determine color
-  if(isupper(sq[0], loc)) {
-    pc.color = SILVER;
-  }
-  else {
-    pc.color = RED;
-  }
-  //determine rotation
-  if(sq[1] == 'u') {
-    pc.rot = UP;
-  }
-  else if(sq[1] == 'd') {
-    pc.rot = DOWN;
-  }
-  else if(sq[1] == 'l') {
-    pc.rot = LEFT;
-  }
-  else if(sq[1] == 'r') {
-    pc.rot = RIGHT;
-  }
-  else {
-    pc.rot = UP;
-  }
-  return pc;
-
-
+  //     if(piece.color == RED) {
+  //       bd << redLetters[piece.type];
+  //     }
+  //     else {
+  //       bd << silverLetters[piece.type];
+  //     }
+  //     bd << rotationLetters[piece.rot]; 
+  //   }
+  //   if(rank != 0){
+  //     bd << "\n";
+  //   }
+  // }
+  // bd << ((ctm == SILVER) ? " w" : " b");
+  // bd << "\n";
+  // return bd.str();
 
 }
+
+// KhetPiece KhetState::strToPiece(string sq) {
+//   KhetPiece pc;
+//   //determine type
+//   if(sq[0] == 'a' || sq[0] == 'A') {
+//     pc.type = ANUBIS;
+//   }
+//   else if (sq[0] == 'h' || sq[0] == 'H') {
+//     pc.type = SPHINX;
+//   }
+//   else if (sq[0] == 'p' || sq[0] == 'P') {
+//     pc.type = PHAROAH;
+//   }
+//   else if (sq[0] == 'y' || sq[0] == 'Y') {
+//     pc.type = PYRAMID;
+//   }
+//   else if (sq[0] == 's' || sq[0] == 'S') {
+//     pc.type = SCARAB;
+//   }
+//   else {
+//     pc.type = EMPTY;
+//   }
+//   //determine color
+//   if(isupper(sq[0], loc)) {
+//     pc.color = SILVER;
+//   }
+//   else {
+//     pc.color = RED;
+//   }
+//   //determine rotation
+//   if(sq[1] == 'u') {
+//     pc.rot = UP;
+//   }
+//   else if(sq[1] == 'd') {
+//     pc.rot = DOWN;
+//   }
+//   else if(sq[1] == 'l') {
+//     pc.rot = LEFT;
+//   }
+//   else if(sq[1] == 'r') {
+//     pc.rot = RIGHT;
+//   }
+//   else {
+//     pc.rot = UP;
+//   }
+//   return pc;
+// }
