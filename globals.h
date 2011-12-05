@@ -96,7 +96,7 @@ Rotation getRot(KhetPiece p)
 }
 
 inline
-unsigned int getile(KhetPiece p)
+unsigned int getFile(KhetPiece p)
 {
   return (p>>3)&0xf;
 }
@@ -169,7 +169,7 @@ typedef struct LaserHitInfo {
 // 2-4       tRank
 // 0-1       tRot
 inline
-KhetMove makeKhetMove(int fFile, int fRank, int fRot, int tFile, int tRank,int tRot, int fPiece, int toPiece) {
+KhetMove makeKhetMove(int fFile, int fRank, int fRot, int tFile, int tRank,int tRot, int fPiece, int tPiece) {
   return (uint32_t)((fPiece<<23)|(tPiece<<18)|(fFile<<14)|(fRank<<11)|(fRot<<9)|(tFile<<5)|(tRank<<2)|(tRot));
 }
 
