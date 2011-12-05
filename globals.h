@@ -170,6 +170,14 @@ typedef struct LaserHitInfo {
 // 0-1       tRot
 inline
 KhetMove makeKhetMove(int fFile, int fRank, int fRot, int tFile, int tRank,int tRot, int fPiece, int tPiece) {
+  cout << "fromPiece " << fPiece;
+  cout << " toPiece " << tPiece;
+  cout << " fromFile " << fFile;
+  cout << " fromRank " << fRank;
+  cout << " fromRot " << fRot;
+  cout << " toFile " << tFile;
+  cout << " toRank " << tRank;
+  cout << " toRot " << tRot << endl;
   return (uint32_t)((fPiece<<23)|(tPiece<<18)|(fFile<<14)|(fRank<<11)|(fRot<<9)|(tFile<<5)|(tRank<<2)|(tRot));
 }
 
