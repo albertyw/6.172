@@ -137,7 +137,7 @@ int eval(Board b, PlayerColor ctm) {
     }
   }
 //measure closest distance of laser to pharaohs
-  Rotation sSphRot = b[sSphFile][sSphRank].rot;
+  Rotation sSphRot = getRot(b[SPHAROH]);
 
   lInfo = KhetState::fireLaser(sSphFile, sSphRank,
       sSphRot, sPharaohFile, sPharaohRank);
@@ -149,7 +149,7 @@ int eval(Board b, PlayerColor ctm) {
 
   silverScore += enemyLaserDistance * lInfo.closest;
 //closest pharaoh for red
-  Rotation rSphRot = b[rSphFile][rSphRank].rot;
+  Rotation rSphRot = getRot(b[RPHAROH]);
 
   lInfo = KhetState::fireLaser(rSphFile, rSphRank,
       rSphRot, rPharaohFile, rPharaohRank);
