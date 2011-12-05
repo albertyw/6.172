@@ -52,33 +52,60 @@ static string fileLetters = "abcdefghij";
 */
 
 //str[0] should correspond to rank 8 file a ie top left
-static string classicOpen = "hd------adpdadyd----"  
-                            "----yl--------------"  
-                            "------Yu------------" 
-                            "yr--Yl--slsu--yd--Yu" 
-                            "yd--Yu--SuSl--yr--Yl" 
-                            "------------yd------" 
-                            "--------------Yr----" 
-                            "----YuAuPuAu------Hu w";
+// static string classicOpen = "hd------adpdadyd----"  
+//                             "----yl--------------"  
+//                             "------Yu------------" 
+//                             "yr--Yl--slsu--yd--Yu" 
+//                             "yd--Yu--SuSl--yr--Yl" 
+//                             "------------yd------" 
+//                             "--------------Yr----" 
+//                             "----YuAuPuAu------Hu w";
 
-static string dynastyOpen = "hd------yladyd------"
-                            "----------pd--------"
-                            "yr------yladsd------"
-                            "yd--sr--Yu--Yd------"
-                            "------yu--yd--Sl--Yu"
-                            "------SuAuYr------Yl"
-                            "--------Pu----------"
-                            "------YuAuYr------Hu w";
+// static string dynastyOpen = "hd------yladyd------"
+//                             "----------pd--------"
+//                             "yr------yladsd------"
+//                             "yd--sr--Yu--Yd------"
+//                             "------yu--yd--Sl--Yu"
+//                             "------SuAuYr------Yl"
+//                             "--------Pu----------"
+//                             "------YuAuYr------Hu w";
 
-static string imhotepOpen = "hd------adpdadsd----"  
-                            "--------------------"  
-                            "------Yu----yr------" 
-                            "yrYl----Ydsu----ydYu" 
-                            "ydYu----Suyu----yrYl" 
-                            "------Yl----yd------" 
-                            "--------------------" 
-                            "----SuAuPuAu------Hu w";
- 
+// static string imhotepOpen = "hd------adpdadsd----"  
+//                             "--------------------"  
+//                             "------Yu----yr------" 
+//                             "yrYl----Ydsu----ydYu" 
+//                             "ydYu----Suyu----yrYl" 
+//                             "------Yl----yd------" 
+//                             "--------------------" 
+//                             "----SuAuPuAu------Hu w";
+
+                                                   
+                                             
+static string classicOpen = "o3------r3n3s3t3----"
+                            "----u2--------------"
+                            "------g1------------"
+                            "v0--h2--p2q1--w3--i1"
+                            "x3--j1--c1d2--y0--k2"
+                            "------------z3------"
+                            "--------------l0----"
+                            "----m1e1a1f1------b1 w";
+
+static string dynastyOpen = "o3------t2r3u3------"
+                            "----------n3--------"
+                            "v0------w2s3p3------"
+                            "x3--q0--g1--h3------"
+                            "------y1--z3--c2--i1"
+                            "------d1e1j0------k2"
+                            "--------a1----------"
+                            "------l1f1m0------b1 w";
+
+static string imhotepOpen = "o3------r3n3s3p3----"
+                            "--------------------"
+                            "------g1----t0------"
+                            "u0h2----i3q1----v3j1"
+                            "w3k1----c1x1----y0l2"
+                            "------m2----z3------"
+                            "----d1e1a1f1------b1 w";
 
 class KhetState {
   public:
@@ -108,6 +135,7 @@ class KhetState {
 
     
     static uint64_t zob[FILE_COUNT][RANK_COUNT][100];
+    static KhetPiece evalboard[FILE_COUNT][RANK_COUNT];
     //attempts to make move in the from of "a8a7" or "a8r" in algstr
     //returns empty str if move is invalid, returns algrstr otherwise
     int makeMove(string algstr);
@@ -126,7 +154,7 @@ class KhetState {
     //closestToFile and rank are used to measure closest distance from any 
     //pt on lasers path to this point. Used by some eval functions
     //returns a LaserHitInfo with information about hit piece if any
-    static LaserHitInfo fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
+    static LaserHitInfo fireLaser(int tFile, int tRank, Rotation laserDir,
                                     int closestToFile, int closestToRank);
     
     static map<uint64_t,KhetState*> khet_cache;

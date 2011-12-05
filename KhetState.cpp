@@ -280,48 +280,45 @@ uint64_t KhetState::hashBoard() {
 //performs move on this state, assumes move is valid
 void KhetState::imake(KhetMove mv) {
     //move piece
-  assert(key==hashBoard());
+    assert(key==hashBoard());
     const unsigned int fromFile = getFromFile(mv);
     const unsigned int fromRank = getFromRank(mv); 
     const unsigned int fromRot = getFromRot(mv); 
     const unsigned int toFile = getToFile(mv); 
     const unsigned int toRank = getToRank(mv); 
     const unsigned int toRot = getToRot(mv); 
-    KhetPiece origPiece = board[fromFile][fromRank];
-    KhetPiece targetPiece = board[toFile][toRank];
+    PieceType origPiece = getFromPiece(mv);
+    PieceType targetPiece = getToPiece(mv);
     
-    if(targetPiece.type != EMPTY &&
-            fromRot == toRot) {//if its rotation target wont be empty
-        assert(origPiece.type == SCARAB);
-        assert(targetPiece.type == ANUBIS || targetPiece.type == PYRAMID);
-        //scarab swap
-    key ^= KhetState::zob[fromFile][fromRank][origPiece.id()];
-    key ^= KhetState::zob[toFile][toRank][targetPiece.id()];
-        board[fromFile][fromRank] = targetPiece;
-        board[toFile][toRank] = origPiece;
-    key ^= KhetState::zob[fromFile][fromRank][board[fromFile][fromRank].id()];
-    key ^= KhetState::zob[toFile][toRank][board[toFile][toRank].id()];
+    if(targetPiece != EMPTY && fromRot == toRot) {//if its rotation target wont be empty
+      assert((origPiece)%13)/2 == 1);
+      assert((targetPiece)%13)>3);
+      //scarab swap
+      key ^= KhetState::zob[fromFile][fromRank][getID(board[origPiece])];
+      key ^= KhetState::zob[toFile][toRank][getID(board[targetPiece])];
+
+      board[origPiece] = moveKhetPiece(board[origPiece],toFile,toRank);
+      board[targetPiece] = moveKhetPiece(board[targetPiece],fromFile,fromRank);
+
+      key ^= KhetState::zob[fromFile][fromRank][getID(board[targetPiece])];
+      key ^= KhetState::zob[toFile][toRank][getID(board[origPiece])];
     }
     else {
-    if (fromRot != toRot)
-    {
-      key ^= KhetState::zob[fromFile][fromRank][origPiece.id()];
-      board[toFile][toRank].rot = (Rotation)toRot;//mv.piece is original piece
-      key ^= KhetState::zob[fromFile][fromRank][board[fromFile][fromRank].id()];
-    } else
-    {
-      key ^= KhetState::zob[fromFile][fromRank][origPiece.id()];
-      key ^= KhetState::zob[toFile][toRank][targetPiece.id()];
-      board[fromFile][fromRank].type = EMPTY;
-      board[toFile][toRank] = origPiece;  
-      board[toFile][toRank].rot = (Rotation)toRot;//mv.piece is original piece
-      key ^= KhetState::zob[fromFile][fromRank][board[fromFile][fromRank].id()];
-      key ^= KhetState::zob[toFile][toRank][board[toFile][toRank].id()];
+      if (fromRot != toRot)
+      {
+        key ^= KhetState::zob[fromFile][fromRank][getID(board[origPiece])];
+        board[origPiece] = rotateKhetPiece(board[origPiece],toRot);
+        key ^= KhetState::zob[fromFile][fromRank][getID(board[origPiece])];
+      } else
+      {
+        key ^= KhetState::zob[fromFile][fromRank][getID(board[origPiece])];
+        key ^= KhetState::zob[toFile][toRank][104];
+        board[origPiece] = moveKhetPiece(board[origPiece],toFile,toRank);
+        key ^= KhetState::zob[fromFile][fromRank][104];
+        key ^= KhetState::zob[toFile][toRank][getID(board[origPiece])];
+      }
     }
-        
-  
-    }
-  assert(key==hashBoard());
+    assert(key==hashBoard());
 
    
     //shoot laser
@@ -330,20 +327,31 @@ void KhetState::imake(KhetMove mv) {
     int tRank;
     //set inital laser location
     if(ctm == SILVER) {
-        sph = board[9][0];
+        sph = board[SSPHINX];
         tFile = 9;
         tRank = 0;
     } else {
-        sph = board[0][7];
+        sph = board[RSPHINX];
         tFile = 0;
         tRank = 7;
     }
 
-    assert(board[tFile][tRank].type == SPHINX && board[tFile][tRank].color == ctm);
+    // assert(board[tFile][tRank].type == SPHINX && board[tFile][tRank].color == ctm);
 
-    Rotation laserDir = sph.rot;
+    Rotation laserDir = getRot(sph);
 
-    LaserHitInfo laserHitInfo = fireLaser(board, tFile, tRank, laserDir, 0, 0);
+    memset(KhetState::evalboard,sizeof(KhetPiece)*80,0);
+
+    for (int x=0; x<26; x++)
+    {
+      KhetPiece kp = b[x];
+      if (kp==0) continue;
+      unsigned int file = getFile(kp);
+      unsigned int rank = getRank(kp);
+      evalboard[file][rank] = kp;
+    }
+
+    LaserHitInfo laserHitInfo = fireLaser(tFile, tRank, laserDir, 0, 0);
 
 
     //piece is to be removed from board
@@ -352,52 +360,58 @@ void KhetState::imake(KhetMove mv) {
     tFile = laserHitInfo.hitFile;
     tRank = laserHitInfo.hitRank;
 
-    switch(targetPiece.type) {
-    case ANUBIS:
+    unsigned int hittype = getType(targetPiece);
+
+    switch(hittype) {
+    case SANUBIS1: case SANUBIS2: case RANUBIS1: case RANUBIS2:
         //anubis can take hit on front
-        if(!isOppositeDirections(laserHitInfo.laserDir, targetPiece.rot)) {
-            key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
-            board[tFile][tRank].type = EMPTY;
-            key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
+        Rotation rot = getRot(targetPiece);
+        if(!isOppositeDirections(laserHitInfo.laserDir, rot)) {
+            key ^= KhetState::zob[tFile][tRank][getID(targetPiece)];
+            board[hittype] = 0;
+            key ^= KhetState::zob[tFile][tRank][104];
         }
         break;
-    case PHAROAH:
-        key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
-        board[tFile][tRank].type = EMPTY;
-        key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
+    case SPHAROAH: case RPHAROAH:
+        key ^= KhetState::zob[tFile][tRank][getID(targetPiece)];
+        board[hittype] = 0;
+        key ^= KhetState::zob[tFile][tRank][104];
         gameOver = true;
-        winner = (targetPiece.color == RED) ? SILVER : RED;
+        winner = (hittype/13) ? SILVER : RED;
         break;
-    case PYRAMID:
-        key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
-        board[tFile][tRank].type = EMPTY;
-        key ^= KhetState::zob[tFile][tRank][board[tFile][tRank].id()];
+    case SPYRAMID1: case SPYRAMID4: case SPYRAMID7: case RPYRAMID3: case RPYRAMID6:
+    case SPYRAMID2: case SPYRAMID5: case RPYRAMID1: case RPYRAMID4: case RPYRAMID7:
+    case SPYRAMID3: case SPYRAMID6: case RPYRAMID2: case RPYRAMID5:
+        key ^= KhetState::zob[tFile][tRank][getID(targetPiece)];
+        board[hittype] = 0;
+        key ^= KhetState::zob[tFile][tRank][104];
         break;
-    case SCARAB:
+    case SSCARAB1: case SSCARAB2: case RSCARAB1: case RSCARAB2: 
         cout << "ERROR: scarab being removed" << endl;
         break;
-    case SPHINX://sphinx cant be affected
+    case SSPHINX: case RSPHINX://sphinx cant be affected
         break;
     case EMPTY:
         break;
     default:
-        cout << "Unknown laser target " << targetPiece.type << endl;
+        cout << "Unknown laser target " << (targetPiece>>7) << endl;
     }
     //change player
     ctm = (ctm == RED) ? SILVER : RED;
-	key ^= 1;
+	  key ^= 1;
     assert(key==hashBoard());
 }
 
-LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
-    int closestToFile, int closestToRank) {
+LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
+                                  int closestToFile, int closestToRank) {
   KhetPiece targetPiece;
-  targetPiece.type = EMPTY;
-
   LaserHitInfo lInfo;
   lInfo.bounced = false;
-  lInfo.hitPiece.type = EMPTY;
+  lInfo.hitPiece = 0;
   lInfo.closest = 999;
+
+  unsigned int type;
+  Rotation rot;
 
   while(true) {
     switch(laserDir) {
@@ -424,18 +438,24 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
     if(tRank > 7 || tRank < 0) break;
 
     //what piece is hit by laser?
-    targetPiece = board[tFile][tRank];
+    targetPiece = evalboard[tFile][tRank];
 
-    if(targetPiece.type == EMPTY) continue; //laser goes through empty sq
+    if(targetPiece==0) continue; //laser goes through empty sq
+
+    type = getType(targetPiece);
+    rot = getRotation(targetPiece);
 
     //a piece was hit
 
     //check for reflections
-    if(targetPiece.type == SCARAB) {
-      switch(laserDir) {
+
+    switch (type)
+    {
+      case SSCARAB1: case SSCARAB2: case RSCARAB1: case RSCARAB2: 
+        switch(laserDir) {
         case UP:
           //scarab has two mirrors
-          if(targetPiece.rot == UP || targetPiece.rot == DOWN){
+          if(rot == UP || rot == DOWN){
             laserDir = RIGHT;
           }
           else {
@@ -443,7 +463,7 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
           }
           break;
         case DOWN:  
-          if(targetPiece.rot == UP || targetPiece.rot == DOWN){
+          if(rot == UP || rot == DOWN){
             laserDir = LEFT;
           }
           else {
@@ -451,7 +471,7 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
           }
           break;
         case LEFT:
-          if(targetPiece.rot == UP || targetPiece.rot == DOWN){
+          if(rot == UP || rot == DOWN){
             laserDir = DOWN;
           }
           else {
@@ -459,7 +479,7 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
           }
           break;
         case RIGHT:
-          if(targetPiece.rot == UP || targetPiece.rot == DOWN){
+          if(rot == UP || rot == DOWN){
             laserDir = UP;
           }
           else {
@@ -471,52 +491,54 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
       }
       lInfo.bounced = true;
       continue;//scarabs always bounec laser, cant be removed
-    }
-    if(targetPiece.type == PYRAMID) {
+    case SPYRAMID1: case SPYRAMID2: case SPYRAMID3: case SPYRAMID4: 
+    case SPYRAMID5: case SPYRAMID6: case SPYRAMID7: case RPYRAMID1: 
+    case RPYRAMID2: case RPYRAMID3: case RPYRAMID4: case RPYRAMID5: 
+    case RPYRAMID6: case RPYRAMID7:
       switch(laserDir) {
         case UP:
-          if(targetPiece.rot == DOWN) {
+          if(rot == DOWN) {
             laserDir = RIGHT;
             lInfo.bounced = true;
             continue;
           }
-          else if(targetPiece.rot == LEFT) {
+          else if(rot == LEFT) {
             laserDir = LEFT;
             lInfo.bounced = true;
             continue;
           }
           break;
         case DOWN:
-          if(targetPiece.rot == UP) {
+          if(rot == UP) {
             laserDir = LEFT;
             lInfo.bounced = true;
             continue;
           }
-          else if(targetPiece.rot == RIGHT) {
+          else if(rot == RIGHT) {
             laserDir = RIGHT;
             lInfo.bounced = true;
             continue;
           }
           break;
         case LEFT:
-          if(targetPiece.rot == RIGHT) {
+          if(rot == RIGHT) {
             laserDir = UP;
             lInfo.bounced = true;
             continue;
           }
-          else if(targetPiece.rot == DOWN) {
+          else if(rot == DOWN) {
             laserDir = DOWN;
             lInfo.bounced = true;
             continue;
           }
           break;
         case RIGHT:
-          if(targetPiece.rot == LEFT) {
+          if(rot == LEFT) {
             laserDir = DOWN;
             lInfo.bounced = true;
             continue;
           }
-          else if(targetPiece.rot == UP) {
+          else if(rot == UP) {
             laserDir = UP;
             lInfo.bounced = true;
             continue;
@@ -524,6 +546,7 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
           break;
       }
     }
+
     lInfo.hitPiece = targetPiece;
     lInfo.hitFile = tFile;
     lInfo.hitRank = tRank;
@@ -535,46 +558,29 @@ LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation la
 }
 
 void KhetState::initBoard(string strBoard) {
-    gameOver = false;
-    for(int i = 0; i < 80; i++) {
-        int file = i % 10;
-        int rank = 8 - (i / 10);//rank goes from 1 to 8 not 0 indexed
-        rank--;
-				board[file][rank].type = EMPTY; 
-        string sq = "";
-        sq += strBoard[i * 2];
-        sq += strBoard[i * 2 + 1];
-				board[file][rank] = strToPiece(sq);
-    }
-    if(strBoard[strBoard.length() - 1] == 'w') {
-      ctm = SILVER;
-    }
-    else {
-      ctm = RED;
-    }
-    gen();
-	key = hashBoard();
-}
+  gameOver = false;
+  memset(board,sizeof(KhetPiece)*26,0);
 
-// bool KhetState::isOppositeDirections(Rotation dir1, Rotation dir2) {
-//   switch (dir1) {
-//     case LEFT:
-//       return dir2 == RIGHT;
-//       break;
-//     case RIGHT:
-//       return dir2 == LEFT;
-//       break;
-//     case UP:
-//       return dir2 == DOWN;
-//       break;
-//     case DOWN:
-//       return dir2 == UP;
-//       break;
-//     default:
-//       cout << "Err in opp dir" << endl;
-//   }
-//   return true;
-// }
+  for(int i = 0; i < 80; i++) {
+      int file = i % 10;
+      int rank = 7 - (i / 10);//rank goes from 1 to 8 yes 0 indexed
+      if (strBoard[i*2]=='-') continue;
+      
+			board[file][rank].type = EMPTY;
+      int type = (int)(strBoard[i*2]-'a');
+      int rot = (int)(strBoard[i*2+1]-'0');
+      
+      board[type] = makeKhetPiece(type,rot,file,rank);
+  }
+  if(strBoard[strBoard.length() - 1] == 'w') {
+    ctm = SILVER;
+  }
+  else {
+    ctm = RED;
+  }
+  gen();
+   key = hashBoard();
+}
 
 //generates all moves and returns the number of moves 
 long KhetState::gen() 
@@ -584,41 +590,53 @@ long KhetState::gen()
   PlayerColor fctm = ctm;
   moves.clear();
 
-  for (int rank = 0; rank < 8; rank++) {
-    for (int file = 0; file < 10; file++) {
-      KhetPiece piece = board[file][rank];	
-      if(( piece.type == EMPTY) || (piece.color !=fctm)) continue;
-      int rot1 = (piece.rot + 1) % 4;
-      int rot2 = (piece.rot + 3) % 4;
-      //cout << file << " " << rank << endl;
-      switch (piece.type) {
-        case SPHINX: 
+  KhetPiece kp;
+  unsigned int file;
+  unsigned int rank;
+  unsigned int type;
+
+  memset(KhetState::evalboard,sizeof(KhetPiece)*80,0);
+
+  for (int x=0; x<26; x++)
+  {
+    kp = board[x];
+    if (kp==0) continue;
+    file = getFile(kp);
+    rank = getRank(kp);
+    evalboard[file][rank] = kp;
+  }
+
+  if (ctm == SILVER)
+  {
+    for (int x=0; x<13; x++)
+    {
+      kp = board[x];
+      if (kp==0) continue;
+      rot = getRot(kp);
+
+      int rot1 = (rot + 1) % 4;
+      int rot2 = (rot + 3) % 4;
+
+      switch (x)
+      {
+        case SSPHINX: 
           //rotations only
-          if(fctm == SILVER) {
-            if(rot1 == UP || rot1 == LEFT) {
-               moves.push_back(makeKhetMove( file, rank, piece.rot,
-                                              file, rank, rot1));
-            }
-            if(rot2 == UP || rot2 == LEFT) {
-              moves.push_back(makeKhetMove(file, rank, piece.rot,
-                                              file, rank, rot2));
-            }
-          }
-          else {
-            if(rot1 == DOWN || rot1 == RIGHT) {
-              moves.push_back(makeKhetMove(file, rank, piece.rot,
-                                              file, rank, rot1));
-            }
-            if(rot2 == DOWN || rot2 == RIGHT) {
-              moves.push_back(makeKhetMove(file, rank, piece.rot,
-                                              file, rank, rot2));
-            }
+          if(rot1 == UP || rot1 == LEFT) {
+             moves.push_back(makeKhetMove( file, rank, rot,
+                                            file, rank, rot1,
+                                            kp, kp));
+          } else
+          {
+            moves.push_back(makeKhetMove(file, rank, rot,
+                                            file, rank, rot2,
+                                            kp, kp));
           }
           break;
-        case ANUBIS: 
-        case SCARAB:
-        case PHAROAH: 
-        case PYRAMID: 
+        case SANUBIS1: case SANUBIS2: 
+        case SSCARAB1: case SSCARAB2:
+        case SPHAROAH: 
+        case SPYRAMID1: case SPYRAMID2: case SPYRAMID3: case SPYRAMID4: 
+        case SPYRAMID5: case SPYRAMID6: case SPYRAMID7: 
           //moveso
           for (int toFileOffset = -1; toFileOffset < 2; toFileOffset++ ) {
             for (int toRankOffset = -1; toRankOffset < 2; toRankOffset++ ) {
@@ -630,62 +648,144 @@ long KhetState::gen()
               if(toRank > 7 || toRank < 0) continue;//offboard
 
               //certain squares are forbidden on board
-              if(piece.color == RED) {
-                if(toFile == 9) continue;
-                if(toFile == 1 && (toRank == 0 || toRank == 7)) continue;
-              }
-              if(piece.color == SILVER) {
-                if(toFile == 0) continue;
-                if(toFile == 8 && (toRank == 0 || toRank == 7)) continue;
-              }
 
+              if(toFile == 0) continue;
+              if(toFile == 8 && (toRank == 0 || toRank == 7)) continue;
+              
+              KhetPiece otherPiece = evalboard[toFile][toRank];
               //is the target location already occuppied
-              if(board[toFile][toRank].type != EMPTY) {
-                if(piece.type != SCARAB) continue;//scarabs can swap
-                KhetPiece otherPiece = board[toFile][toRank];
-                  
+              if(evalboard[toFile][toRank] != 0) {
+                if(!(type==SSCARAB1||type==SSCARAB2) continue;//scarabs can swap
+                
                 //dont swap the other piece into an illegal square
-                if(otherPiece.color == RED) {
+                if(getType(otherPiece)/13) {
                   if(file == 9) continue;
                   if(file == 1 && (rank == 0 || rank == 7)) continue;
-                }
-                if(otherPiece.color == SILVER) {
+                } else {
                   if(file == 0) continue;
                   if(file == 8 && (rank == 0 || rank == 7)) continue;
                 }
 
-                if(otherPiece.type == PYRAMID || otherPiece.type == ANUBIS) {
+
+                if((getType(otherPiece)%13)>3) {
                   //valid swap move
-                  moves.push_back(makeKhetMove(file, rank, piece.rot, 
-                                                  toFile, toRank, piece.rot));
-                }
-                else {
+                  moves.push_back(makeKhetMove(file, rank, rot, 
+                                                  toFile, toRank, rot,
+                                                  kp, otherPiece));
+                } else {
                   continue;
                 }
-              }
-              else {
+              } else {
                 //valid move
-                moves.push_back(makeKhetMove(file, rank, piece.rot, 
-                                                toFile, toRank, piece.rot));
+                moves.push_back(makeKhetMove(file, rank, rot, 
+                                                toFile, toRank, rot,
+                                                kp, otherPiece));
               }
             }
           }
           //rotations 
-          moves.push_back(makeKhetMove(file, rank, piece.rot, file, rank, rot1));
+          moves.push_back(makeKhetMove(file, rank, rot, file, rank, rot1, kp, kp));
           //if(piece.type != SCARAB) {
-          moves.push_back(makeKhetMove(file, rank, piece.rot, file, rank, rot2));
+          moves.push_back(makeKhetMove(file, rank, rot, file, rank, rot2, kp, kp));
           //}
           break;
         default:
           cout << "unknown piece in gen: " << piece.type  << endl;
       }
+    }
+  } else
+  {
+    for (int x=13; x<26; x++)
+    {
+      if (kp==0) continue;
+      kp = board[x];
+      rot = getRot(kp);
 
-    }	
+      int rot1 = (rot + 1) % 4;
+      int rot2 = (rot + 3) % 4;
+
+      switch (x)
+      {
+        case RSPHINX: 
+          //rotations only
+          if(rot1 == DOWN || rot1 == RIGHT) {
+             moves.push_back(makeKhetMove( file, rank, rot,
+                                            file, rank, rot1,
+                                            kp, kp));
+          } else
+          {
+            moves.push_back(makeKhetMove(file, rank, rot,
+                                            file, rank, rot2,
+                                            kp, kp));
+          }
+          break;
+        case RANUBIS1: case RANUBIS2: 
+        case RSCARAB1: case RSCARAB2:
+        case RPHAROAH: 
+        case RPYRAMID1: case RPYRAMID2: case RPYRAMID3: case SRYRAMID4: 
+        case RPYRAMID5: case RPYRAMID6: case RPYRAMID7: 
+          //moveso
+          for (int toFileOffset = -1; toFileOffset < 2; toFileOffset++ ) {
+            for (int toRankOffset = -1; toRankOffset < 2; toRankOffset++ ) {
+              if(toRankOffset == 0 && toFileOffset == 0) continue;//must move
+
+              int toFile = file + toFileOffset;
+              int toRank = rank + toRankOffset;
+              if(toFile > 9 || toFile < 0) continue;//offboard
+                        if(toRank > 7 || toRank < 0) continue;//offboard
+
+              //certain squares are forbidden on board
+              if(toFile == 9) continue;
+              if(toFile == 1 && (toRank == 0 || toRank == 7)) continue;
+              
+
+              KhetPiece otherPiece = evalboard[toFile][toRank];
+              //is the target location already occuppied
+              if(evalboard[toFile][toRank] != 0) {
+                if(!(type==RSCARAB1||type==RSCARAB2) continue;//scarabs can swap
+                
+                //dont swap the other piece into an illegal square
+                if(getType(otherPiece)/13) {
+                  if(file == 9) continue;
+                  if(file == 1 && (rank == 0 || rank == 7)) continue;
+                } else {
+                  if(file == 0) continue;
+                  if(file == 8 && (rank == 0 || rank == 7)) continue;
+                }
+
+                if((getType(otherPiece)%13)>3) {
+                  //valid swap move
+                  moves.push_back(makeKhetMove(file, rank, rot, 
+                                                  toFile, toRank, rot,
+                                                  kp, otherPiece));
+                } else {
+                  continue;
+                }
+              }
+              else {
+                //valid move
+                moves.push_back(makeKhetMove(file, rank, rot, 
+                                                toFile, toRank, rot,
+                                                  kp, otherPiece));
+              }
+            }
+          }
+          //rotations 
+          moves.push_back(makeKhetMove(file, rank, rot, file, rank, rot1, kp, kp));
+          //if(piece.type != SCARAB) {
+          moves.push_back(makeKhetMove(file, rank, rot, file, rank, rot2, kp, kp));
+          //}
+          break;
+        default:
+          cout << "unknown piece in gen: " << piece.type  << endl;
+      }
+    }
   }
   return moves.size();
 }
 
 string KhetState::getBoardStr() {
+  return "";
   stringstream bd;
   for(int rank = 7; rank >= 0; rank--) {
     for(int file = 0; file < 10; file++) {
@@ -709,6 +809,7 @@ string KhetState::getBoardStr() {
 }
 
 string KhetState::getBoardPrettyStr() {
+  return "";
   stringstream bd;
   for(int rank = 7; rank >= 0; rank--) {
     for(int file = 0; file < 10; file++) {

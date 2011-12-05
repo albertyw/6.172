@@ -1,5 +1,7 @@
 #include "eval.h"
 
+KhetPiece KhetState::evalboard[FILE_COUNT][RANK_COUNT];
+
 int eval(Board b, PlayerColor ctm) {
   int eval_score = 0;
   int sPharaohRank = 0;
@@ -10,57 +12,105 @@ int eval(Board b, PlayerColor ctm) {
   int redScore = 0;
   int silverScore = 0;
 
+  KhetPiece kp;
+  unsigned int file;
+  unsigned int rank;
+  unsigned int type;
+
+  memset(KhetState::evalboard,sizeof(KhetPiece)*80,0);
+
+  for (int x=0; x<26; x++)
+  {
+    kp = b[x];
+    if (kp==0) continue;
+    file = getFile(kp);
+    rank = getRank(kp);
+    KhetState::evalboard[file][rank] = kp;
+  }
+
   //piece score calc
   int rC = 0;
   int sC = 0;
-  for(int file = 0; file < FILE_COUNT; file++) {
-    for(int rank = 0; rank < RANK_COUNT; rank++) {
-      int center_value = center[file][rank];
-      int piece_value = 0; 
-      int pst = 0;
-      int pieceScore = 0;
-      KhetPiece piece = b[file][rank]; 
-      switch(piece.type) {
-        case SCARAB:
-          pst = scPST;
-          if(isEdge(file,rank)) pieceScore += scEdge;
-          break;
-        case SPHINX:
-          break;
-        case PHAROAH:
-          pst = phPST;
-          if(piece.color == SILVER) {
-            sPharaohRank = rank;
-            sPharaohFile = file;
-          }
-          else {
-            rPharaohRank = rank;
-            rPharaohFile = file;
-          }
-          break;
-        case PYRAMID:
-          pst = pyPST;
-          piece_value = pyVal;
-          pieceScore += pyMob * adjacentEmptySquares(b, file, rank);
-          if(isEdge(file,rank)) pieceScore += pyEdge;
-          break;
-        case ANUBIS:
-          pst = anPST;
-          piece_value = anVal;
-          break;
-        case EMPTY:
-          continue;
-          break;
+  for(int x = 0; x < 26; x++) {
+    kp = b[x];
+    if (kp==0) continue;
+    file = getFile(kp);
+    rank = getRank(kp);
+    int center_value = center[file][rank];
+    int piece_value = 0; 
+    int pst = 0;
+    int pieceScore = 0;
+
+    type = (unsigned int) getType(kp);
+
+    if (type<13) // silver
+    {
+      switch(getType(kp)) {
+      case SPHAROH : 
+        pst = phPST;
+        sPharaohRank = rank;
+        sPharaohFile = file;
+        break;
+      case SSPHINX : 
+        break;
+      case SANUBIS1: 
+      case SANUBIS2: 
+        pst = anPST;
+        piece_value = anVal;
+        break;
+      case SSCARAB1: 
+      case SSCARAB2: 
+        pst = scPST;
+        if(isEdge(file,rank)) pieceScore += scEdge;
+        break;
+      case SPYRAMID1: 
+      case SPYRAMID2: 
+      case SPYRAMID3: 
+      case SPYRAMID4: 
+      case SPYRAMID5: 
+      case SPYRAMID6: 
+      case SPYRAMID7: 
+        pst = pyPST;
+        piece_value = pyVal;
+        pieceScore += pyMob * adjacentEmptySquares(file, rank);
+        if(isEdge(file,rank)) pieceScore += pyEdge;
+        break;
       }
-      
-      pieceScore += piece_value + (center_value * pst); 
-      
-      if (piece.color == SILVER) {
-        silverScore += pieceScore;
+      silverScore += pieceScore + piece_value + (center_value * pst); 
+    } else // red
+    {
+      switch(getType(kp)) {
+      case RPHAROH : 
+        pst = phPST;
+        rPharaohRank = rank;
+        rPharaohFile = file;
+        break;
+      case RSPHINX : 
+        break;
+      case RANUBIS1: 
+      case RANUBIS2: 
+        pst = anPST;
+        piece_value = anVal;
+        break;
+      case RSCARAB1: 
+      case RSCARAB2: 
+        pst = scPST;
+        if(isEdge(file,rank)) pieceScore += scEdge;
+        break;
+      case RPYRAMID1: 
+      case RPYRAMID2: 
+      case RPYRAMID3: 
+      case RPYRAMID4: 
+      case RPYRAMID5: 
+      case RPYRAMID6: 
+      case RPYRAMID7: 
+        pst = pyPST;
+        piece_value = pyVal;
+        pieceScore += pyMob * adjacentEmptySquares(file, rank);
+        if(isEdge(file,rank)) pieceScore += pyEdge;
+        break;
       }
-      else {
-        redScore += pieceScore;
-      }
+      redScore += pieceScore + piece_value + (center_value * pst); 
     }
   }
   int rSphRank = 7;
@@ -126,7 +176,7 @@ bool isEdge(int file, int rank) {
   return false;
 } 
 
-int adjacentEmptySquares(Board b, int file, int rank) {
+int adjacentEmptySquares(int file, int rank) {
   int count = 0;
   for(int fileOffset = -1; fileOffset < 2; fileOffset++) {
     for(int rankOffset = -1; rankOffset < 2; rankOffset++) {
@@ -139,7 +189,7 @@ int adjacentEmptySquares(Board b, int file, int rank) {
         continue;
       }
       if(rankOffset == 0 && fileOffset == 0) continue;
-      if(b[toFile][toRank].type == EMPTY) count++;
+      if(KhetState::evalboard[toFile][toRank]==0) count++;
     }
   }
   return count;

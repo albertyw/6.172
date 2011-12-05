@@ -8,12 +8,34 @@
 typedef uint64_t u64;
 using namespace std;
 enum PieceType {
-  ANUBIS = 1,
-  SCARAB = 2,
-  PYRAMID = 3,
-  PHAROAH = 4,
-  SPHINX = 5,
-  EMPTY = 6
+  EMPTY       = 26,
+  SPHAROH     = 0,
+  SSPHINX     = 1,
+  SSCARAB1     = 2,
+  SSCARAB2     = 3,
+  SANUBIS1    = 4,
+  SANUBIS2     = 5,
+  SPYRAMID1     = 6,
+  SPYRAMID2     = 7,
+  SPYRAMID3     = 8,
+  SPYRAMID4     = 9,
+  SPYRAMID5     = 10,
+  SPYRAMID6     = 11,
+  SPYRAMID7     = 12,
+  RPHAROH     = 13,
+  RSPHINX     = 14,
+  RSCARAB1     = 15,
+  RSCARAB2     = 16,
+  RANUBIS1     = 17,
+  RANUBIS2     = 18,
+  RPYRAMID1     = 19,
+  RPYRAMID2     = 20,
+  RPYRAMID3     = 21,
+  RPYRAMID4     = 22,
+  RPYRAMID5     = 23,
+  RPYRAMID6     = 24,
+  RPYRAMID7    = 25,
+
 };
 
 enum PlayerColor {
@@ -28,14 +50,69 @@ enum Rotation {
   DOWN = 3,
 };
 
-typedef struct KhetPiece {
-  PieceType type;
-  Rotation rot;
-  PlayerColor color;
-  int id() {
-    return (((int)color))|(((int)rot)<<1)|(((int)type))<<3;
-  }
-} KhetPiece;
+// typedef struct KhetPiece {
+//   PieceType type;
+//   Rotation rot;
+//   PlayerColor color;
+//   int id() {
+//     return (((int)color))|(((int)rot)<<1)|(((int)type))<<3;
+//   }
+// } KhetPiece;
+
+#define KhetPiece uint16_t
+// if empty, i.e. piece is dead, = 0
+// 9-13      type
+// 7-8       rot
+// 3-6       file
+// 0-2       rank
+inline
+KhetPiece makeKhetPiece(int type, int rot, int file, int rank)
+{
+  return (((int)type)<<9)|(((int)rot)<<7)|(file<<3)|(rank);
+}
+
+inline 
+KhetPiece moveKhetPiece(KhetPiece piece, int file, int rank)
+{
+  return (piece&0x3f80)|(file<<3)|rank;
+}
+
+inline 
+KhetPiece rotateKhetPiece(KhetPiece piece, int rot)
+{
+  return (piece&0x3e7f)|(rot<<7);
+}
+
+inline
+PieceType getType(KhetPiece p)
+{
+  return (PieceType)(p>>9);
+}
+
+inline
+Rotation getRot(KhetPiece p)
+{
+  return (Rotation)((p>>7)&0x3);
+}
+
+inline
+unsigned int getile(KhetPiece p)
+{
+  return (p>>3)&0xf;
+}
+
+inline
+unsigned int getRank(KhetPiece p)
+{
+  return (p&0x7);
+}
+
+inline
+unsigned int getID(KhetPiece p)
+{
+  return p>>7;
+}
+
 
 typedef struct LaserHitInfo {
 
@@ -83,6 +160,8 @@ typedef struct LaserHitInfo {
 #define KhetMove uint32_t
 //typedef uint32_t KhetMove;
 // bits      object
+// 23-27     fPiece - piecetype
+// 18-22     tPiece - piecetype
 // 14-17     fFile
 // 11-13     fRank
 // 9-10      fRot
@@ -90,14 +169,26 @@ typedef struct LaserHitInfo {
 // 2-4       tRank
 // 0-1       tRot
 inline
-KhetMove makeKhetMove(int fFile, int fRank, int fRot, int tFile, int tRank,int tRot) {
-  return (uint32_t)((fFile<<14)|(fRank<<11)|(fRot<<9)|(tFile<<5)|(tRank<<2)|(tRot));
+KhetMove makeKhetMove(int fFile, int fRank, int fRot, int tFile, int tRank,int tRot, int fPiece, int toPiece) {
+  return (uint32_t)((fPiece<<23)|(tPiece<<18)|(fFile<<14)|(fRank<<11)|(fRot<<9)|(tFile<<5)|(tRank<<2)|(tRot));
+}
+
+inline
+unsigned int getFromPiece(KhetMove mv)
+{
+  return (mv>>23);
+}
+
+inline
+unsigned int getToPiece(KhetMove mv)
+{
+  return (mv>>18)&0x1f;
 }
 
 inline
 unsigned int getFromFile(KhetMove mv)
 {
-  return (mv>>14);
+  return (mv>>14)&0xf;
 }
 
 inline
@@ -142,7 +233,8 @@ unsigned int getToRot(KhetMove mv)
 // }
 
 
-typedef KhetPiece Board[FILE_COUNT][RANK_COUNT];
+// typedef KhetPiece Board[FILE_COUNT][RANK_COUNT];
+typedef KhetPiece Board[26];
 
 
 #endif

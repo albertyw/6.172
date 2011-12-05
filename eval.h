@@ -42,6 +42,6 @@ static int center[FILE_COUNT][RANK_COUNT] = {{-3, -2, -1, 0, 0, -1, -2, -3},
 #define pyMob 23 // count empty squares around pyramid, and multiply
 
 int eval(Board b, PlayerColor ctm);
-int adjacentEmptySquares(Board b, int file, int rank);
+int adjacentEmptySquares(int file, int rank);
 bool isEdge(int file, int rank);
 #endif //EVAL_HDR
