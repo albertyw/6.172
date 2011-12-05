@@ -415,7 +415,7 @@ LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
   lInfo.hitPiece = 0;
   lInfo.hitFile = -1;
   lInfo.hitRank = -1;
-  lInfo.laserDir = 0;
+  lInfo.laserDir = (Rotation)0;
 
   unsigned int type;
   Rotation rot;
