@@ -342,7 +342,7 @@ void KhetState::imake(KhetMove mv) {
 
     Rotation laserDir = getRot(sph);
 
-    memset(KhetState::evalboard,sizeof(KhetPiece)*80,0);
+    memset(KhetState::evalboard,0,sizeof(KhetPiece)*80);
 
     for (int x=0; x<26; x++)
     {
@@ -567,7 +567,7 @@ LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
 
 void KhetState::initBoard(string strBoard) {
   gameOver = false;
-  memset(board,sizeof(KhetPiece)*26,0);
+  memset(board,0,sizeof(KhetPiece)*26);
 
   for(int i = 0; i < 80; i++) {
       int file = i % 10;
@@ -604,7 +604,7 @@ long KhetState::gen()
   unsigned int type;
   Rotation rot;
 
-  memset(KhetState::evalboard,sizeof(KhetPiece)*80,0);
+  memset(KhetState::evalboard,0,sizeof(KhetPiece)*80);
 
   for (int x=0; x<26; x++)
   {
@@ -807,7 +807,7 @@ string KhetState::getBoardStr() {
   unsigned int rank;
   unsigned int type;
 
-  memset(KhetState::evalboard,sizeof(KhetPiece)*80,0);
+  memset(KhetState::evalboard,0,sizeof(KhetPiece)*80);
 
   for (int x=0; x<26; x++)
   {
@@ -843,7 +843,7 @@ string KhetState::getBoardPrettyStr() {
   unsigned int rank;
   unsigned int type;
 
-  memset(KhetState::evalboard,sizeof(KhetPiece)*80,0);
+  memset(KhetState::evalboard,0,sizeof(KhetPiece)*80);
 
   for (int x=0; x<26; x++)
   {

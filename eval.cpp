@@ -17,7 +17,7 @@ int eval(Board b, PlayerColor ctm) {
   unsigned int rank;
   unsigned int type;
 
-  memset(KhetState::evalboard,sizeof(KhetPiece)*80,0);
+  memset(KhetState::evalboard,0,sizeof(KhetPiece)*80);
 
   for (int x=0; x<26; x++)
   {
