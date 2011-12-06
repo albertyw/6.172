@@ -375,7 +375,8 @@ int root_search(ABState *g, int depth);
 
 int search(ABState *prev, KhetMove next_move, int depth );
 
-
+KhetMove killer_moves[MAX_DEPTH];
+int curdepth;
 
 };
 #endif//header

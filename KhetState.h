@@ -115,6 +115,7 @@ class KhetState {
 	KhetState* makeMove(KhetMove mv);
 	KhetState* makeMove(int index);
 
+    bool isValidMove(KhetMove km);
     bool isWon();
     //counts the number of possible states up to depth. Useful for 
     //debugging move generator

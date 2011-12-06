@@ -274,6 +274,35 @@ KhetState* KhetState::makeMove(int index) {
   return getKhetState(this,moves[index]);
 }
 
+bool KhetState::isValidMove(KhetMove km) {
+  const unsigned int fromFile = getFromFile(mv);
+  const unsigned int fromRank = getFromRank(mv); 
+  const unsigned int fromRot = getFromRot(mv); 
+  const unsigned int toFile = getToFile(mv); 
+  const unsigned int toRank = getToRank(mv); 
+  const unsigned int toRot = getToRot(mv); 
+  KhetPiece origPiece = board[fromFile][fromRank];
+  KhetPiece targetPiece = board[toFile][toRank];
+  if (origPiece.type == EMPTY) return false;
+  if (targetPiece.type != EMPTY)
+  {
+    if (origPiece.type!=SCARAB) return false;
+    if (targetPiece.type == PYRAMID || targetPiece.type == ANUBIS) return true;
+    return false;
+  } else
+  {
+    if (fromRot==toRot)
+    {
+      if (fromFile==toFile && fromRank==toRank) return true;
+      return false;
+    } else
+    {
+      if (fromFile==toFile && fromRank==toRank) return false;
+      return true;
+    }
+  }
+}
+
 uint64_t KhetState::hashBoard() {
   uint64_t hashKey = 0;
   for(int file = 0; file < FILE_COUNT; file++) {

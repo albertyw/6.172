@@ -56,6 +56,8 @@ int ABSearch(ABState* g, int max_depth, int search_time,
   search_done = 0;
   cilk_spawn timer_thread();
 
+  memset(killer_moves,INVALID_MOVE,sizeof(KhetMove)*MAX_DEPTH);
+
   //iterative deepening loop
   for (int depth=1; depth <= max_depth; depth++)
   {
@@ -63,7 +65,7 @@ int ABSearch(ABState* g, int max_depth, int search_time,
     double  tt;
     int nc;
 
-
+    curdepth = depth;
     assert(KhetState::checkKhetCache()==0);
     score = root_search( g, depth );
     assert(KhetState::checkKhetCache()==0);
@@ -167,6 +169,7 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
     int saw_rep = 0;
     unsigned int num_moves;
     ABState *next;
+    KhetMove move;
 	
     auto search_catch = [&] (int ret_sc, int ret_mv )->int {
       m.lock(); 
@@ -248,7 +251,31 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
   //paranoia check to make sure hash table isnot  malfunctioning
   if(num_moves > ht_move ) {
     //focus all resources on searching this move first
-    sc = search( next, next->ks->getMove(ht_move), depth-1);
+    move = next->ks->getMove(ht_move);
+    sc = search( next, move, depth-1);
+    sc = -sc;
+    if (sc > bestscore) { 
+      bestscore = sc;
+      local_best_move = ht_move;
+      if (sc > next->alpha) next->alpha = sc;
+      if (sc >= next->beta) {
+        //prune
+        killer_moves[curdepth-depth] = move;
+        delete next;
+        return bestscore;
+      }
+    } 
+  }
+  else {
+    //error inhash
+  }
+
+  // KILLER MOVES
+  move = killer_moves[curdepth-depth];
+  if (km!=INVALID_MOVE && next->ks->isValidMove(km))
+  {
+    // try searching the killer move
+    sc = search( next, move, depth-1);
     sc = -sc;
     if (sc > bestscore) { 
       bestscore = sc;
@@ -259,10 +286,7 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
         delete next;
         return bestscore;
       }
-    } 
-  }
-  else {
-    //error inhash
+    }
   }
 
   /* cycle through all the moves */
@@ -277,7 +301,12 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
     if (stateInd != ht_move) {   /* don't try this again */
       // ABState* next_state = next_moves[stateInd]; 
       //search catch returns 1 if pruned
-      if( search_catch( search(next, next->ks->getMove(stateInd), depth-1), stateInd) ) break;
+      move = next->ks->getMove(stateInd);
+      if( search_catch( search(next, move, depth-1), stateInd) )
+      {
+        killer_moves[curdepth-depth] = move;
+        break;
+      }
     }
 	}
 #if HASH
