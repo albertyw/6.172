@@ -635,101 +635,101 @@ long KhetState::gen()
         }
 
 
-      KhetPiece piece = board[file][rank];	
-      if(( piece.type == EMPTY) || (piece.color !=fctm)) continue;
-      int rot1 = (piece.rot + 1) % 4;
-      int rot2 = (piece.rot + 3) % 4;
-      //cout << file << " " << rank << endl;
-      switch (piece.type) {
-        case SPHINX: 
-          //rotations only
-          if(fctm == SILVER) {
-            if(rot1 == UP || rot1 == LEFT) {
-               moves.push_back(makeKhetMove( file, rank, piece.rot,
-                                              file, rank, rot1));
-            }
-            if(rot2 == UP || rot2 == LEFT) {
-              moves.push_back(makeKhetMove(file, rank, piece.rot,
-                                              file, rank, rot2));
-            }
-          }
-          else {
-            if(rot1 == DOWN || rot1 == RIGHT) {
-              moves.push_back(makeKhetMove(file, rank, piece.rot,
-                                              file, rank, rot1));
-            }
-            if(rot2 == DOWN || rot2 == RIGHT) {
-              moves.push_back(makeKhetMove(file, rank, piece.rot,
-                                              file, rank, rot2));
-            }
-          }
-          break;
-        case ANUBIS: 
-        case SCARAB:
-        case PHAROAH: 
-        case PYRAMID: 
-          //moveso
-          for (int toFileOffset = -1; toFileOffset < 2; toFileOffset++ ) {
-            for (int toRankOffset = -1; toRankOffset < 2; toRankOffset++ ) {
-              if(toRankOffset == 0 && toFileOffset == 0) continue;//must move
-
-              int toFile = file + toFileOffset;
-              int toRank = rank + toRankOffset;
-              if(toFile > 9 || toFile < 0) continue;//offboard
-              if(toRank > 7 || toRank < 0) continue;//offboard
-
-              //certain squares are forbidden on board
-              if(piece.color == RED) {
-                if(toFile == 9) continue;
-                if(toFile == 1 && (toRank == 0 || toRank == 7)) continue;
+        KhetPiece piece = board[file][rank];	
+        if(( piece.type == EMPTY) || (piece.color !=fctm)) continue;
+        int rot1 = (piece.rot + 1) % 4;
+        int rot2 = (piece.rot + 3) % 4;
+        //cout << file << " " << rank << endl;
+        switch (piece.type) {
+          case SPHINX: 
+            //rotations only
+            if(fctm == SILVER) {
+              if(rot1 == UP || rot1 == LEFT) {
+                 moves.push_back(makeKhetMove( file, rank, piece.rot,
+                                                file, rank, rot1));
               }
-              if(piece.color == SILVER) {
-                if(toFile == 0) continue;
-                if(toFile == 8 && (toRank == 0 || toRank == 7)) continue;
+              if(rot2 == UP || rot2 == LEFT) {
+                moves.push_back(makeKhetMove(file, rank, piece.rot,
+                                                file, rank, rot2));
               }
+            }
+            else {
+              if(rot1 == DOWN || rot1 == RIGHT) {
+                moves.push_back(makeKhetMove(file, rank, piece.rot,
+                                                file, rank, rot1));
+              }
+              if(rot2 == DOWN || rot2 == RIGHT) {
+                moves.push_back(makeKhetMove(file, rank, piece.rot,
+                                                file, rank, rot2));
+              }
+            }
+            break;
+          case ANUBIS: 
+          case SCARAB:
+          case PHAROAH: 
+          case PYRAMID: 
+            //moveso
+            for (int toFileOffset = -1; toFileOffset < 2; toFileOffset++ ) {
+              for (int toRankOffset = -1; toRankOffset < 2; toRankOffset++ ) {
+                if(toRankOffset == 0 && toFileOffset == 0) continue;//must move
 
-              //is the target location already occuppied
-              if(board[toFile][toRank].type != EMPTY) {
-                if(piece.type != SCARAB) continue;//scarabs can swap
-                KhetPiece otherPiece = board[toFile][toRank];
-                  
-                //dont swap the other piece into an illegal square
-                if(otherPiece.color == RED) {
-                  if(file == 9) continue;
-                  if(file == 1 && (rank == 0 || rank == 7)) continue;
+                int toFile = file + toFileOffset;
+                int toRank = rank + toRankOffset;
+                if(toFile > 9 || toFile < 0) continue;//offboard
+                if(toRank > 7 || toRank < 0) continue;//offboard
+
+                //certain squares are forbidden on board
+                if(piece.color == RED) {
+                  if(toFile == 9) continue;
+                  if(toFile == 1 && (toRank == 0 || toRank == 7)) continue;
                 }
-                if(otherPiece.color == SILVER) {
-                  if(file == 0) continue;
-                  if(file == 8 && (rank == 0 || rank == 7)) continue;
+                if(piece.color == SILVER) {
+                  if(toFile == 0) continue;
+                  if(toFile == 8 && (toRank == 0 || toRank == 7)) continue;
                 }
 
-                if(otherPiece.type == PYRAMID || otherPiece.type == ANUBIS) {
-                  //valid swap move
+                //is the target location already occuppied
+                if(board[toFile][toRank].type != EMPTY) {
+                  if(piece.type != SCARAB) continue;//scarabs can swap
+                  KhetPiece otherPiece = board[toFile][toRank];
+                    
+                  //dont swap the other piece into an illegal square
+                  if(otherPiece.color == RED) {
+                    if(file == 9) continue;
+                    if(file == 1 && (rank == 0 || rank == 7)) continue;
+                  }
+                  if(otherPiece.color == SILVER) {
+                    if(file == 0) continue;
+                    if(file == 8 && (rank == 0 || rank == 7)) continue;
+                  }
+
+                  if(otherPiece.type == PYRAMID || otherPiece.type == ANUBIS) {
+                    //valid swap move
+                    moves.push_back(makeKhetMove(file, rank, piece.rot, 
+                                                    toFile, toRank, piece.rot));
+                  }
+                  else {
+                    continue;
+                  }
+                }
+                else {
+                  //valid move
                   moves.push_back(makeKhetMove(file, rank, piece.rot, 
                                                   toFile, toRank, piece.rot));
                 }
-                else {
-                  continue;
-                }
-              }
-              else {
-                //valid move
-                moves.push_back(makeKhetMove(file, rank, piece.rot, 
-                                                toFile, toRank, piece.rot));
               }
             }
-          }
-          //rotations 
-          moves.push_back(makeKhetMove(file, rank, piece.rot, file, rank, rot1));
-          //if(piece.type != SCARAB) {
-          moves.push_back(makeKhetMove(file, rank, piece.rot, file, rank, rot2));
-          //}
-          break;
-        default:
-          cout << "unknown piece in gen: " << piece.type  << endl;
-      }
+            //rotations 
+            moves.push_back(makeKhetMove(file, rank, piece.rot, file, rank, rot1));
+            //if(piece.type != SCARAB) {
+            moves.push_back(makeKhetMove(file, rank, piece.rot, file, rank, rot2));
+            //}
+            break;
+          default:
+            cout << "unknown piece in gen: " << piece.type  << endl;
+        }
 
-	  }
+  	  }
     }	
   }
   return moves.size();
