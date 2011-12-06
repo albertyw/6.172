@@ -571,7 +571,7 @@ LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
   return lInfo;
 }
 
-LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
+LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
           int closestToFile, int closestToRank, int closestToFile2, int closestToRank2) {
   KhetPiece targetPiece;
   targetPiece.type = EMPTY;
