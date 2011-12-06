@@ -621,8 +621,20 @@ long KhetState::gen()
   PlayerColor fctm = ctm;
   moves.clear();
 
-  for (int rank = 0; rank < 8; rank++) {
-    for (int file = 0; file < 10; file++) {
+  int rank, file;
+
+  for (int afile = 0; afile < 5; afile++) {
+    for (int arank = 0; arank < 4; arank++) {
+      for (int b=0; b<4; b++) {
+        switch (b)
+        {
+          case 0: rank = arank; file = afile; break;
+          case 1: rank = arank; 9-file = afile; break;
+          case 2: rank = 7-arank; file = afile; break;
+          case 3: rank = 7-arank; 9-file = afile; break;
+        }
+
+
       KhetPiece piece = board[file][rank];	
       if(( piece.type == EMPTY) || (piece.color !=fctm)) continue;
       int rot1 = (piece.rot + 1) % 4;
@@ -716,6 +728,7 @@ long KhetState::gen()
         default:
           cout << "unknown piece in gen: " << piece.type  << endl;
       }
+
 
     }	
   }
