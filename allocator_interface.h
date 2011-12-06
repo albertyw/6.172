@@ -35,6 +35,9 @@ namespace my
     
     static size_t ** getBinPointer(uint8_t binNum);
     static void setBinPointer(uint8_t binNum, size_t *setPointer);
+    static pthread_mutex_t * getBinLock(uint8_t binNum);
+    static void lockBin(uint8_t binNum);
+    static void unlockBin(uint8_t binNum);
     static void setBlockPointer(size_t *blockPointer, size_t *pointerValue);
     static size_t * getHeapPointer();
     static size_t * sizeAddBytes(size_t *pointer, uint64_t bytes);

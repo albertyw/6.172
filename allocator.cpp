@@ -40,7 +40,7 @@
 #define BIN_MIN 3
 #define BIN_MAX 36            // The highest number bin
 #define NUMBER_OF_BINS (BIN_MAX-BIN_MIN+1)                               //TODO: OPTIMIZE 33; using 33 because we're not using bins 0,1,2
-#define PRIVATE_SIZE (ALIGNMENT*NUMBER_OF_BINS)                      
+#define PRIVATE_SIZE (SIZE_T_SIZE*NUMBER_OF_BINS + MUTEX_SIZE*NUMBER_OF_BINS)                      
 #define HEAP_SIZE (ALIGNMENT*1024)                          //TODO: OPTIMIZE 1024
 // HEAP_SIZE and PRIVATE_SIZE should be a power of 2
 
@@ -138,7 +138,7 @@ namespace my
   inline size_t ** allocator::getBinPointer(uint8_t binNum){
     assert(binNum <= BIN_MAX);
     assert(binNum >= BIN_MIN);
-    size_t ** temp = (size_t**)mem_heap_lo() + (binNum-3);
+    size_t ** temp = (size_t**)mem_heap_lo() + (binNum-BIN_MIN);
     assert(temp >= (size_t **)mem_heap_lo());
     assert(temp < (size_t **)getHeapPointer());
     return temp;
@@ -155,6 +155,28 @@ namespace my
     size_t **binPointer = getBinPointer(binNum);
     *binPointer = setPointer;
     assert(*getBinPointer(binNum) == setPointer);
+  }
+  
+  /**
+   * Get the lock on a bin
+   **/
+   inline pthread_mutex_t* allocator::getBinLock(uint8_t binNum){
+    assert(SIZE_T_SIZE >= MUTEX_SIZE);
+    return (pthread_mutex_t*)((size_t*)mem_heap_lo() + BIN_MAX - BIN_MIN + 1 + binNum - BIN_MIN);
+  }
+  
+  /**
+   * Lock a bin
+   **/
+  inline void allocator::lockBin(uint8_t binNum){
+    pthread_mutex_lock(getBinLock(binNum));
+  }
+  
+  /**
+   * Unlock a bin
+   **/
+  inline void allocator::unlockBin(uint8_t binNum){
+    pthread_mutex_unlock(getBinLock(binNum));
   }
   
   /**
