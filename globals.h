@@ -32,7 +32,6 @@ typedef struct KhetPiece {
   PieceType type;
   Rotation rot;
   PlayerColor color;
-  int pyScore;
   int id() {
     return (((int)color))|(((int)rot)<<1)|(((int)type))<<3;
   }
