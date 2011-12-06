@@ -53,7 +53,7 @@ int uciMakeMove(string move) {
     return 1;
   }
   
-  _ABSEARCH::ABState *a = new ABState(prev,index);
+  ABState *a = new ABState(prev,index);
   gameHis[ply+1].key = a->key;
   gameHis[ply+1].his = prev;
   gameHis[ply+1].ply_of_game = a->ply_of_game;
