@@ -112,7 +112,7 @@ class KhetState {
   public:
 
     static int checkKhetCache();
-	static KhetState* getKhetState(uint64_t key);
+    static KhetState* getKhetState(uint64_t key);
     static KhetState* getKhetState(KhetState* s, KhetMove mv);
     static KhetState* getKhetState(KhetState* s, int mvi);
     static KhetState* getKhetState(string b);

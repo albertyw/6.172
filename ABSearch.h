@@ -91,7 +91,7 @@ static int get_best_move() {
 #define INF 32700
 #define MATE 32000
 
-#define REPWIN 32001
+#define REPWIN 27001
 
 //#define REP 0
 #define HASH 1
