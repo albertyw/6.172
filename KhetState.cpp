@@ -625,13 +625,13 @@ long KhetState::gen()
 
   for (int afile = 0; afile < 5; afile++) {
     for (int arank = 0; arank < 4; arank++) {
-      for (int b=0; b<4; b++) {
-        switch (b)
+      for (int bbb=0; bbb<4; bbb++) {
+        switch (bbb)
         {
           case 0: rank = arank; file = afile; break;
-          case 1: rank = arank; 9-file = afile; break;
+          case 1: rank = arank; file = 9-afile; break;
           case 2: rank = 7-arank; file = afile; break;
-          case 3: rank = 7-arank; 9-file = afile; break;
+          case 3: rank = 7-arank; file = 9-afile; break;
         }
 
 
@@ -729,7 +729,7 @@ long KhetState::gen()
           cout << "unknown piece in gen: " << piece.type  << endl;
       }
 
-
+	  }
     }	
   }
   return moves.size();
