@@ -426,7 +426,7 @@ void KhetState::imake(KhetMove mv) {
     assert(key==hashBoard());
 }
 
-LaserHitInfo KhetState::fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
+LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
     int closestToFile, int closestToRank) {
   KhetPiece targetPiece;
   targetPiece.type = EMPTY;
@@ -972,7 +972,7 @@ int KhetState::adjacentEmptySquares(int file, int rank) {
         continue;
       }
       if(rankOffset == 0 && fileOffset == 0) continue;
-      if(b[toFile][toRank].type == EMPTY) count++;
+      if(board[toFile][toRank].type == EMPTY) count++;
     }
   }
   return count;
