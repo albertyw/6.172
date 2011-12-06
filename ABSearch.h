@@ -39,7 +39,7 @@
 
 namespace _ABSEARCH {
 static int   timeout;
-static bool global_abort;
+static Abort *global_abort;
 static int   search_done;
 static u64   start_wall_time;
 static int   bestmove;
@@ -73,7 +73,8 @@ results in undefined behavior
 aborts currently running alpha beta search
    */
 static void abortSearch() {
-  global_abort = true;
+  if (global_abort)
+  global_abort->abort();
 }
 
 //can be called to get the index of the best known move so far
@@ -295,7 +296,7 @@ static void timer_thread(void)
 {
      for (;;) {
       if (new_wall_time() >= (u64) timeout * 1000 + start_wall_time) {
-           global_abort = true;
+		global_abort->abort();
            return;
       }
       if (search_done) return;
@@ -305,7 +306,7 @@ static void timer_thread(void)
 
 static void timeout_handler( int signum )
 {
-  global_abort = true;
+  global_abort->abort();
 }
 
 
@@ -373,7 +374,7 @@ global var bestmove
 */
 int root_search(ABState *g, int depth);
 
-int search(ABState *prev, KhetMove next_move, int depth );
+ int search(ABState *prev, KhetMove next_move, int depth, Abort *parentabort);
 
 
 

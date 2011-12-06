@@ -8,9 +8,9 @@ adjudicate = 200
 
 player = us
 invoke = ./khetplayer
-depth = 2
+fis = 100 2
 
 player = dailey
 invoke = ./khetplayer.dailey
-depth = 2
+fis = 100 2
 

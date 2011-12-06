@@ -54,7 +54,9 @@ int ABSearch(ABState* g, int max_depth, int search_time,
   //done in only this ABSearch
   prev_move = 0;
 
-  global_abort = false;
+  //if (global_abort)
+  //	delete global_abort;
+  global_abort = new Abort();
   search_done = 0;
   cilk_spawn timer_thread();
 
@@ -77,7 +79,7 @@ int ABSearch(ABState* g, int max_depth, int search_time,
       nc += nodec[i];
     total_nc += nc;
 
-    if (global_abort) 
+    if (global_abort->isAborted()) 
       break;
     tt = seconds() - starttime;
     if(f) {
@@ -145,14 +147,15 @@ int root_search(ABState *g, int depth) {
 	 unsigned int num_moves = g->ks->getNumPossibleMoves();
 /* search best move from previous iteration first */
    // KhetMove* best_state = next_moves[prev_move];
-   root_search_catch( search( g, g->ks->getMove(prev_move), depth-1), prev_move);
+	 root_search_catch( search( g, g->ks->getMove(prev_move), depth-1, global_abort), prev_move);
 	 
    /* cycle through all the moves */
-   for(int stateInd = 0; stateInd < num_moves; stateInd++ ) {
+	 #pragma cilk grainsize = 1
+   cilk_for(int stateInd = 0; stateInd < num_moves; stateInd++ ) {
      // ABState* next_state = next_moves[stateInd]; 
      if( stateInd != prev_move) { 
-      if( root_search_catch( search(g, g->ks->getMove(stateInd), depth-1),stateInd ) )
-        break;
+	   if( root_search_catch( search(g, g->ks->getMove(stateInd), depth-1, global_abort),stateInd ) )
+         global_abort->abort();
      }
    }
    //update best move for next iteration
@@ -161,7 +164,7 @@ int root_search(ABState *g, int depth) {
 	 
 }
 
-int search(ABState *prev, KhetMove next_move, int depth ) {
+  int search(ABState *prev, KhetMove next_move, int depth, Abort *parentabort) {
 
     tbb::mutex m;
     int local_best_move = INF;
@@ -172,6 +175,7 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
     unsigned int num_moves;
     ABState *next;
     KhetMove move;
+	Abort localabort(parentabort);
 	
     auto search_catch = [&] (int ret_sc, int ret_mv )->int {
       m.lock(); 
@@ -197,7 +201,7 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
       return prune;
     };
 
-	if (global_abort) {
+	if (localabort.isAborted()) {
       return 0;
   }
 	
@@ -258,7 +262,7 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
   if(num_moves > ht_move ) {
     //focus all resources on searching this move first
     move = next->ks->getMove(ht_move);
-    sc = search( next, move, depth-1);
+    sc = search( next, move, depth-1, &localabort);
     sc = -sc;
     if (sc > bestscore) { 
       bestscore = sc;
@@ -281,7 +285,7 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
   if (move!=INVALID_MOVE && next->ks->isValidMove(move))
   {
     // try searching the killer move
-    sc = search( next, move, depth-1);
+    sc = search( next, move, depth-1, &localabort);
     sc = -sc;
     if (sc > bestscore) { 
       bestscore = sc;
@@ -298,20 +302,20 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
   /* cycle through all the moves */
 
 	//if  aborted this result does not matter
-  if (global_abort) {
+  if (localabort.isAborted()) {
     delete next;
     return 0;
   }
-
-	for(int stateInd = 0; stateInd < num_moves; stateInd++ ) {
+	#pragma cilk grainsize = 1
+   cilk_for(int stateInd = 0; stateInd < num_moves; stateInd++ ) {
     if (stateInd != ht_move) {   /* don't try this again */
       // ABState* next_state = next_moves[stateInd]; 
       //search catch returns 1 if pruned
       move = next->ks->getMove(stateInd);
-      if( search_catch( search(next, move, depth-1), stateInd) )
+      if( search_catch( search(next, move, depth-1,&localabort), stateInd) )
       {
         killer_moves[curdepth-depth] = move;
-        break;
+        localabort.abort();
       }
     }
 	}
