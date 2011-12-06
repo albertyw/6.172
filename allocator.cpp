@@ -5,6 +5,7 @@
 #include "memlib.h"
 #include <math.h>
 #include <assert.h>
+#include <time.h>
 
 /*
 ...................________
@@ -105,9 +106,7 @@ namespace my
    * Find the ceiling for the log of num  
    **/
   inline uint8_t log2(size_t x){
-    // From http://aggregate.org/MAGIC/#Population%20Count%20%28Ones%20Count%29
-    //same as
-   //return ceil(log(num)/log(2)); //TODO: FIND A BITHACK                                       
+    // From http://aggregate.org/MAGIC/#Population%20Count%20%28Ones%20Count%29                                       
     register size_t y = (x & (x - 1));
     y |= -y;
     y >>= 63;
@@ -161,15 +160,27 @@ namespace my
    * Get the lock on a bin
    **/
    inline pthread_mutex_t* allocator::getBinLock(uint8_t binNum){
-    assert(SIZE_T_SIZE >= MUTEX_SIZE);
-    return (pthread_mutex_t*)((size_t*)mem_heap_lo() + BIN_MAX - BIN_MIN + 1 + binNum - BIN_MIN);
+    //assert(SIZE_T_SIZE >= MUTEX_SIZE);
+    pthread_mutex_t* lowLock = (pthread_mutex_t*)((size_t*)mem_heap_lo() + BIN_MAX - BIN_MIN + 1);
+    return lowLock + binNum - BIN_MIN;
   }
   
   /**
    * Lock a bin
+   * Times out in 3 seconds
    **/
   inline void allocator::lockBin(uint8_t binNum){
-    pthread_mutex_lock(getBinLock(binNum));
+    int rc = pthread_mutex_trylock(getBinLock(binNum));
+    /*
+    struct timespec abs_time;
+    clock_gettime(CLOCK_REALTIME, &abs_time);
+    abs_time.tv_sec += 3;
+    int rc = pthread_mutex_timedlock(getBinLock(binNum), &abs_time);
+    */
+    if (rc!=0) {
+      printf("Lock time out\n");
+      assert(false);
+    }
   }
   
   /**
@@ -253,11 +264,12 @@ namespace my
     assert(binNum >= BIN_MIN);
     assert(*getBinPointer(binNum)==0);
     void *newMemPointer = mem_sbrk(size);
-    memset(newMemPointer, 0, size);
+    memset(newMemPointer, 0, size);                         //TODO: REMOVE THIS
     assert((size_t *)newMemPointer >= getHeapPointer());
     assert((size_t *)newMemPointer <= (size_t *)mem_heap_hi());
     assert((char *)mem_heap_hi() - (char*)newMemPointer + 1 == size);
-    setBinPointer(binNum, (size_t *)newMemPointer);
+    lockBin(binNum);
+    addBlockToBin((size_t *)newMemPointer, binNum);
     assert(pow2(binNum) == size);
     return binNum;
   }
@@ -269,6 +281,7 @@ namespace my
    * smallerSize is the number of bytes of the block size needed
    * both sizes should be a power of 2
    * return a pointer to the block size needed
+   * There must be a lock already on largerbinNum
    **/
   inline void allocator::splitBlock(uint8_t largerBinNum, uint8_t smallerBinNum)
   {
@@ -283,29 +296,29 @@ namespace my
     size_t biggerSize = pow2(largerBinNum);
     
     // GET THE REQUIRED BLOCK POINTER
-    size_t *pointerInBlock = *getBinPointer(largerBinNum);
-    size_t *endBlock = sizeAddBytes(pointerInBlock, (uint64_t)biggerSize);
+    size_t *requiredBlock = popBlockFromBin(largerBinNum);
+    size_t *endBlock = sizeAddBytes(requiredBlock, (uint64_t)biggerSize);
     assert(endBlock >= getHeapPointer());
-    // EXTRACT THE REQUIRED BLOCK
-    setBinPointer(largerBinNum, nextBlock(pointerInBlock));
-    setBinPointer(smallerBinNum, pointerInBlock);
-    setBlockPointer(pointerInBlock, 0);
     // WHILE CURRENTSIZE IS LESS THAN BIGGERSIZE/2
-    pointerInBlock = sizeAddBytes(pointerInBlock, (uint64_t)smallerSize);
+    size_t *pointerInBlock = sizeAddBytes(requiredBlock, (uint64_t)smallerSize);
     uint8_t currentBin = smallerBinNum;
     
     for(size_t currentSize = smallerSize; currentSize < biggerSize; currentSize *= 2){
       assert(currentSize == pow2(currentBin));
       assert(pointerInBlock <= (size_t *)mem_heap_hi());
       assert(pointerInBlock >= getHeapPointer());
-      // COPY THE BIN'S POINTER TO THE BLOCK
-      setBlockPointer(pointerInBlock, *getBinPointer(currentBin));
-      // CHANGE THE BIN'S POINTER TO POINT TO THE BLOCK
-      setBinPointer(currentBin, pointerInBlock);
-      // Change values for next iteration
+      // ADD THE NEW BLOCK TO THE BIN
+      lockBin(currentBin);
+      addBlockToBin(pointerInBlock, currentBin);
+      unlockBin(currentBin);
+      // CHANGE VALUES FOR NEXT ITERATION
       pointerInBlock = sizeAddBytes(pointerInBlock, (uint64_t)currentSize);
       currentBin++;
     }
+    // ADD THE REQUIRED BLOCK TO A BIN
+    lockBin(smallerBinNum);
+    addBlockToBin(requiredBlock, smallerBinNum);
+    
     assert(currentBin == largerBinNum);   // Make sure we've split up the whole block
     assert(endBlock == pointerInBlock);
   }
@@ -490,6 +503,11 @@ namespace my
     assert(*p == 0);
     assert(*(sizeAddBytes(p, (uint64_t)PRIVATE_SIZE)) == 0);
     
+    // Initialize bin locks
+    for(uint8_t binNum=BIN_MIN; binNum<BIN_MAX; binNum++){
+      pthread_mutex_init(getBinLock(binNum), NULL);
+    }
+    
     // ALLOCATE A PART OF THE HEAP TO MEMORIZE EMPTY BIN'S BLOCKS
     addBlockToBin(getHeapPointer(), log2(HEAP_SIZE));
     return 0;
@@ -501,8 +519,7 @@ namespace my
    * malloc - Allocate a block by incrementing the brk pointer.
    *     Always allocate a block whose size is a multiple of the alignment.
    */
-  void * allocator::malloc(size_t size)
-  {
+  void * allocator::malloc(size_t size){
     // Make sure that we're aligned to 8 byte boundaries
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
     assert(size <= (my_aligned_size-8));
@@ -510,6 +527,7 @@ namespace my
     // FIND THE BIN (ROUND UP LG(SIZE))
     uint8_t binAllocateNum = log2(my_aligned_size);
     pthread_mutex_lock(&qwer);
+    lockBin(binAllocateNum);
     size_t **binPtr = getBinPointer(binAllocateNum);
     assert(binAllocateNum >= BIN_MIN);
     assert(binAllocateNum <= BIN_MAX);
@@ -517,10 +535,13 @@ namespace my
     assert(binPtr >= (size_t **)mem_heap_lo());
     // IF BIN IS EMPTY
     if(*binPtr == 0){                                     //TODO: USE A GLOBAL VARIABLE TO SAVE THE HIGHEST BIN NUMBER
-      // SEARCH LARGER BINS FOR BLOCKS                    //TODO: ADD COALESCING
+      unlockBin(binAllocateNum);
+      // SEARCH LARGER BINS FOR BLOCKS                    //TODO: ADD COALESCING IN CASE THERE ARE SMALLER BLOCKS
       uint8_t binToBreakNum;
       for(binToBreakNum = binAllocateNum+1; binToBreakNum <= BIN_MAX; binToBreakNum++){
+        lockBin(binToBreakNum);
         if(*getBinPointer(binToBreakNum) != 0) break;
+        unlockBin(binToBreakNum);
       }
       // IF NO BLOCKS FOUND, ALLOCATE MORE MEMORY FOR THE HEAP
       if(binToBreakNum > BIN_MAX){
@@ -528,6 +549,8 @@ namespace my
       }
       // SPLIT BLOCK UP INTO SMALLER BINS
       splitBlock(binToBreakNum, binAllocateNum);
+      // binAllocateNum should be locked now
+      unlockBin(binToBreakNum);
       // ASSERT THAT THE BIN WE JUST ADDED TO HAS 2 BLOCKS
       assert(*getBinPointer(binAllocateNum)!=0); //Assert that the bin is not empty
       assert(nextBlock(*getBinPointer(binAllocateNum))!=0); // Assert that the bin points to something
@@ -537,12 +560,13 @@ namespace my
     assert(*getBinPointer(binAllocateNum)!=0);
     // REMOVE BLOCK POINTER FROM BIN
     size_t * returnBlock = popBlockFromBin(binAllocateNum);
-    pthread_mutex_unlock(&qwer);
+    unlockBin(binAllocateNum);
     // RECORD THE SIZE INTO THE RETURNBLOCK
     *returnBlock = my_aligned_size;
     assert(*returnBlock!=0);
     returnBlock = sizeAddBytes(returnBlock, (uint64_t)SIZE_T_SIZE);
     // RETURN BLOCK POINTER
+    pthread_mutex_unlock(&qwer);
     assert(returnBlock >= getHeapPointer());
     assert(returnBlock <= (size_t *)mem_heap_hi());
     return returnBlock;
