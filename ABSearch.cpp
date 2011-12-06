@@ -2,7 +2,8 @@
 
 namespace _ABSEARCH {
 
-  KhetMove killer_moves[MAX_DEPTH];
+#define NUM_KILLER_MOVES 4
+  KhetMove killer_moves[MAX_DEPTH][NUM_KILLER_MOVES];
   int curdepth;
 /*
 Alpha beta search function
@@ -58,7 +59,7 @@ int ABSearch(ABState* g, int max_depth, int search_time,
   search_done = 0;
   cilk_spawn timer_thread();
 
-  memset(killer_moves,INVALID_MOVE,sizeof(KhetMove)*MAX_DEPTH);
+  memset(killer_moves,INVALID_MOVE,sizeof(KhetMove)*MAX_DEPTH*NUM_KILLER_MOVES);
 
   //iterative deepening loop
   for (int depth=1; depth <= max_depth; depth++)
@@ -172,6 +173,8 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
     unsigned int num_moves;
     ABState *next;
     KhetMove move;
+    KhetMove killer[4] = killer_moves[curdepth-depth];
+    bool done = false;
 	
     auto search_catch = [&] (int ret_sc, int ret_mv )->int {
       m.lock(); 
@@ -266,7 +269,16 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
       if (sc > next->alpha) next->alpha = sc;
       if (sc >= next->beta) {
         //prune
-        killer_moves[curdepth-depth] = move;
+        for (int a=0; a<NUM_KILLER_MOVES; a++)
+        {
+          if (killer[a] == INVALID_MOVE)
+          {
+            killer[a] = move;
+            delete next;
+            return bestscore;
+          }
+        }
+        killer[0] = move;
         delete next;
         return bestscore;
       }
@@ -277,20 +289,32 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
   }
 
   // KILLER MOVES
-  move = killer_moves[curdepth-depth];
-  if (move!=INVALID_MOVE && next->ks->isValidMove(move))
+  for (int kill=0; kill<NUM_KILLER_MOVES; kill++)
   {
-    // try searching the killer move
-    sc = search( next, move, depth-1);
-    sc = -sc;
-    if (sc > bestscore) { 
-      bestscore = sc;
-      local_best_move = ht_move;
-      if (sc > next->alpha) next->alpha = sc;
-      if (sc >= next->beta) {
-        //prune
-        delete next;
-        return bestscore;
+    move = killer[kill];
+    if (move!=INVALID_MOVE && next->ks->isValidMove(move))
+    {
+      // try searching the killer move
+      sc = search( next, move, depth-1);
+      sc = -sc;
+      if (sc > bestscore) { 
+        bestscore = sc;
+        local_best_move = ht_move;
+        if (sc > next->alpha) next->alpha = sc;
+        if (sc >= next->beta) {
+          //prune
+          for (int a=0; a<NUM_KILLER_MOVES; a++)
+            {
+              if (killer[a] == INVALID_MOVE)
+              {
+                killer[a] = move;
+                done = true;
+              }
+            }
+            if (!done)
+              killer[0] = move;
+          done = true;
+        }
       }
     }
   }
@@ -298,23 +322,35 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
   /* cycle through all the moves */
 
 	//if  aborted this result does not matter
+
   if (global_abort) {
     delete next;
     return 0;
   }
-
-	for(int stateInd = 0; stateInd < num_moves; stateInd++ ) {
-    if (stateInd != ht_move) {   /* don't try this again */
-      // ABState* next_state = next_moves[stateInd]; 
-      //search catch returns 1 if pruned
-      move = next->ks->getMove(stateInd);
-      if( search_catch( search(next, move, depth-1), stateInd) )
-      {
-        killer_moves[curdepth-depth] = move;
-        break;
+  if (!done)
+  {
+    for(int stateInd = 0; stateInd < num_moves; stateInd++ ) {
+      if (stateInd != ht_move) {   /* don't try this again */
+        // ABState* next_state = next_moves[stateInd]; 
+        //search catch returns 1 if pruned
+        move = next->ks->getMove(stateInd);
+        if( search_catch( search(next, move, depth-1), stateInd) )
+        {
+          for (int a=0; a<NUM_KILLER_MOVES; a++)
+          {
+            if (killer[a] == INVALID_MOVE)
+            {
+              killer[a] = move;
+              done = true;
+            }
+          }
+          if (!done)
+            killer[0] = move;
+          break;
+        }
       }
     }
-	}
+  }
 #if HASH
   //use hash table for one one color
   
