@@ -1,4 +1,4 @@
-cpus = 10
+cpus = 1
 title = Example
 openings = 50
 adjudicate = 200         
@@ -8,9 +8,9 @@ adjudicate = 200
 
 player = us
 invoke = ./khetplayer
-fis = 100 2
+depth = 4
 
 player = dailey
 invoke = ./khetplayer.dailey
-fis = 100 2
+depth = 4
 

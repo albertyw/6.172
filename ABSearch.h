@@ -36,10 +36,14 @@
 #include "Abort.h"
 #include "ABState.h"
 
+class ABORT {
+ public:
+  static Abort *global_abort;
+};
 
 namespace _ABSEARCH {
 static int   timeout;
-static Abort *global_abort;
+
 static int   search_done;
 static u64   start_wall_time;
 static int   bestmove;
@@ -73,8 +77,8 @@ results in undefined behavior
 aborts currently running alpha beta search
    */
 static void abortSearch() {
-  if (global_abort)
-  global_abort->abort();
+  if (ABORT::global_abort)
+	ABORT::global_abort->abort();
 }
 
 //can be called to get the index of the best known move so far
@@ -296,7 +300,7 @@ static void timer_thread(void)
 {
      for (;;) {
       if (new_wall_time() >= (u64) timeout * 1000 + start_wall_time) {
-		global_abort->abort();
+		ABORT::global_abort->abort();
            return;
       }
       if (search_done) return;
@@ -306,7 +310,7 @@ static void timer_thread(void)
 
 static void timeout_handler( int signum )
 {
-  global_abort->abort();
+  ABORT::global_abort->abort();
 }
 
 

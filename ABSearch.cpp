@@ -1,9 +1,11 @@
 #include "ABSearch.h"
 
-namespace _ABSEARCH {
+Abort *ABORT::global_abort;
 
+namespace _ABSEARCH {
   KhetMove killer_moves[MAX_DEPTH];
   int curdepth;
+  static Abort *global_abort;
 /*
 Alpha beta search function
 g: initial state
@@ -56,7 +58,8 @@ int ABSearch(ABState* g, int max_depth, int search_time,
 
   //if (global_abort)
   //	delete global_abort;
-  global_abort = new Abort();
+  ABORT::global_abort = new Abort();
+  global_abort = ABORT::global_abort;
   search_done = 0;
   cilk_spawn timer_thread();
 
