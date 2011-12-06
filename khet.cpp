@@ -1,7 +1,7 @@
 #include "khet.h"
 
 #define INFO(a) fprintf a
-// #define DEBUG 1
+// #define PERF 1
 
 
 string best_move_buf;
@@ -48,11 +48,16 @@ void notate_helper(int best_move, int depth, int score, int nc, double tt) {
 //returns 0 if ok, 1 otherwise
 int uciMakeMove(string move) {
   _ABSEARCH::ABState *prev = &gameHis[ply];
-  int index = prevState->ks->makeMove(move);
+  int index = prev->ks->makeMove(move);
   if(index<0) {
     return 1;
   }
-  gameHis[ply+1] = _ABSEARCH::ABState(prevState,index);
+  
+  _ABSEARCH::ABState *a = new _ABSEARCH::ABState(prev,index);
+  gameHis[ply+1].key = a->key;
+  gameHis[ply+1].his = prev;
+  gameHis[ply+1].ply_of_game = a->ply_of_game;
+  gameHis[ply+1].ks = a->ks;
   return 0;
     
 }
@@ -87,6 +92,11 @@ void start_search(int search_time, int depth) {
   //best-move_buf could be empty if you did not have time to complete a search
   //to depth 1. You should consider how this case should be handled
   cout << "bestmove " << best_move_buf << endl;
+
+#ifdef PERF
+  exit(0);
+#endif
+
 }
 /*
 Process uki commmands from input buffer
@@ -99,11 +109,20 @@ void uci() {
     string tokens[1024];
     s = getInput();
     int token_count = parseString(s, tokens);
-    
+
+#ifdef PERF
+	ply = 0;
+	gameHis[ply].ks->init("classic");
+	cilk_spawn start_search(-1, 4);
+	while(true);
+#endif
+
+
+	
     if(token_count == 0) {
       continue;
     }
-
+	
 	/*
     ofstream myfile2;
     myfile2.open ("output.out" , ios::out | ios::app);
