@@ -816,8 +816,7 @@ long KhetState::gen()
             break;
           case ANUBIS: 
           case SCARAB:
-          case PHAROAH: 
-          case PYRAMID: 
+          case PHAROAH:
             //moveso
             for (int toFileOffset = -1; toFileOffset < 2; toFileOffset++ ) {
               for (int toRankOffset = -1; toRankOffset < 2; toRankOffset++ ) {
@@ -867,6 +866,44 @@ long KhetState::gen()
                   moves.push_back(makeKhetMove(file, rank, piece.rot, 
                                                   toFile, toRank, piece.rot));
                 }
+              }
+            }
+            //rotations 
+            moves.push_back(makeKhetMove(file, rank, piece.rot, file, rank, rot1));
+            //if(piece.type != SCARAB) {
+            moves.push_back(makeKhetMove(file, rank, piece.rot, file, rank, rot2));
+            //}
+            break;
+          case PYRAMID:
+            board[file][rank].pyScore = 0;
+            if (isEdge(file,rank)) board[file][rank].pyScore = pyEdge;
+            //moveso
+            for (int toFileOffset = -1; toFileOffset < 2; toFileOffset++ ) {
+              for (int toRankOffset = -1; toRankOffset < 2; toRankOffset++ ) {
+                if(toRankOffset == 0 && toFileOffset == 0) continue;//must move
+
+                int toFile = file + toFileOffset;
+                int toRank = rank + toRankOffset;
+                if(toFile > 9 || toFile < 0) continue;//offboard
+                if(toRank > 7 || toRank < 0) continue;//offboard
+
+                //certain squares are forbidden on board
+                if(piece.color == RED) {
+                  if(toFile == 9) continue;
+                  if(toFile == 1 && (toRank == 0 || toRank == 7)) continue;
+                }
+                if(piece.color == SILVER) {
+                  if(toFile == 0) continue;
+                  if(toFile == 8 && (toRank == 0 || toRank == 7)) continue;
+                }
+
+                //is the target location already occuppied
+                if(board[toFile][toRank].type != EMPTY) continue;
+                
+                board[file][rank].pyScore += pyMob;
+                //valid move
+                moves.push_back(makeKhetMove(file, rank, piece.rot, 
+                                                toFile, toRank, piece.rot));
               }
             }
             //rotations 
@@ -1024,8 +1061,9 @@ int KhetState::eval(PlayerColor ctm) {
         case PYRAMID:
           pst = pyPST;
           piece_value = pyVal;
-          pieceScore += adjacentEmptySquares(file, rank);
-          if(isEdge(file,rank)) pieceScore += pyEdge;
+          // pieceScore += adjacentEmptySquares(file, rank);
+          // if(isEdge(file,rank)) pieceScore += pyEdge;
+          pieceScore = piece.pyScore;
           break;
         case ANUBIS:
           pst = anPST;
