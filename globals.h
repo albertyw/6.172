@@ -46,6 +46,7 @@ typedef struct LaserHitInfo {
 
   int closest; //closest manhattan distance of any pt on laser path
               // to some target file and rank
+  int closest2;
   bool bounced; //true if laser was reflected at any point
 
 } LaserHitInfo;

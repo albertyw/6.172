@@ -158,6 +158,9 @@ class KhetState {
     //returns a LaserHitInfo with information about hit piece if any
     LaserHitInfo fireLaser(int tFile, int tRank, Rotation laserDir,
                                     int closestToFile, int closestToRank);
+    LaserHitInfo fireLaser(int tFile, int tRank, Rotation laserDir,
+                            int closestToFile, int closestToRank, 
+                            int closestToFile2, int closestToRank2);
     
     int eval(PlayerColor ctm);
     int adjacentEmptySquares(int file, int rank);
