@@ -10,7 +10,7 @@ LDFLAGS = -ltbb
 HEADERS := \
 	khet.h \
 	KhetState.h \
-	eval.h \
+	# eval.h \
 	ABSearch.h \
 	Abort.h \
 	globals.h\
@@ -20,7 +20,7 @@ HEADERS := \
 # If you add a new file called "filename.c", you should
 # add "filename.o \" to this list.
 OBJS := \
-	eval.o \
+	# eval.o \
 	KhetState.o \
 	khet.o \
 	ABSearch.o \

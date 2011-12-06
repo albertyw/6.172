@@ -10,7 +10,7 @@
 #include <vector>
 //#include "ABSearch.h"
 //#include "ABState.h"
-#include "eval.h"
+// #include "eval.h"
 #include "globals.h"
 #include <locale>
 #include <sstream>
@@ -78,7 +78,35 @@ static string imhotepOpen = "hd------adpdadsd----"
                             "------Yl----yd------" 
                             "--------------------" 
                             "----SuAuPuAu------Hu w";
- 
+
+//distance to closest corner, normalized by subtracting 3
+static int center[FILE_COUNT][RANK_COUNT] = {{-3, -2, -1, 0, 0, -1, -2, -3},
+  {-2, -1, 0, 1, 1, 0, -1, -2},
+  {-1, 0, 1, 2, 2, 1, 0, -1},
+  {0, 1, 2, 3, 3, 2, 1, 0},
+  {1, 2, 3, 4, 4, 3, 2, 1},
+  {1, 2,3 ,4, 4, 3, 2, 1},
+  {0, 1,2 , 3, 3, 2, 1, 0},
+  {-1, 0, 1, 2, 2, 1, 0, -1},
+  {-2, -1, 0, 1, 1, 0, -1, -2},
+  {-3, -2, -1, 0, 0, -1, -2, -3}};
+#define pyVal 100               //pyramid value
+
+#define enemyLaserDistance -65 //shoot laser and find closest distance to enemy 
+                              //pharaoh, use manhattan dist(x + y).
+
+#define friendlyLaserDistance 5 //as above, but for friendly pharaoh
+
+#define anVal 230               //value of anubis
+#define phPST -9 //piece square table for pharaoh. Dont want him near the middle
+#define scPST 10 //scarab piece square table
+#define anPST -5 //Anubis table
+#define pyPST 20 //pyramid table
+
+#define pyEdge 10 //pyramid bonus for being on edge of baord
+#define scEdge 10 //scarab bonus for being on edge of baord
+#define exposed -120 //if laser fired from pharaoh hits mirroed surface
+#define pyMob 23 // count empty squares around pyramid, and multiply
 
 class KhetState {
   public:
@@ -128,9 +156,13 @@ class KhetState {
     //closestToFile and rank are used to measure closest distance from any 
     //pt on lasers path to this point. Used by some eval functions
     //returns a LaserHitInfo with information about hit piece if any
-    static LaserHitInfo fireLaser(Board board, int tFile, int tRank, Rotation laserDir,
+    LaserHitInfo fireLaser(int tFile, int tRank, Rotation laserDir,
                                     int closestToFile, int closestToRank);
     
+    int eval(PlayerColor ctm);
+    int adjacentEmptySquares(int file, int rank);
+    bool isEdge(int file, int rank);
+
     static map<uint64_t,KhetState*> khet_cache;
     uint64_t key;
     
