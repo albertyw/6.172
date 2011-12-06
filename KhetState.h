@@ -103,7 +103,8 @@ class KhetState {
     void getPossibleMoves(std::vector<KhetMove> &v);
     unsigned int getNumPossibleMoves();
 
-    string getMove(int i);
+    string getMoveStr(int i);
+    KhetMove getMove(int i);
     string getCtmStr();
 
     

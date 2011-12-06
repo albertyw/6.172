@@ -364,7 +364,7 @@ NOT threadsafe, running multiple searchs concurrently results in undefined
 behavior
 */
 int ABSearch(ABState* g, int max_depth, int search_time, 
-    void(*f)(int best_move,int depth, int score ,int nodes, double time));
+    void(*f)(KhetMove best_move,int depth, int score ,int nodes, double time));
 
 /*
 starts ABSearch assuming g is the root
@@ -373,7 +373,7 @@ global var bestmove
 */
 int root_search(ABState *g, int depth);
 
-int search(ABState *prev, int next_move, int depth );
+int search(ABState *prev, KhetMove next_move, int depth );
 
 
 

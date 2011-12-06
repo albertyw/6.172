@@ -15,7 +15,7 @@ NOT threadsafe, running multiple searchs concurrently results in undefined
 behavior
 */
 int ABSearch(ABState* g, int max_depth, int search_time, 
-    void(*f)(int best_move,int depth, int score ,int nodes, double time)){
+    void(*f)(KhetMove best_move,int depth, int score ,int nodes, double time)){
 
   char    buf[8];
   double starttime;
@@ -53,8 +53,9 @@ int ABSearch(ABState* g, int max_depth, int search_time,
   prev_move = 0;
 
   global_abort = false;
-  cilk_spawn timer_thread();
   search_done = 0;
+  cilk_spawn timer_thread();
+
   //iterative deepening loop
   for (int depth=1; depth <= max_depth; depth++)
   {
@@ -140,13 +141,13 @@ int root_search(ABState *g, int depth) {
 	 unsigned int num_moves = g->ks->getNumPossibleMoves();
 /* search best move from previous iteration first */
    // KhetMove* best_state = next_moves[prev_move];
-   root_search_catch( search( g, prev_move, depth-1), prev_move);
+   root_search_catch( search( g, g->ks->getMove(prev_move), depth-1), prev_move);
 	 
    /* cycle through all the moves */
    for(int stateInd = 0; stateInd < num_moves; stateInd++ ) {
      // ABState* next_state = next_moves[stateInd]; 
      if( stateInd != prev_move) { 
-      if( root_search_catch( search(g, stateInd, depth-1),stateInd ) )
+      if( root_search_catch( search(g, g->ks->getMove(stateInd), depth-1),stateInd ) )
         break;
      }
    }
@@ -156,7 +157,7 @@ int root_search(ABState *g, int depth) {
 	 
 }
 
-int search(ABState *prev, int next_move, int depth ) {
+int search(ABState *prev, KhetMove next_move, int depth ) {
 
     tbb::mutex m;
     int local_best_move = INF;
@@ -247,7 +248,7 @@ int search(ABState *prev, int next_move, int depth ) {
   //paranoia check to make sure hash table isnot  malfunctioning
   if(num_moves > ht_move ) {
     //focus all resources on searching this move first
-    sc = search( next, ht_move, depth-1);
+    sc = search( next, next->ks->getMove(ht_move), depth-1);
     sc = -sc;
     if (sc > bestscore) { 
       bestscore = sc;
@@ -276,7 +277,7 @@ int search(ABState *prev, int next_move, int depth ) {
     if (stateInd != ht_move) {   /* don't try this again */
       // ABState* next_state = next_moves[stateInd]; 
       //search catch returns 1 if pruned
-      if( search_catch( search(next, stateInd, depth-1), stateInd) ) break;
+      if( search_catch( search(next, next->ks->getMove(stateInd), depth-1), stateInd) ) break;
     }
 	}
 #if HASH

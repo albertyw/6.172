@@ -130,8 +130,13 @@ KhetState::KhetState(string strBoard) : moves_init(false) {
   // gen();
   key = hashBoard();
 }
-string KhetState::getMove(int i) {
+
+string KhetState::getMoveStr(int i) {
   return alg(moves[i]);
+}
+
+KhetMove KhetState::getMove(int i) {
+  return moves[i];
 }
 
 string KhetState::getCtmStr() {

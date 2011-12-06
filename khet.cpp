@@ -33,8 +33,8 @@ string getInput() {
   return s;
 }
 
-void notate_helper(int best_move, int depth, int score, int nc, double tt) {
-  best_move_buf = gameHis[ply].ks->getMove(best_move);
+void notate_helper(KhetMove best_move, int depth, int score, int nc, double tt) {
+  best_move_buf = gameHis[ply].ks->getMoveStr(best_move);
   INFO(( stdout, 
         "info depth %d time %7.1f score %6d  currmove %s nodes %d nps %7.1f \n", 
         depth, 
