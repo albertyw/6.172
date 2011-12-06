@@ -47,13 +47,13 @@ void notate_helper(KhetMove best_move, int depth, int score, int nc, double tt) 
 //uses old state and move to generate a new state and save it in newState
 //returns 0 if ok, 1 otherwise
 int uciMakeMove(string move) {
-  _ABSEARCH::ABState *prev = &gameHis[ply];
+  ABState *prev = &gameHis[ply];
   int index = prev->ks->makeMove(move);
   if(index<0) {
     return 1;
   }
   
-  _ABSEARCH::ABState *a = new _ABSEARCH::ABState(prev,index);
+  _ABSEARCH::ABState *a = new ABState(prev,index);
   gameHis[ply+1].key = a->key;
   gameHis[ply+1].his = prev;
   gameHis[ply+1].ply_of_game = a->ply_of_game;
@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
   //12 32 36 960 1008 40
   //cout << sizeof(KhetPiece) << " " << sizeof(LaserHitInfo) << " ";
   //cout << sizeof(KhetMove) << " " << sizeof(Board) << " ";
-  //cout << sizeof(KhetState) << " " << sizeof(_ABSEARCH::ABState);
+  //cout << sizeof(KhetState) << " " << sizeof(ABState);
   
   //this will be reading input in the background
   cilk_spawn inputThread();

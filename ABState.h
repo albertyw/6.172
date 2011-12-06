@@ -4,7 +4,6 @@
 
 #include "KhetState.h"
 #include <vector>
-namespace _ABSEARCH {
 /*
 Interface for user defined search states
 Users must define the following two functions
@@ -75,6 +74,5 @@ public:
   }
 };
 
-}
 
 #endif // HEADER

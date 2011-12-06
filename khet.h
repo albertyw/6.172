@@ -29,7 +29,7 @@ typedef struct
 
 i_buf istr;
 
-_ABSEARCH::ABState gameHis[1024];
+ABState gameHis[1024];
 int ply;
 
 
