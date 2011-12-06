@@ -1024,7 +1024,7 @@ int KhetState::eval(PlayerColor ctm) {
         case PYRAMID:
           pst = pyPST;
           piece_value = pyVal;
-          pieceScore += pyMob * adjacentEmptySquares(file, rank);
+          pieceScore += adjacentEmptySquares(file, rank);
           if(isEdge(file,rank)) pieceScore += pyEdge;
           break;
         case ANUBIS:
@@ -1116,7 +1116,7 @@ int KhetState::adjacentEmptySquares(int file, int rank) {
         continue;
       }
       if(rankOffset == 0 && fileOffset == 0) continue;
-      if(board[toFile][toRank].type == EMPTY) count++;
+      if(board[toFile][toRank].type == EMPTY) count+=pyMob;
     }
   }
   return count;
