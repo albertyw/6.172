@@ -146,6 +146,9 @@ void uci() {
       continue;
     }
     else if(tokens[0].compare("setoption") == 0) {
+      if (tokens[1].compare("LMR") == 0) {
+        _OPTIONS::LMR_CUTOFF = atoi(tokens[2]);
+      }
       continue;
     }
     else if(tokens[0].compare("position")== 0) {
@@ -301,6 +304,8 @@ int main(int argc, char *argv[])
       }
     }
   }
+
+  _OPTIONS::LMR_CUTOFF = INF+1;
 
   //12 32 36 960 1008 40
   //cout << sizeof(KhetPiece) << " " << sizeof(LaserHitInfo) << " ";

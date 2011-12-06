@@ -147,5 +147,8 @@ unsigned int getToRot(KhetMove mv)
 
 typedef KhetPiece Board[FILE_COUNT][RANK_COUNT];
 
+namespace _OPTIONS {
+  int LMR_CUTOFF;
+};
 
 #endif
