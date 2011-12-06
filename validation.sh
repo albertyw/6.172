@@ -2,6 +2,10 @@ echo 'python validate.py ./cache-scratch-validate 1 1000 8 1000000	'
 python validate.py ./cache-scratch-validate 1 1000 8 1000000
 echo ''
 echo ''
+echo 'python validate.py ./cache-scratch-validate 12 1000 8 1000000	'
+python validate.py ./cache-scratch-validate 12 1000 8 1000000
+echo ''
+echo ''
 echo 'python validate.py ./cache-thrash-validate 1 1000 8 1000000'
 python validate.py ./cache-thrash-validate 1 1000 8 1000000
 echo ''
@@ -16,3 +20,5 @@ echo ''
 echo ''
 echo 'python validate.py ./linux-scalability-validate 8 10000000 1'
 python validate.py ./linux-scalability-validate 8 10000000 1
+
+

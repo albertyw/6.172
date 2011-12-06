@@ -49,6 +49,7 @@
 
 /* The smallest aligned size that will hold a size_t value. */
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
+#define MUTEX_SIZE (ALIGN(sizeof(pthread_mutex_t)))
 
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
 
@@ -60,7 +61,8 @@ TODO: Check Deadlock detection (add a timeout, only for testing)
 TODO: Use a large lock for making program run in serial for testing
 TODO: jemalloc, tcmalloc, 
 TODO: Check cache line/boundary
-
+TODO: Create different mutexes for different operations (malloc, free, realloc) 
+or for different bin sizes
 */
 namespace my
 {
@@ -84,12 +86,12 @@ namespace my
     return num;
   }
 
+  /**
+   * From http://aggregate.org/MAGIC/#Population%20Count%20%28Ones%20Count%29
+   * 32-bit recursive reduction using SWAR but first step is mapping 2-bit values 
+   * into sum of 2 1-bit values in sneaky way
+   **/
   inline size_t ones(register size_t x) {
-    // From http://aggregate.org/MAGIC/#Population%20Count%20%28Ones%20Count%29
-    /* 32-bit recursive reduction using SWAR...
-      but first step is mapping 2-bit values 
-       into sum of 2 1-bit values in sneaky way
-    */
     x -= ((x >> 1) & 0x55555555);
     x = (((x >> 2) & 0x33333333) + (x & 0x33333333));
     x = (((x >> 4) + x) & 0x0f0f0f0f);
@@ -139,9 +141,9 @@ namespace my
     size_t ** temp = (size_t**)mem_heap_lo() + (binNum-3);
     assert(temp >= (size_t **)mem_heap_lo());
     assert(temp < (size_t **)getHeapPointer());
-    
     return temp;
   }
+  
   /**
    * Set the pointer in a bin (i.e. the value of the bin) to a given pointer
    **/
@@ -154,6 +156,7 @@ namespace my
     *binPointer = setPointer;
     assert(*getBinPointer(binNum) == setPointer);
   }
+  
   /**
    * Set the value of blockPointer to pointerValue
    **/
@@ -187,6 +190,31 @@ namespace my
   
   
   //*************************** HEAP HELPER FUNCTIONS ************************//
+  /**
+   * Add a block to a bin
+   **/
+  inline void allocator::addBlockToBin(size_t *blockPointer, uint8_t binNum){
+    assert(binNum >= BIN_MIN);
+    assert(binNum <= BIN_MAX);
+    assert(blockPointer >= getHeapPointer());
+    assert(blockPointer <= (size_t *)mem_heap_hi());
+    setBlockPointer(blockPointer, *getBinPointer(binNum));
+    setBinPointer(binNum, blockPointer);
+  }
+  
+  /**
+   * Remove and return a block from a bin
+   **/
+  inline size_t * allocator::popBlockFromBin(uint8_t binNum){
+    assert(binNum >= BIN_MIN);
+    assert(binNum <= BIN_MAX);
+    size_t * returnBlock = *getBinPointer(binNum);
+    assert(returnBlock >= getHeapPointer());
+    assert(returnBlock <= (size_t *)mem_heap_hi());
+    setBinPointer(binNum, nextBlock(returnBlock));
+    return returnBlock;
+  }
+   
   /**
    * Increase the heap size then add the extra amount to a bin
    * size should be max of current heap size and the size needed by malloc
@@ -418,10 +446,11 @@ namespace my
    * init - Initialize the malloc package.  Called once before any other
    * calls are made.  Since this is a very simple implementation, we just
    * return success.
+   * This is only called once by the parallel allocator, so no need to check for 
+   * races in this function.  
    */
    int allocator::init()
   {
-    pthread_mutex_lock(&qwer);
     assert(HEAP_SIZE%8 == 0);
     assert(PRIVATE_SIZE%8 == 0);
     // ALLOCATE A STARTING HEAP
@@ -440,8 +469,7 @@ namespace my
     assert(*(sizeAddBytes(p, (uint64_t)PRIVATE_SIZE)) == 0);
     
     // ALLOCATE A PART OF THE HEAP TO MEMORIZE EMPTY BIN'S BLOCKS
-    setBinPointer(log2(HEAP_SIZE), getHeapPointer());
-    pthread_mutex_unlock(&qwer);
+    addBlockToBin(getHeapPointer(), log2(HEAP_SIZE));
     return 0;
   }
   
@@ -453,13 +481,13 @@ namespace my
    */
   void * allocator::malloc(size_t size)
   {
-    pthread_mutex_lock(&qwer);
     // Make sure that we're aligned to 8 byte boundaries
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
     assert(size <= (my_aligned_size-8));
     assert(my_aligned_size%8 == 0);
     // FIND THE BIN (ROUND UP LG(SIZE))
     uint8_t binAllocateNum = log2(my_aligned_size);
+    pthread_mutex_lock(&qwer);
     size_t **binPtr = getBinPointer(binAllocateNum);
     assert(binAllocateNum >= BIN_MIN);
     assert(binAllocateNum <= BIN_MAX);
@@ -486,10 +514,8 @@ namespace my
     // ASSERT BIN IS NOT EMPTY
     assert(*getBinPointer(binAllocateNum)!=0);
     // REMOVE BLOCK POINTER FROM BIN
-    size_t * returnBlock = *getBinPointer(binAllocateNum);
-    assert(returnBlock >= getHeapPointer());
-    assert(returnBlock <= (size_t *)mem_heap_hi());
-    setBinPointer(binAllocateNum, nextBlock(returnBlock));
+    size_t * returnBlock = popBlockFromBin(binAllocateNum);
+    pthread_mutex_unlock(&qwer);
     // RECORD THE SIZE INTO THE RETURNBLOCK
     *returnBlock = my_aligned_size;
     assert(*returnBlock!=0);
@@ -497,31 +523,31 @@ namespace my
     // RETURN BLOCK POINTER
     assert(returnBlock >= getHeapPointer());
     assert(returnBlock <= (size_t *)mem_heap_hi());
-    pthread_mutex_unlock(&qwer);
     return returnBlock;
   }
   
   
   //******************** FREE ***************************//
-  /*
-   * free - Freeing a block does nothing.
-   */
+  /**
+   *  Free a block
+   **/
   void allocator::free(void *ptr)
   {
-    pthread_mutex_lock(&qwer);
     // DON'T DO ANYTHING FOR NULL POINTERS
-    if(ptr == NULL) return;
+    if(ptr == NULL){
+      return;
+    }
     assert(ptr >= getHeapPointer());
     assert((size_t *)ptr <= (size_t *)mem_heap_hi());
     // GO BACK AND FIND THE SIZE
     size_t *blockPointer = blockHeader(ptr);
     freeBlock(blockPointer, *blockPointer);
-    pthread_mutex_unlock(&qwer);
   }
   
   /**
    * Given a pointer to the beginning of the block and the size of the block that 
    * is to be freed, add the block to bins
+   * blockSize is not necessarily a power of 2
    **/
   inline void allocator::freeBlock(size_t *blockPointer, size_t blockSize){
     // FIND BIN THAT BLOCK IS SUPPOSED TO BELONG TO
@@ -536,10 +562,11 @@ namespace my
     // ERASE VALUES IN the freed block
     memset(blockPointer,0,blockSize);           // TODO: Move to validator
     // ADD BLOCK TO BIN
-    setBlockPointer(blockPointer, *getBinPointer(binNum));
-    setBinPointer(binNum, blockPointer);
+    pthread_mutex_lock(&qwer);
+    addBlockToBin(blockPointer, binNum);
     // COALESCE BLOCKS
     joinBlocks(blockPointer, binNum);           // TODO: Coalesce only once every n frees or when no blocks left, run in parallel
+    pthread_mutex_unlock(&qwer);
     if(pow2(binNum) < blockSize){
       freeBlock(blockPointer + pow2(binNum), blockSize - pow2(binNum));
     }
@@ -552,7 +579,6 @@ namespace my
    */
   void * allocator::realloc(void *origPointer, size_t wantSize)
   {
-    pthread_mutex_lock(&qwer);
     if(wantSize==0){  // if size is 0, same as free
       free(origPointer);
       return (void*)0;
@@ -572,7 +598,6 @@ namespace my
     wantSize = roundPowUp(ALIGN(wantSize) + ALIGN(SIZE_T_SIZE));
     if(wantSize == origSize){
       assert(origPointer == blockPointer + 1);
-      pthread_mutex_unlock(&qwer);
       return origPointer;
     }
     uint8_t binNum = log2(currentSize);
@@ -582,14 +607,14 @@ namespace my
     size_t *endOfWantedBlock = (size_t*)((char*)blockPointer + wantSize); // technically sizeAddBytes, but may be out of heap
     assert(endOfOrigBlock >= getHeapPointer());
     assert(endOfOrigBlock <= (size_t*)mem_heap_hi()+1);
-    if(currentSize < wantSize){        //IF REQUESTED SIZE IS LARGER
+    pthread_mutex_lock(&qwer);
+    /*if(currentSize < wantSize){        //IF REQUESTED SIZE IS LARGER
       // CHECK IF JOINING NEIGHBOR BINS WORKS
-      setBlockPointer(blockPointer, *getBinPointer(binNum));
-      setBinPointer(binNum, blockPointer);
+      addBlockToBin(blockPointer, binNum);
       binNum = joinBlocks(blockPointer, binNum, false);
       currentSize = pow2(binNum);
-    }
-    
+    }*/
+    pthread_mutex_unlock(&qwer);
     if(currentSize > wantSize){       // IF CURRENT SIZE IS LARGER
       // FREE THE REST OF THE BLOCK
       freeBlock(endOfWantedBlock, currentSize - wantSize);
