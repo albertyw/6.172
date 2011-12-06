@@ -1,7 +1,9 @@
 #include "ABSearch.h"
 
 namespace _ABSEARCH {
-	
+
+  KhetMove killer_moves[MAX_DEPTH];
+  int curdepth;
 /*
 Alpha beta search function
 g: initial state
@@ -225,7 +227,11 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
 #if HASH
   ttRec* entry = getEntry( &tt, next->key);
    if (entry) {
-     if (recUsable(entry, depth, next->beta)) return(entry->score );
+     if (recUsable(entry, depth, next->beta))
+	 {
+	   delete next;
+	   return(entry->score );
+	 }
      ht_move = entry->move;
    }
 #endif
@@ -272,7 +278,7 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
 
   // KILLER MOVES
   move = killer_moves[curdepth-depth];
-  if (km!=INVALID_MOVE && next->ks->isValidMove(km))
+  if (move!=INVALID_MOVE && next->ks->isValidMove(move))
   {
     // try searching the killer move
     sc = search( next, move, depth-1);

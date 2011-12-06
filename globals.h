@@ -130,6 +130,8 @@ unsigned int getToRot(KhetMove mv)
   return (mv)&0x3;
 }
 
+#define INVALID_MOVE 0xffffffffu
+
 // inline
 // bool operator==(const KhetMove lhs, const KhetMove rhs)
 // {

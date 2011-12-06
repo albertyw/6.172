@@ -274,7 +274,7 @@ KhetState* KhetState::makeMove(int index) {
   return getKhetState(this,moves[index]);
 }
 
-bool KhetState::isValidMove(KhetMove km) {
+bool KhetState::isValidMove(KhetMove mv) {
   const unsigned int fromFile = getFromFile(mv);
   const unsigned int fromRank = getFromRank(mv); 
   const unsigned int fromRot = getFromRot(mv); 
