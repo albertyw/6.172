@@ -4,7 +4,6 @@ namespace _ABSEARCH {
 
   KhetMove killer_moves[MAX_DEPTH];
   int curdepth;
-
 /*
 Alpha beta search function
 g: initial state
@@ -132,9 +131,7 @@ int root_search(ABState *g, int depth) {
 			bestmove = ret_mv;
 			if (ret_sc >= g->beta) {
         prune = 1;
-			} else if (ret_sc > _OPTIONS::LMR_CUTOFF) {
-        prune = 1;   
-      }
+			}
 			if (ret_sc > g->alpha) g->alpha = ret_sc;
 		}	
 
@@ -191,8 +188,6 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
         local_best_move = ret_mv;
         if (ret_sc >= next->beta) {
           prune = 1;
-        } else if (ret_sc > _OPTIONS::LMR_CUTOFF) {
-          prune = 1;   
         }
 
         if (ret_sc > next->alpha) next->alpha = ret_sc;
@@ -274,9 +269,6 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
         killer_moves[curdepth-depth] = move;
         delete next;
         return bestscore;
-      } else if (sc > _OPTIONS::LMR_CUTOFF) {
-        delete next;
-        return bestscore;
       }
     } 
   }
@@ -298,38 +290,31 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
       if (sc >= next->beta) {
         //prune
         delete next;
-      } else if (sc > _OPTIONS::LMR_CUTOFF) {
-        delete next;
+        return bestscore;
       }
     }
   }
 
   /* cycle through all the moves */
 
+	//if  aborted this result does not matter
+  if (global_abort) {
+    delete next;
+    return 0;
+  }
 
-  if (next)
-  {
-      //if  aborted this result does not matter
-    if (global_abort) {
-      delete next;
-      return 0;
-    }
-
-    for(int stateInd = 0; stateInd < num_moves; stateInd++ ) {
-      if (stateInd != ht_move) {   /* don't try this again */
-        // ABState* next_state = next_moves[stateInd]; 
-        //search catch returns 1 if pruned
-        move = next->ks->getMove(stateInd);
-        if( search_catch( search(next, move, depth-1), stateInd) )
-        {
-          killer_moves[curdepth-depth] = move;
-          break;
-        }
+	for(int stateInd = 0; stateInd < num_moves; stateInd++ ) {
+    if (stateInd != ht_move) {   /* don't try this again */
+      // ABState* next_state = next_moves[stateInd]; 
+      //search catch returns 1 if pruned
+      move = next->ks->getMove(stateInd);
+      if( search_catch( search(next, move, depth-1), stateInd) )
+      {
+        killer_moves[curdepth-depth] = move;
+        break;
       }
     }
-    delete next;
-  }
-	
+	}
 #if HASH
   //use hash table for one one color
   
@@ -341,6 +326,7 @@ int search(ABState *prev, KhetMove next_move, int depth ) {
     putEntry( &tt, next->key, depth, bestscore, EXACT_SCORE, local_best_move );
   }
 #endif
+  delete next;
 	return bestscore;
 
 }
