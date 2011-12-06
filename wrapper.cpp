@@ -114,15 +114,26 @@ void *my_malloc(size_t size)
 
 void *my_realloc(void* ptr, size_t size)
 {
-  void* ret = my::allocator::realloc(ptr, size);
-
 #ifdef VALIDATE
   int i = __sync_fetch_and_add(&seq, 1);
   std::ofstream& log = getLog();
 #ifdef USE_ONE_LOG
   pthread_mutex_lock(&log_mutex);
 #endif /* USE_ONE_LOG */
-  log << i << " realloc " << ptr << " " << size << " " << ret << "\n";
+  log << i << " realloc-begin " << ptr << " " << size << "\n";
+#ifdef USE_ONE_LOG
+  pthread_mutex_unlock(&log_mutex);
+#endif /* USE_ONE_LOG */
+#endif /* VALIDATE */
+
+  void* ret = my::allocator::realloc(ptr, size);
+
+#ifdef VALIDATE
+  i = __sync_fetch_and_add(&seq, 1);
+#ifdef USE_ONE_LOG
+  pthread_mutex_lock(&log_mutex);
+#endif /* USE_ONE_LOG */
+  log << i << " realloc-end " << ptr << " " << size << " " << ret << "\n";
 #ifdef USE_ONE_LOG
   pthread_mutex_unlock(&log_mutex);
 #endif /* USE_ONE_LOG */

@@ -447,6 +447,7 @@ static double eval_mm_util(trace_t *trace, int tracenum)
   int size, newsize, oldsize;
   int max_total_size = 0;
   int total_size = 0;
+  size_t heap_size = 0 ;
   char *p;
   char *newp, *oldp;
 
@@ -517,8 +518,12 @@ static double eval_mm_util(trace_t *trace, int tracenum)
         app_error("Nonexistent request type in eval_mm_util");
     }
   }
-
-  return ((double)max_total_size / (double)mem_heapsize());
+  max_total_size = (max_total_size > MEM_ALLOWANCE) ?
+    max_total_size : MEM_ALLOWANCE ;
+  heap_size = mem_heapsize() ;
+  heap_size = (heap_size > MEM_ALLOWANCE) ?
+    heap_size : MEM_ALLOWANCE ;
+  return ((double)max_total_size / (double)heap_size);
 }
 
 
