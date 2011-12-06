@@ -47,27 +47,31 @@ public:
   ABState(KhetState* _ks) {
     ks = _ks;
     ply_of_game = 0;
-    key = ks->key^ply_of_game;
+    key = ks->key;//^ply_of_game;
     his = 0;
   }
 
   ABState(ABState *prev, KhetMove mv) {
     ks = prev->ks->makeMove(mv);
     ply_of_game = prev->ply_of_game+1;
-    key = ks->key^ply_of_game;
+    key = ks->key;//^ply_of_game;
     his = prev;
   }
 
   ABState(ABState *prev, int move) {
     ks = prev->ks->makeMove(move);
     ply_of_game = prev->ply_of_game+1;
-    key = ks->key^ply_of_game;
+    key = ks->key;//^ply_of_game;
     his = prev;
   }
 
   ABState() {
     his = 0;
     ks = new KhetState();
+  }
+
+  ~ABState() {
+    delete ks;
   }
 };
 

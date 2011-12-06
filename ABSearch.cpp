@@ -212,6 +212,7 @@ int search(ABState *prev, int next_move, int depth ) {
       }
     } 
     if(count == 2) {
+      delete next;
       return REPWIN;
     }
 #endif
@@ -227,12 +228,16 @@ int search(ABState *prev, int next_move, int depth ) {
 	
   //too deep
   if (depth <= 0) {
-    return next->ks->evaluate();
+    int ret = next->ks->evaluate();
+    delete next;
+    return ret;
   }
   num_moves = next->ks->getNumPossibleMoves();
 
   if(num_moves == 0) {
-    return next->ks->evaluate(); //won game?
+    int ret = next->ks->evaluate();
+    delete next;
+    return ret; //won game?
   }
   //flip AB values and search negamax
   next->alpha = -prev->beta;
@@ -250,6 +255,7 @@ int search(ABState *prev, int next_move, int depth ) {
       if (sc > next->alpha) next->alpha = sc;
       if (sc >= next->beta) {
         //prune
+        delete next;
         return bestscore;
       }
     } 
@@ -262,6 +268,7 @@ int search(ABState *prev, int next_move, int depth ) {
 
 	//if  aborted this result does not matter
   if (global_abort) {
+    delete next;
     return 0;
   }
 
@@ -283,7 +290,7 @@ int search(ABState *prev, int next_move, int depth ) {
     putEntry( &tt, next->key, depth, bestscore, EXACT_SCORE, local_best_move );
   }
 #endif
-
+  delete next;
 	return bestscore;
 
 }

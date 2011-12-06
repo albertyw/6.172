@@ -1,6 +1,8 @@
 #include "khet.h"
 
 #define INFO(a) fprintf a
+// #define DEBUG 1
+
 
 string best_move_buf;
 void uci();
@@ -44,20 +46,13 @@ void notate_helper(int best_move, int depth, int score, int nc, double tt) {
 }
 //uses old state and move to generate a new state and save it in newState
 //returns 0 if ok, 1 otherwise
-int uciMakeMove(_ABSEARCH::ABState* prevState, _ABSEARCH::ABState* newState, string move) {
-
-  // *newState = *prevState;
-  //maintain history for repetition checking
-  // newState->his = prevState;
+int uciMakeMove(string move) {
+  _ABSEARCH::ABState *prev = &gameHis[ply];
   int index = prevState->ks->makeMove(move);
   if(index<0) {
     return 1;
   }
-  _ABSEARCH::ABState a = _ABSEARCH::ABState(prevState,index);
-  newState->ks = a.ks;
-  newState->key = a.key;
-  newState->his = prevState;
-  newState->ply_of_game = a.ply_of_game;
+  gameHis[ply+1] = _ABSEARCH::ABState(prevState,index);
   return 0;
     
 }
@@ -155,7 +150,7 @@ void uci() {
       }
       for(int i = 3; i < token_count; i++) {
 		//gameHis[ply].ks->debugMoves();
-        if(uciMakeMove(&gameHis[ply], &gameHis[ply + 1], tokens[i]) != 0 ) {
+        if(uciMakeMove(tokens[i]) != 0 ) {
           cout << s <<" Invalid move:" << tokens[i] << endl;
           ofstream myfile;
           myfile.open ("output.out", ios::out | ios::app);

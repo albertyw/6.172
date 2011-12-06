@@ -38,50 +38,53 @@ KhetState* KhetState::getKhetState(uint64_t key)
 KhetState* KhetState::getKhetState(KhetState* s, KhetMove mv)
 {
     KhetState* newstate = new KhetState(s,mv);
-    uint64_t key = newstate->key;
-  if (KhetState::khet_cache.count(key))
-  {
-    assert(newstate->getBoardStr().compare(KhetState::khet_cache[key]->getBoardStr())==0);
-    delete newstate;
-    return KhetState::khet_cache[key];
-  } else
-  {
-    KhetState::khet_cache[key] = newstate;
     return newstate;
-  }
+  //   uint64_t key = newstate->key;
+  // if (KhetState::khet_cache.count(key))
+  // {
+  //   assert(newstate->getBoardStr().compare(KhetState::khet_cache[key]->getBoardStr())==0);
+  //   delete newstate;
+  //   return KhetState::khet_cache[key];
+  // } else
+  // {
+  //   KhetState::khet_cache[key] = newstate;
+  //   return newstate;
+  // }
 }
 
 KhetState* KhetState::getKhetState(KhetState* s, int mvi)
 {
     KhetState* newstate = new KhetState(s,mvi);
-    uint64_t key = newstate->key;
-  if (KhetState::khet_cache.count(key))
-  {
-    assert(newstate->getBoardStr().compare(KhetState::khet_cache[key]->getBoardStr())==0);
-    delete newstate;
-    return KhetState::khet_cache[key];
-  } else
-  {
-    KhetState::khet_cache[key] = newstate;
     return newstate;
-  }
+  //   uint64_t key = newstate->key;
+  // if (KhetState::khet_cache.count(key))
+  // {
+  //   assert(newstate->getBoardStr().compare(KhetState::khet_cache[key]->getBoardStr())==0);
+  //   delete newstate;
+  //   return KhetState::khet_cache[key];
+  // } else
+  // {
+  //   KhetState::khet_cache[key] = newstate;
+  //   return newstate;
+  // }
 }
 
 KhetState* KhetState::getKhetState(string b)
 {
     KhetState* newstate = new KhetState(b);
-    uint64_t key = newstate->key;
-
-  if (KhetState::khet_cache.count(key))
-  {
-    assert(newstate->getBoardStr().compare(KhetState::khet_cache[key]->getBoardStr())==0);
-    delete newstate;
-    return KhetState::khet_cache[key];
-  } else
-  {
-    KhetState::khet_cache[key] = newstate;
     return newstate;
-  }
+  //   uint64_t key = newstate->key;
+
+  // if (KhetState::khet_cache.count(key))
+  // {
+  //   assert(newstate->getBoardStr().compare(KhetState::khet_cache[key]->getBoardStr())==0);
+  //   delete newstate;
+  //   return KhetState::khet_cache[key];
+  // } else
+  // {
+  //   KhetState::khet_cache[key] = newstate;
+  //   return newstate;
+  // }
 }
 
 
@@ -100,7 +103,7 @@ KhetState::KhetState(KhetState* s, KhetMove mv) : moves_init(false) {
   key = s->key;
   imake(mv);
   //assert(result.compare("") != 0);
-  gen();
+  // gen();
   // key = hashBoard();
 }
 
@@ -116,7 +119,7 @@ KhetState::KhetState(KhetState* s, int mvi) : moves_init(false) {
   key = s->key;
   imake(s->moves[mvi]);
   //assert(result.compare("") != 0);
-  gen();
+  // gen();
   // key = hashBoard();
 }
 
@@ -124,7 +127,7 @@ KhetState::KhetState(string strBoard) : moves_init(false) {
   initBoard(strBoard);
   //his = NULL;
   //first move
-  gen();
+  // gen();
   key = hashBoard();
 }
 string KhetState::getMove(int i) {
@@ -552,7 +555,7 @@ void KhetState::initBoard(string strBoard) {
     else {
       ctm = RED;
     }
-    gen();
+    // gen();
 	key = hashBoard();
 }
 
