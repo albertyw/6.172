@@ -47,9 +47,9 @@ int ABSearch(ABState* g, int max_depth, int search_time,
   starttime = seconds();
 
   /* write a random move in buf, just in case we timeout at depth 1 */
-//  if(f) {
-//    (*f)(0, depth, score, nc, tt);
-//  }
+  if(f) {
+    (*f)(8, 0, 0, 0, 0);
+  }
   //remember best move from iterations of root search
   //done in only this ABSearch
   prev_move = 0;

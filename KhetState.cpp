@@ -132,10 +132,12 @@ KhetState::KhetState(string strBoard) : moves_init(false) {
 }
 
 string KhetState::getMoveStr(int i) {
+  gen();
   return alg(moves[i]);
 }
 
 KhetMove KhetState::getMove(int i) {
+  gen();
   return moves[i];
 }
 
