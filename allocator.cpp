@@ -52,6 +52,9 @@
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 #define MUTEX_SIZE (ALIGN(sizeof(pthread_mutex_t)))
 
+/* The minimum score for coallescing to happen */
+#define COALLESCE_MIN 15
+
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
 
 
@@ -64,9 +67,12 @@ TODO: jemalloc, tcmalloc,
 TODO: Check cache line/boundary
 TODO: Create different mutexes for different operations (malloc, free, realloc) 
 or for different bin sizes
+TODO: Create a lookup table or caching for math functions
 */
 namespace my
 {
+  volatile int allocator::coallesceScore = 0;
+  pthread_mutex_t allocator::coallesceScoreMutex;
   pthread_mutex_t allocator::qwer;
   //******************** MATH STUFF *********************//
   /**
@@ -194,7 +200,7 @@ namespace my
    * Set the value of blockPointer to pointerValue
    **/
   inline void allocator::setBlockPointer(size_t *blockPointer, size_t *pointerValue){
-    assert(blockPointer >= getHeapPointer());
+    assert(blockPointer >= (size_t *)mem_heap_lo());
     assert(blockPointer <= (size_t *)mem_heap_hi());
     assert(pointerValue >= getHeapPointer() || pointerValue == 0);
     assert(pointerValue <= (size_t *)mem_heap_hi());
@@ -238,14 +244,41 @@ namespace my
   /**
    * Remove and return a block from a bin
    **/
-  inline size_t * allocator::popBlockFromBin(uint8_t binNum){
+  inline size_t * allocator::popBlockFromBin(uint8_t binNum, size_t *blockPointer = 0){
     assert(binNum >= BIN_MIN);
     assert(binNum <= BIN_MAX);
-    size_t * returnBlock = *getBinPointer(binNum);
-    assert(returnBlock >= getHeapPointer());
-    assert(returnBlock <= (size_t *)mem_heap_hi());
-    setBinPointer(binNum, nextBlock(returnBlock));
-    return returnBlock;
+    assert(blockPointer == 0 || blockPointer >= getHeapPointer());
+    assert(blockPointer <= (size_t *)((char*)(mem_heap_hi())+1));
+    size_t * returnBlock;
+    if(blockPointer == 0){
+      //printf("%i\n", binNum);
+      returnBlock = *getBinPointer(binNum);
+      //printf("%p\n", returnBlock);
+      assert(returnBlock >= getHeapPointer());
+      assert(returnBlock <= (size_t *)mem_heap_hi());
+      assert(nextBlock(returnBlock) == 0 || nextBlock(returnBlock) >= getHeapPointer());
+      assert(nextBlock(returnBlock) <= (size_t *)mem_heap_hi());
+      setBinPointer(binNum, nextBlock(returnBlock));
+      return returnBlock;
+    }else{
+      size_t *possibleBlockPointer = *getBinPointer(binNum);
+      size_t *previousBlockPointer = (size_t *)getBinPointer(binNum);
+      returnBlock = 0;
+      while(possibleBlockPointer!=0){
+        assert(possibleBlockPointer >= getHeapPointer());
+        assert(sizeAddBytes(possibleBlockPointer, pow2(binNum)) <= (size_t*)mem_heap_hi()+1);
+        assert(previousBlockPointer >= (size_t*)mem_heap_lo());
+        assert(sizeAddBytes(previousBlockPointer, pow2(binNum)) <= (size_t*)mem_heap_hi());
+        if(possibleBlockPointer == blockPointer){
+          setBlockPointer(previousBlockPointer, nextBlock(possibleBlockPointer));
+          assert(possibleBlockPointer == 0 || (possibleBlockPointer >= getHeapPointer() && possibleBlockPointer < (size_t *)mem_heap_hi()));
+          return possibleBlockPointer;
+        }
+        previousBlockPointer = possibleBlockPointer;
+        possibleBlockPointer = nextBlock(possibleBlockPointer);
+      }
+      return 0;
+    }
   }
    
   /**
@@ -328,14 +361,70 @@ namespace my
    * recursively see if it can be combined with neighboring blocks
    * Returns the new binNum of block
    **/
-  inline uint8_t allocator::joinBlocks(size_t *blockPointer, uint8_t binNum, bool joinBefore=true){
+  inline void allocator::joinBlocks(size_t *blockPointer, uint8_t binNum, bool joinBefore=true){
+    // FOR EACH BIN
+    /*
+    uint64_t blockSize = pow2(BIN_MIN);
+    size_t *block;
+    size_t *blockPrevious;
+    size_t *possibleJoin;
+    for(uint8_t binNum = BIN_MIN; binNum <= BIN_MAX; binNum++){
+      blockSize = pow2(binNum);
+      lockBin(binNum);
+      // COMPARE EVERY TWO BLOCKS
+      block = *getBinPointer(binNum);
+      blockPrevious = (size_t *)getBinPointer(binNum);
+      while(block!=0){
+        assert(block >= getHeapPointer());
+        assert(sizeAddBytes(block, blockSize) <= (size_t*)mem_heap_hi()+1);
+        assert(blockPrevious >= (size_t*)mem_heap_lo());
+        assert(sizeAddBytes(blockPrevious, blockSize) <= (size_t*)mem_heap_hi());
+        // CHECK FOR FREE BLOCK AFTER
+        //binInfo();
+        //printf("%p\n", block);
+        //printf("%lu\n", blockSize);
+        //printf("%p\n", mem_heap_hi());
+        possibleJoin = sizeAddBytes(block, (uint64_t)blockSize);
+        //assert(possibleJoin == sizeAddBytes(block, (uint64_t)blockSize));
+        // Remove possibleJoin
+        if(popBlockFromBin(binNum, possibleJoin) != 0){
+          assert((char*)sizeAddBytes(block, blockSize*2) <=(char*)mem_heap_hi()+1);
+          assert(block >= getHeapPointer());
+          assert((char*)sizeAddBytes(possibleJoin, blockSize) <=(char*)mem_heap_hi()+1);
+          assert(possibleJoin >= getHeapPointer());
+          // Skip block
+          setBlockPointer(blockPrevious, nextBlock(block));
+          // Add large block
+          addBlockToBin(block, binNum+1);
+        }
+        // CHECK FOR FREE BLOCK BEFORE
+        possibleJoin = (size_t*)((char*)block + -(uint64_t)blockSize);
+        //assert(block == (size_t*)((char*)block + -(uint64_t)blockSize));
+        if(possibleJoin >= getHeapPointer()){
+          if(popBlockFromBin(binNum, possibleJoin) != 0){
+            assert((char*)sizeAddBytes(block, blockSize) <=(char*)mem_heap_hi()+1);
+            assert(block >= getHeapPointer());
+            assert((char*)sizeAddBytes(possibleJoin, blockSize*2) <=(char*)mem_heap_hi()+1);
+            assert(possibleJoin >= getHeapPointer());
+            assert(sizeAddBytes(possibleJoin, (uint64_t)blockSize));
+            setBlockPointer(blockPrevious, nextBlock(block));
+            addBlockToBin(possibleJoin, binNum+1);
+          }
+        }
+        blockPrevious = block;
+        block = nextBlock(block);
+      }
+      unlockBin(binNum);
+      blockSize *= 2;
+    }*/
+    
     size_t blockSize = pow2(binNum);
     // FIND IF CONTIGUOUS FREE BLOCKS ARE FREE
     size_t *previousFreeBlockPointer = (size_t*)getBinPointer(binNum);
     size_t *binFreeBlockPointer = *getBinPointer(binNum);
     while(binFreeBlockPointer !=0){
       if(binFreeBlockPointer == sizeAddBytes(blockPointer, (uint64_t)blockSize)){
-        //binFreeBlockPointer ist to be deleted
+        //binFreeBlockPointer is to be deleted
         // Delete old values
         *binFreeBlockPointer = 0;
         *blockPointer = 0;
@@ -366,7 +455,7 @@ namespace my
     assert(binNum <= BIN_MAX);
     assert(binNum >= BIN_MIN);
     
-    return binNum;
+    //return binNum;
   }
   
   /**
@@ -412,6 +501,7 @@ namespace my
        printf("%i:  - ", i);
        while(p!=0){
          assert(p <= (size_t *)mem_heap_hi());
+         sizeAddBytes(p, pow2(i));
          assert(p >= getHeapPointer() || p == 0);
          printf("% p ", p);
          p = nextBlock(p);
@@ -503,13 +593,16 @@ namespace my
     assert(*p == 0);
     assert(*(sizeAddBytes(p, (uint64_t)PRIVATE_SIZE)) == 0);
     
-    // Initialize bin locks
+    // INITIALIZE BIN LOCKS
     for(uint8_t binNum=BIN_MIN; binNum<BIN_MAX; binNum++){
       pthread_mutex_init(getBinLock(binNum), NULL);
     }
     
     // ALLOCATE A PART OF THE HEAP TO MEMORIZE EMPTY BIN'S BLOCKS
     addBlockToBin(getHeapPointer(), log2(HEAP_SIZE));
+    
+    // INITIALIZE COALLESCING SCORE
+    int coallesceScore = 0;
     return 0;
   }
   
@@ -520,6 +613,8 @@ namespace my
    *     Always allocate a block whose size is a multiple of the alignment.
    */
   void * allocator::malloc(size_t size){
+    //printf("Malloc\n");
+    //binInfo();
     // Make sure that we're aligned to 8 byte boundaries
     size_t my_aligned_size = roundPowUp(ALIGN(size) + ALIGN(SIZE_T_SIZE));
     assert(size <= (my_aligned_size-8));
@@ -559,11 +654,14 @@ namespace my
     // ASSERT BIN IS NOT EMPTY
     assert(*getBinPointer(binAllocateNum)!=0);
     // REMOVE BLOCK POINTER FROM BIN
+    //printf("%i\n", binAllocateNum);
     size_t * returnBlock = popBlockFromBin(binAllocateNum);
     unlockBin(binAllocateNum);
     // RECORD THE SIZE INTO THE RETURNBLOCK
     *returnBlock = my_aligned_size;
     assert(*returnBlock!=0);
+    //printf("%p\n", returnBlock);
+    //binInfo();
     returnBlock = sizeAddBytes(returnBlock, (uint64_t)SIZE_T_SIZE);
     // RETURN BLOCK POINTER
     pthread_mutex_unlock(&qwer);
@@ -579,6 +677,8 @@ namespace my
    **/
   void allocator::free(void *ptr)
   {
+    //printf("Free\n");
+    //binInfo();
     // DON'T DO ANYTHING FOR NULL POINTERS
     if(ptr == NULL){
       return;
@@ -598,21 +698,30 @@ namespace my
   inline void allocator::freeBlock(size_t *blockPointer, size_t blockSize){
     // FIND BIN THAT BLOCK IS SUPPOSED TO BELONG TO
     uint8_t binNum;
+    // FIND BINNUM = min(log(blockSize))
     if(roundPowUp(blockSize)!=blockSize){
       binNum = log2(roundPowUp(blockSize)/2);
     }else{
-      binNum = log2(blockSize); // we actually want the min(log(blockSize))
+      binNum = log2(blockSize); 
     }
     assert(binNum >= BIN_MIN);
     assert(binNum <= BIN_MAX);
     // ERASE VALUES IN the freed block
-    memset(blockPointer,0,blockSize);           // TODO: Move to validator
+    memset(blockPointer,0,blockSize);           // TODO: Remove
     // ADD BLOCK TO BIN
-    pthread_mutex_lock(&qwer);
+    lockBin(binNum);
     addBlockToBin(blockPointer, binNum);
+    unlockBin(binNum);
     // COALESCE BLOCKS
-    joinBlocks(blockPointer, binNum);           // TODO: Coalesce only once every n frees or when no blocks left, run in parallel
-    pthread_mutex_unlock(&qwer);
+    pthread_mutex_lock(&coallesceScoreMutex);
+    coallesceScore += 1;
+    if(coallesceScore >= COALLESCE_MIN){
+      coallesceScore = 0;
+      pthread_mutex_unlock(&coallesceScoreMutex);
+      joinBlocks(blockPointer, binNum); 
+    }else{
+      pthread_mutex_unlock(&coallesceScoreMutex);
+    }
     if(pow2(binNum) < blockSize){
       freeBlock(blockPointer + pow2(binNum), blockSize - pow2(binNum));
     }
@@ -625,6 +734,8 @@ namespace my
    */
   void * allocator::realloc(void *origPointer, size_t wantSize)
   {
+    //printf("Realloc\n");
+    //binInfo();
     if(wantSize==0){  // if size is 0, same as free
       free(origPointer);
       return (void*)0;
@@ -638,8 +749,8 @@ namespace my
     size_t *blockPointer = blockHeader(origPointer);
     uint64_t origSize = (uint64_t)*blockPointer;            // TODO: CONVERT TO SIZE_T INSTEAD OF UINT64_T
     uint64_t currentSize = (uint64_t)*blockPointer;
-    assert(pow2(log2(currentSize)) == currentSize);
     assert(pow2(log2(origSize)) == origSize);
+    assert(pow2(log2(currentSize)) == currentSize);
     // CALCULATE DIFFERENCE IN MEMORY THAT IS NEEDED FOR THE REALLOC
     wantSize = roundPowUp(ALIGN(wantSize) + ALIGN(SIZE_T_SIZE));
     if(wantSize == origSize){
@@ -653,25 +764,27 @@ namespace my
     size_t *endOfWantedBlock = (size_t*)((char*)blockPointer + wantSize); // technically sizeAddBytes, but may be out of heap
     assert(endOfOrigBlock >= getHeapPointer());
     assert(endOfOrigBlock <= (size_t*)mem_heap_hi()+1);
-    pthread_mutex_lock(&qwer);
-    /*if(currentSize < wantSize){        //IF REQUESTED SIZE IS LARGER
+    lockBin(binNum);/*
+    if(currentSize < wantSize){        //IF REQUESTED SIZE IS LARGER
       // CHECK IF JOINING NEIGHBOR BINS WORKS
-      addBlockToBin(blockPointer, binNum);
+      addBlockToBin(blockPointer, binNum);                          // *** IS THIS NEEDED?***
       binNum = joinBlocks(blockPointer, binNum, false);
       currentSize = pow2(binNum);
+      size_t *poppedPointer = popBlockFromBin(binNum);
+      
+      assert(poppedPointer == blockPointer);
     }*/
+    unlockBin(binNum);
     pthread_mutex_unlock(&qwer);
     if(currentSize > wantSize){       // IF CURRENT SIZE IS LARGER
       // FREE THE REST OF THE BLOCK
       freeBlock(endOfWantedBlock, currentSize - wantSize);
       // CHANGE THE BLOCK SIZE
       *blockPointer = wantSize;
-      pthread_mutex_unlock(&qwer);
       return origPointer;
     }else{                            // IF CURRENT SIZE IS STILL SMALLER THAN WANTED SIZE
       void *newBlock = malloc(wantSize);
       std::memcpy(newBlock, origPointer, origSize);
-      pthread_mutex_unlock(&qwer);
       return newBlock;
     }
   }

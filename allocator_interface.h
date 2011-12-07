@@ -31,6 +31,8 @@ namespace my
   class allocator : public virtual allocator_interface
   {
   public:
+    static volatile int coallesceScore;
+    static pthread_mutex_t coallesceScoreMutex;
     static pthread_mutex_t qwer;
     
     static size_t ** getBinPointer(uint8_t binNum);
@@ -43,10 +45,10 @@ namespace my
     static size_t * sizeAddBytes(size_t *pointer, uint64_t bytes);
     
     static void addBlockToBin(size_t *blockPointer, uint8_t binNum);
-    static size_t * popBlockFromBin(uint8_t binNum);
+    static size_t * popBlockFromBin(uint8_t binNum, size_t *blockPointer);
     static uint8_t increaseHeapSize(size_t size);
     static void splitBlock(uint8_t largerBinNum,uint8_t smallerBinNum);
-    static uint8_t joinBlocks(size_t *blockPointer, uint8_t binNum, bool joinBefore);
+    static void joinBlocks(size_t *blockPointer, uint8_t binNum, bool joinBefore);
     static size_t * nextBlock(size_t *blockPointer);
     static size_t * blockHeader(void *ptr);
     static void binInfo();
