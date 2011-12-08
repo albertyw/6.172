@@ -239,6 +239,7 @@ int eval_mm_valid(Type *impl, trace_t *trace, int tracenum)
           oldsize = size;
         /* YOUR CODE HERE */
         for(size_t *writePointer = (size_t*)oldp; writePointer < (size_t*)((char*)oldp+oldsize); writePointer++){
+          //printf("%lu %lu\n", *writePointer, (size_t)((char*)writePointer-oldp));
           assert(*writePointer == (size_t)((char*)writePointer-oldp));
         }
         for(size_t *writePointer = (size_t*)newp; writePointer < (size_t*)((char*)newp+size); writePointer++){
