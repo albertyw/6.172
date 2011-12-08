@@ -32,8 +32,8 @@ namespace my
   {
   public:
     static volatile int coallesceScore;
+    static size_t *heapPointer;
     static pthread_mutex_t coallesceScoreMutex;
-    static pthread_mutex_t qwer;
     
     static size_t ** getBinPointer(uint8_t binNum);
     static void setBinPointer(uint8_t binNum, size_t *setPointer);
