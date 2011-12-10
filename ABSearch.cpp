@@ -147,37 +147,20 @@ int root_search(ABState *g, int depth) {
 	 g->alpha = -INF;
 	 g->beta = INF;
      
-    unsigned int num_moves = g->ks->getNumPossibleMoves();
-    /* search best move from previous iteration first */
-    // KhetMove* best_state = next_moves[prev_move];
-    root_search_catch( search( g, g->ks->getMove(prev_move), depth-1, global_abort), prev_move);
-
-    /* cycle through all the moves */
-    int stateInd;
-    bool done;
-    for(stateInd = 0; stateInd < num_moves; stateInd+=12 ) {
-      #pragma cilk grainsize = 1
-      cilk_for(int temp=stateInd; temp<stateInd+12; temp++ ) {
-        // ABState* next_state = next_moves[stateInd]; 
-        if( temp != prev_move) { 
-          if( root_search_catch( search(g, g->ks->getMove(temp), depth-1, global_abort),temp ) )
-             global_abort->abort();
-        }
-      }
-    }
-
-    if (!global_abort->isAborted())
-    {
-      #pragma cilk grainsize = 1
-      cilk_for(; stateInd<num_moves; stateInd++ ) {
-        // ABState* next_state = next_moves[stateInd]; 
-        if( stateInd != prev_move) { 
-          if( root_search_catch( search(g, g->ks->getMove(stateInd), depth-1, global_abort),stateInd) )
-             global_abort->abort();
-        }
-      }
-    }
+	 unsigned int num_moves = g->ks->getNumPossibleMoves();
+/* search best move from previous iteration first */
+   // KhetMove* best_state = next_moves[prev_move];
+	 root_search_catch( search( g, g->ks->getMove(prev_move), depth-1, global_abort), prev_move);
 	 
+   /* cycle through all the moves */
+	 #pragma cilk grainsize = 1
+   cilk_for(int stateInd = 0; stateInd < num_moves; stateInd++ ) {
+     // ABState* next_state = next_moves[stateInd]; 
+     if( stateInd != prev_move) { 
+	   if( root_search_catch( search(g, g->ks->getMove(stateInd), depth-1, global_abort),stateInd ) )
+         global_abort->abort();
+     }
+   }
    //update best move for next iteration
 	 prev_move = bestmove;
 	 return bestscore;
@@ -326,40 +309,19 @@ int root_search(ABState *g, int depth) {
     delete next;
     return 0;
   }
-
-  int stateInd;
-  for (stateInd = 0; stateInd < num_moves; stateInd+=12 ) {
-    #pragma cilk grainsize = 1
-    cilk_for(int temp = stateInd; temp < stateInd+12; temp++ ) {
-      if (temp != ht_move) {   /* don't try this again */
-        // ABState* next_state = next_moves[stateInd]; 
-        //search catch returns 1 if pruned
-        move = next->ks->getMove(temp);
-        if( search_catch( search(next, move, depth-1,&localabort), temp) )
-        {
-          killer_moves[curdepth-depth] = move;
-          localabort.abort();
-        }
+	#pragma cilk grainsize = 1
+   cilk_for(int stateInd = 0; stateInd < num_moves; stateInd++ ) {
+    if (stateInd != ht_move) {   /* don't try this again */
+      // ABState* next_state = next_moves[stateInd]; 
+      //search catch returns 1 if pruned
+      move = next->ks->getMove(stateInd);
+      if( search_catch( search(next, move, depth-1,&localabort), stateInd) )
+      {
+        killer_moves[curdepth-depth] = move;
+        localabort.abort();
       }
     }
-  }
-  if (!localabort.isAborted())
-  {
-    #pragma cilk grainsize = 1
-    cilk_for(; stateInd < num_moves; stateInd++) {
-      if (stateInd != ht_move) {   /* don't try this again */
-        // ABState* next_state = next_moves[stateInd]; 
-        //search catch returns 1 if pruned
-        move = next->ks->getMove(stateInd);
-        if( search_catch( search(next, move, depth-1,&localabort), stateInd) )
-        {
-          killer_moves[curdepth-depth] = move;
-          localabort.abort();
-        }
-      }
-    }
-  }
-
+	}
 #if HASH
   //use hash table for one one color
   
