@@ -252,6 +252,28 @@ string KhetState::alg(KhetMove mv) {
   return mvstream.str();
 }
 
+//converts string to move notation
+KhetMove KhetState::alg(string mv) {
+  string s = "";
+  //used for integer to str conversion
+  
+  unsigned int ffile = mv[0]-'a';
+  unsigned int frank = mv[1]-'1';
+  unsigned int frot = (unsigned int)(board[ffile][frank].rot);
+  if (mv[2]<'a')
+  {
+    if (mv[2]=='L')
+      return makeKhetMove(ffile,frank,frot,ffile,frank,(frot+1)%4);
+    else
+      return makeKhetMove(ffile,frank,frot,ffile,frank,(frot+3)%4);
+  } else
+  {
+    unsigned int tfile = mv[2]-'a';
+    unsigned int trank = mv[3]-'1';
+    return makeKhetMove(ffile,frank,frot,ftile,trank,frot);
+  }
+}
+
 //attenots to make move in the from of "a8R" or a8a7 in algstr
 //returns empty str if move is invalid, returns algrstr otherwise
 int KhetState::makeMove(string algstr) {
@@ -315,6 +337,7 @@ uint64_t KhetState::hashBoard() {
   }
   return hashKey^=(int)ctm;
 }
+
 
 //performs move on this state, assumes move is valid
 void KhetState::imake(KhetMove mv) {

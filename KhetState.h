@@ -169,6 +169,10 @@ class KhetState {
     static map<uint64_t,KhetState*> khet_cache;
     uint64_t key;
     
+
+    string alg(KhetMove mv);
+    KhetMove alg(string mv);
+
   private:
     inline
     static bool isOppositeDirections(Rotation dir1, Rotation dir2)
@@ -187,7 +191,6 @@ class KhetState {
     //performs move on this state, assumes move is valid
     void imake(KhetMove mv);
     //converts a move into str notation
-    string alg(KhetMove mv);
     bool gameOver;
     PlayerColor winner;
 };

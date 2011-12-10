@@ -48,12 +48,14 @@ void notate_helper(KhetMove best_move, int depth, int score, int nc, double tt) 
 //returns 0 if ok, 1 otherwise
 int uciMakeMove(string move) {
   ABState *prev = &gameHis[ply];
-  int index = prev->ks->makeMove(move);
-  if(index<0) {
-    return 1;
-  }
-  
-  ABState *a = new ABState(prev,index);
+
+  // we just assume move correct from kauto
+  // int index = prev->ks->makeMove(move);
+  // if(index<0) {
+  //   return 1;
+  // }
+  KhetMove mv = prev->ks->alg(move);
+  ABState *a = new ABState(prev,mv);
   gameHis[ply+1].key = a->key;
   gameHis[ply+1].his = prev;
   gameHis[ply+1].ply_of_game = a->ply_of_game;
