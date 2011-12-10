@@ -724,22 +724,30 @@ bool KhetState::exposureCheck(int tFile, int tRank) {
   for (int x=tFile; x<10; x++)
   {
     // targetPiece = board[x][tRank];
-    if(board[x][tRank].type == SCARAB || board[x][tRank].type == PYRAMID) return true;
+    if (board[x][tRank].type != EMPTY)
+      if (board[x][tRank].type == SCARAB || board[x][tRank].type == PYRAMID) return true;
+      else break;
   }
   for (int x=tFile-1; x>=0; x--)
   {
     // targetPiece = board[x][tRank];
-    if(board[x][tRank].type == SCARAB || board[x][tRank].type == PYRAMID) return true;
+    if (board[x][tRank].type != EMPTY)
+      if (board[x][tRank].type == SCARAB || board[x][tRank].type == PYRAMID) return true;
+      else break;
   }
   for (int x=tRank; x<8; x++)
   {
     // targetPiece = board[tFile][x];
-    if(board[tFile][x].type == SCARAB || board[tFile][x].type == PYRAMID) return true;
+    if (board[tFile][x].type != EMPTY)
+      if (board[tFile][x].type == SCARAB || board[tFile][x].type == PYRAMID) return true;
+      else break;
   }
   for (int x=tRank-1; x>=0; x--)
   {
     // targetPiece = board[tFile][x];
-    if(board[tFile][x].type == SCARAB || board[tFile][x].type == PYRAMID) return true;
+    if (board[tFile][x].type != EMPTY)
+      if (board[tFile][x].type == SCARAB || board[tFile][x].type == PYRAMID) return true;
+      else break;
   }
   return false;
 }
