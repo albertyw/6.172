@@ -151,7 +151,8 @@ void uci() {
       continue;
     }
     else if(tokens[0].compare("position")== 0) {
-      ply = 0;
+      // ply = 0;
+	  if (ply==0)
       if(gameHis[ply].ks->init(tokens[1]) != 0) {
         cout << "invalid input position" << endl;
         ofstream myfile;
@@ -169,8 +170,9 @@ void uci() {
         myfile.close();
         exit(1);
       }
-      for(int i = 3; i < token_count; i++) {
+      for(int i = 3+ply; i < token_count; i++) {
 		//gameHis[ply].ks->debugMoves();
+		cout << "editing ply " << ply << endl;
         if(uciMakeMove(tokens[i]) != 0 ) {
           cout << s <<" Invalid move:" << tokens[i] << endl;
           ofstream myfile;
@@ -230,8 +232,16 @@ void uci() {
     }
     //prints out string format of board
     else if(tokens[0].compare("display")== 0) {
-      string bd = gameHis[ply].ks->getBoardPrettyStr();
-      cout << bd << endl ;
+	  if (token_count>1)
+	  {
+		string bd = gameHis[atoi(tokens[1].c_str())].ks->getBoardPrettyStr();
+		cout << bd << endl ;
+	  } else
+	  {
+		string bd = gameHis[ply].ks->getBoardPrettyStr();
+		cout << bd << endl ;
+	  }
+      
     }
     //forces a move generation of current board
     else if(tokens[0].compare("gen")== 0) {

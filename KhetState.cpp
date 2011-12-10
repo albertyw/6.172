@@ -270,7 +270,7 @@ KhetMove KhetState::alg(string mv) {
   {
     unsigned int tfile = mv[2]-'a';
     unsigned int trank = mv[3]-'1';
-    return makeKhetMove(ffile,frank,frot,ftile,trank,frot);
+    return makeKhetMove(ffile,frank,frot,tfile,trank,frot);
   }
 }
 
