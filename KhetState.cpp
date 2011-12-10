@@ -719,34 +719,46 @@ LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
 }
 
 bool KhetState::exposureCheck(int tFile, int tRank) {
-  // KhetPiece targetPiece;
+  KhetPiece targetPiece;
 
   for (int x=tFile; x<10; x++)
   {
-    // targetPiece = board[x][tRank];
-    if (board[x][tRank].type != EMPTY)
-      if (board[x][tRank].type == SCARAB || board[x][tRank].type == PYRAMID) return true;
+    targetPiece = board[x][tRank];
+    if (targetPiece.type != EMPTY)
+      if (targetPiece.type == SCARAB) return true;
+      else if (targetPiece.type == PYRAMID)
+        if (targetPiece.rot == DOWN || targetPiece.rot == LEFT) return true;
+        else break;
       else break;
   }
   for (int x=tFile-1; x>=0; x--)
   {
-    // targetPiece = board[x][tRank];
-    if (board[x][tRank].type != EMPTY)
-      if (board[x][tRank].type == SCARAB || board[x][tRank].type == PYRAMID) return true;
+    targetPiece = board[x][tRank];
+    if (targetPiece.type != EMPTY)
+      if (targetPiece.type == SCARAB) return true;
+      else if (targetPiece.type == PYRAMID)
+        if (targetPiece.rot == UP || targetPiece.rot == RIGHT) return true;
+        else break;
       else break;
   }
   for (int x=tRank; x<8; x++)
   {
-    // targetPiece = board[tFile][x];
-    if (board[tFile][x].type != EMPTY)
-      if (board[tFile][x].type == SCARAB || board[tFile][x].type == PYRAMID) return true;
+    targetPiece = board[tFile][x];
+    if (targetPiece.type != EMPTY)
+      if (targetPiece.type == SCARAB) return true;
+      else if (targetPiece.type == PYRAMID)
+        if (targetPiece.rot == UP || targetPiece.rot == LEFT) return true;
+        else break;
       else break;
   }
   for (int x=tRank-1; x>=0; x--)
   {
-    // targetPiece = board[tFile][x];
-    if (board[tFile][x].type != EMPTY)
-      if (board[tFile][x].type == SCARAB || board[tFile][x].type == PYRAMID) return true;
+    targetPiece = board[tFile][x];
+    if (targetPiece.type != EMPTY)
+      if (targetPiece.type == SCARAB) return true;
+      else if (targetPiece.type == PYRAMID)
+        if (targetPiece.rot == DOWN || targetPiece.rot == RIGHT) return true;
+        else break;
       else break;
   }
   return false;
