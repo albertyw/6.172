@@ -156,11 +156,11 @@ class KhetState {
     //closestToFile and rank are used to measure closest distance from any 
     //pt on lasers path to this point. Used by some eval functions
     //returns a LaserHitInfo with information about hit piece if any
-    LaserHitInfo fireLaser(int tFile, int tRank, Rotation laserDir,
-                                    int closestToFile, int closestToRank);
+    LaserHitInfo fireLaser(int tFile, int tRank, Rotation laserDir);
     LaserHitInfo fireLaser(int tFile, int tRank, Rotation laserDir,
                             int closestToFile, int closestToRank, 
                             int closestToFile2, int closestToRank2);
+    bool exposureCheck(int tFile, int tRank);
     
     int eval(PlayerColor ctm);
     int adjacentEmptySquares(int file, int rank);

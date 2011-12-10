@@ -382,7 +382,7 @@ void KhetState::imake(KhetMove mv) {
 
     Rotation laserDir = sph.rot;
 
-    LaserHitInfo laserHitInfo = fireLaser(tFile, tRank, laserDir, 0, 0);
+    LaserHitInfo laserHitInfo = fireLaser(tFile, tRank, laserDir);
 
 
     //piece is to be removed from board
@@ -428,15 +428,13 @@ void KhetState::imake(KhetMove mv) {
     assert(key==hashBoard());
 }
 
-LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
-    int closestToFile, int closestToRank) {
+LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir) {
   KhetPiece targetPiece;
   targetPiece.type = EMPTY;
 
   LaserHitInfo lInfo;
   lInfo.bounced = false;
   lInfo.hitPiece.type = EMPTY;
-  lInfo.closest = 999;
 
   while(true) {
     switch(laserDir) {
@@ -455,10 +453,7 @@ LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
       default:
         cout << "Unkown laserDirection " << laserDir << endl;
     }
-    int distanceFromLaser = abs(tFile - closestToFile) + abs(tRank - closestToRank); 
-    if(distanceFromLaser < lInfo.closest) {
-      lInfo.closest = distanceFromLaser;
-    }
+
     if(tFile > 9 || tFile < 0) break; //off board, clean miss
     if(tRank > 7 || tRank < 0) break;
 
@@ -721,6 +716,32 @@ LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
   }
   //piece got hit
   return lInfo;
+}
+
+bool KhetState::exposureCheck(int tFile, int tRank) {
+  // KhetPiece targetPiece;
+
+  for (int x=tFile; x<10; x++)
+  {
+    // targetPiece = board[x][tRank];
+    if(board[x][tRank].type == SCARAB || board[x][tRank].type == PYRAMID) return true;
+  }
+  for (int x=tFile-1; x>=0; x--)
+  {
+    // targetPiece = board[x][tRank];
+    if(board[x][tRank].type == SCARAB || board[x][tRank].type == PYRAMID) return true;
+  }
+  for (int x=tRank; x<8; x++)
+  {
+    // targetPiece = board[tFile][x];
+    if(board[tFile][x].type == SCARAB || board[tFile][x].type == PYRAMID) return true;
+  }
+  for (int x=tRank-1; x>=0; x--)
+  {
+    // targetPiece = board[tFile][x];
+    if(board[tFile][x].type == SCARAB || board[tFile][x].type == PYRAMID) return true;
+  }
+  return false;
 }
 
 void KhetState::initBoard(string strBoard) {
@@ -1055,22 +1076,28 @@ int KhetState::eval(PlayerColor ctm) {
   LaserHitInfo lInfo;
   
   //exposure checks 
-  for(int rot = RIGHT; rot != (DOWN + 1); ++rot) {
-    lInfo = KhetState::fireLaser(rPharaohFile, rPharaohRank,
-      (Rotation)rot, 0, 0);
-    if(lInfo.bounced) {
-      redScore += exposed;
-      break;
-    }
-  }
-  for(int rot = RIGHT; rot !=( DOWN + 1); ++rot) {
-    lInfo = KhetState::fireLaser(sPharaohFile, sPharaohRank,
-      (Rotation)rot, 0, 0);
-    if(lInfo.bounced)  {
-      silverScore += exposed;
-      break;
-    }
-  }
+  // for(int rot = RIGHT; rot != (DOWN + 1); ++rot) {
+  //   lInfo = KhetState::fireLaser(rPharaohFile, rPharaohRank,
+  //     (Rotation)rot, 0, 0);
+  //   if(lInfo.bounced) {
+  //     redScore += exposed;
+  //     break;
+  //   }
+  // }
+
+  if (exposureCheck(rPharaohFile, rPharaohRank))
+    redScore += exposed;
+  if (exposureCheck(sPharaohFile, sPharaohRank))
+    silverScore += exposed;
+
+  // for(int rot = RIGHT; rot !=( DOWN + 1); ++rot) {
+  //   lInfo = KhetState::fireLaser(sPharaohFile, sPharaohRank,
+  //     (Rotation)rot, 0, 0);
+  //   if(lInfo.bounced)  {
+  //     silverScore += exposed;
+  //     break;
+  //   }
+  // }
 //measure closest distance of laser to pharaohs
   Rotation sSphRot = board[sSphFile][sSphRank].rot;
 
