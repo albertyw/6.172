@@ -721,7 +721,7 @@ LaserHitInfo KhetState::fireLaser(int tFile, int tRank, Rotation laserDir,
 bool KhetState::exposureCheck(int tFile, int tRank) {
   KhetPiece targetPiece;
 
-  for (int x=tFile; x<10; x++)
+  for (int x=tFile+1; x<10; x++)
   {
     targetPiece = board[x][tRank];
     if (targetPiece.type != EMPTY)
@@ -730,6 +730,7 @@ bool KhetState::exposureCheck(int tFile, int tRank) {
         if (targetPiece.rot == DOWN || targetPiece.rot == LEFT) return true;
         else break;
       else break;
+	else;
   }
   for (int x=tFile-1; x>=0; x--)
   {
@@ -740,8 +741,9 @@ bool KhetState::exposureCheck(int tFile, int tRank) {
         if (targetPiece.rot == UP || targetPiece.rot == RIGHT) return true;
         else break;
       else break;
+	else;
   }
-  for (int x=tRank; x<8; x++)
+  for (int x=tRank+1; x<8; x++)
   {
     targetPiece = board[tFile][x];
     if (targetPiece.type != EMPTY)
@@ -750,6 +752,7 @@ bool KhetState::exposureCheck(int tFile, int tRank) {
         if (targetPiece.rot == UP || targetPiece.rot == LEFT) return true;
         else break;
       else break;
+	else;
   }
   for (int x=tRank-1; x>=0; x--)
   {
@@ -760,6 +763,7 @@ bool KhetState::exposureCheck(int tFile, int tRank) {
         if (targetPiece.rot == DOWN || targetPiece.rot == RIGHT) return true;
         else break;
       else break;
+	else;
   }
   return false;
 }
