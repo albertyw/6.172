@@ -1,0 +1,59 @@
+#!/afs/csail.mit.edu/proj/courses/6.172/bin/python
+
+# python version > 2.6
+
+####
+#Creates config file for autotester and starts autotester
+#Requires paths to two executables, and optional lists of default options
+###
+import os, subprocess, sys, socket
+
+def getOpt(opts_file):
+
+  f = open(opts_file, "r")
+  return f.read()
+
+PROGRAM_NAME = os.path.basename(sys.argv[0])
+
+if len(sys.argv) < 3:
+  print "Usage: %s player1 player2 [player1.config] [player2.config]" % PROGRAM_NAME
+  exit(-1)
+
+#make config file
+p1 = os.path.realpath(sys.argv[1])
+p2 = os.path.realpath(sys.argv[1])
+p1name = os.path.basename(sys.argv[2])
+p2name = os.path.basename(sys.argv[2])
+if(p1name == p2name):
+  p2name = p2name + "2"
+cwd = os.getcwd()
+#getenv("HOSTNAME") doesnt work on cloud10
+hostname = socket.gethostname()
+start_remote = "/afs/csail/proj/courses/6.172/bin/khet_invoke.sh"
+
+
+fname = cwd + "/" + p1name + "_" + p2name + ".txt";
+config = open(fname, "w+b")
+config.write( "title = " + fname + " \n" +
+              "cpus = 1 \n")
+config.write("\n")
+
+config.write("player = " + p1name + "\n")
+config.write("invoke = " + start_remote + " " + hostname  + " " + p1 + "\n")
+if len(sys.argv) > 3:
+  config.write(getOpt(sys.argv[3]))
+
+config.write("\n")
+
+config.write("player = " + p2name + "\n")
+config.write("invoke = " + start_remote + " " + hostname  + " "+ p2 + "\n")
+if len(sys.argv) > 3:
+  config.write(getOpt(sys.argv[4]))
+
+config.close()
+
+config_t = open(fname, "r")
+
+#start autotester
+#copy config file to watched directory? or cqsub?
+

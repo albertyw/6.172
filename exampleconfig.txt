@@ -1,0 +1,16 @@
+cpus = 1
+title = Example
+openings = 50
+adjudicate = 200         
+
+# now we have the player definitions
+# --
+
+player = us
+invoke = ./khetplayer
+depth = 4
+
+player = dailey
+invoke = ./khetplayer.dailey
+depth = 4
+
